@@ -1,13 +1,14 @@
 {
   "dependencies": {
     "com.karrar.netick": {
-      "version": "file:C:/Users/Global-pc/Desktop/netick--/netick 2 -- root/Netick Free Git",
+      "version": "https://github.com/NetickNetworking/NetickForUnity.git",
       "depth": 0,
-      "source": "local",
+      "source": "git",
       "dependencies": {
         "com.unity.nuget.mono-cecil": "1.11.4",
         "com.unity.addressables": "1.22.3"
-      }
+      },
+      "hash": "c22326ecd4355d61a5fd89387ffb93258886bcc4"
     },
     "com.unity.addressables": {
       "version": "1.22.3",

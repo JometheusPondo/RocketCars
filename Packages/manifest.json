@@ -1,6 +1,6 @@
 {
   "dependencies": {
-    "com.karrar.netick": "file:C:/Users/Global-pc/Desktop/netick--/netick 2 -- root/Netick Free Git",
+    "com.karrar.netick": "https://github.com/NetickNetworking/NetickForUnity.git",
     "com.unity.cinemachine": "2.10.3",
     "com.unity.collab-proxy": "2.6.0",
     "com.unity.feature.development": "1.0.1",
