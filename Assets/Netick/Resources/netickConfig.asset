@@ -1,0 +1,58 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 2061283162, guid: da78c2c9df60edc4fb5f65b59fa57c41, type: 3}
+  m_Name: netickConfig
+  m_EditorClassIdentifier: 
+  Prefabs:
+  - {fileID: 2435061680698831871, guid: b8ab3af591528cd449e670a574a96d6e, type: 3}
+  - {fileID: 8671745862874386170, guid: 5922f81430a296145abe236caa5817c7, type: 3}
+  AutoGetPrefabs: 1
+  PrefabsPath: Assets/
+  TickRate: 30
+  MaxAllowedTimestep: 0.1
+  MaxPlayers: 6
+  MaxObjects: 255
+  MaxSendableDataSize: 50000
+  StateAllocatorBlockSize: 131072
+  MetaAllocatorBlockSize: 1048576
+  AggressivePreAllocation: 0
+  MaxPredictedTicks: 64
+  ServerDivisor: 1
+  PhysicsPrediction: 1
+  PhysicsType: 1
+  InvokeRenderInHeadless: 0
+  InvokeUpdate: 1
+  RenderInvokeOrder: 0
+  MaxAdditiveScenes: 4
+  InputReuseAtLowFPS: 1
+  ExtraInterpolationDelay: 0
+  AccurateLocalInterpolation: 1
+  EnableMultithreading: 0
+  EnableLogging: 1
+  EnableProfiling: 1
+  EnableLagCompensation: 0
+  FastSerialization: 1
+  EnableInterestManagement: 0
+  SyncTransformOnSpawn: 1
+  EnableNarrowphaseFiltering: 0
+  CustomGroupCount: 2
+  AoILayerCount: 1
+  WorldSize: {x: 8000, y: 1, z: 8000}
+  IncludeInactiveObjects: 0
+  AoILayer0CellSize: 450
+  AoILayer1CellSize: 750
+  AoILayer2CellSize: 750
+  AoILayer3CellSize: 750
+  AoILayer4CellSize: 750
+  RenderWorldGrid: 0
+  RenderedLayer: 0
+  LagCompensationDebug: 1

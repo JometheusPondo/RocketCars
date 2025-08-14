@@ -1,0 +1,113 @@
+using UnityEngine;
+using System;
+using System.Collections;
+using Netick.Unity;
+using Netick;
+
+public class CarCameraController : NetworkBehaviour
+{
+  public Transform        CarRenderTransform;
+
+  [Header("Camera")]
+  public bool             LookAtBall         = true;
+  public Transform        CameraParent;
+  public Vector3          CameraOffset;
+  public float            LerpFactor         = 20f;
+  public AudioClip        ChangeCameraAudioClip;
+
+  private Transform       _camera;
+  private CarController   _carController;
+  private Player          _player;
+  private GameMode        _gm;
+  private Transform       _ballRenderTransform;
+  private Vector3         _curDir;
+  private Vector3         _vel;
+  public override void NetworkStart()
+  {
+    _player               = GetComponent<Player>();
+    _carController        = GetComponent<CarController>();   
+    _gm                   = Sandbox.FindObjectOfType<GameMode>();
+    _camera               = Sandbox.FindObjectOfType<Camera>().transform;
+    _ballRenderTransform  = Sandbox.FindObjectOfType<Ball>().  transform.GetChild(0);
+  }
+
+  public override void NetworkRender()
+  {
+    if (IsInputSource && _player.IsReady)
+    {
+      if (_gm.DisableCarCamera)
+        return;
+
+      if (Sandbox.InputEnabled && Input.GetButtonDown("Camera Toggle")) // toggle camera mode.
+      {
+        LookAtBall = !LookAtBall;
+        // audio effect
+        if (Sandbox.IsVisible)
+          AudioSource.PlayClipAtPoint(ChangeCameraAudioClip, transform.position);
+      }
+
+      if (LookAtBall)
+        FollowCarAndLookAtBall(Sandbox.DeltaTime);
+      else
+        FollowCarAndLookAtCar(Sandbox.DeltaTime);
+    }
+  }
+
+  private void FollowCarAndLookAtCar(float deltaTime)
+  {
+    var forward                = _carController.Rigidbody.velocity;
+
+    if (_carController.IsGrounded)
+    {
+      // reverse view when middle mouse button is pressed.
+      if (Input.GetMouseButton(2))
+        forward                = -transform.forward;
+      else
+        forward                = transform.forward;
+    }
+
+    forward.y                  = 0;
+    forward.Normalize();
+
+    var dot                    = Mathf.     Abs(Vector3.Dot(_curDir.normalized, forward));
+    var t                      = Math.      Max(0.2f, Mathf.Pow(dot, 10)) * LerpFactor * deltaTime;
+    _curDir                    = Vector3.   Lerp(_curDir, forward, t);
+
+    var pos                    = CarRenderTransform.position + (_curDir * CameraOffset.z) + (Vector3.up * CameraOffset.y);
+    var rot                    = Quaternion.LookRotation(_curDir, Vector3.up);
+
+
+    _camera.transform.position = Vector3.Lerp(_camera.transform.position, pos, LerpFactor * deltaTime);
+
+    // _camera.transform.position = Vector3.   SmoothDamp (_camera.transform.position, pos, ref _vel, LerpFactor * deltaTime); 
+    _camera.transform.rotation = Quaternion.Slerp(_camera.transform.rotation, rot, LerpFactor * deltaTime);
+  }
+
+  private void FollowCarAndLookAtBall(float deltaTime)
+  {
+    var ballPosNoY             = _ballRenderTransform.transform.position;
+    ballPosNoY.y               = CarRenderTransform.position.y;
+ 
+    var carPos                 = CarRenderTransform.position;
+    
+    var carToBall              = (ballPosNoY - carPos).normalized;
+    var carToBall2             = (_ballRenderTransform.transform.position - carPos).normalized;
+    var camLookDir             = carToBall;
+
+    if (Vector3.Distance(ballPosNoY, carPos) > 40f)
+      camLookDir               = carToBall2;
+    
+    if (Vector3.Angle(carToBall, carToBall2) < 10f)
+      camLookDir               = carToBall;
+
+    var dot                    = Mathf.     Abs(Vector3.Dot(_curDir.normalized, camLookDir));
+    var t                      = Math.      Max(0.2f, Mathf.Pow(dot, 10)) * LerpFactor * deltaTime;
+    _curDir                    = Vector3.   Lerp(_curDir, camLookDir, t);
+
+    var pos                    = carPos + (carToBall * CameraOffset.z) + (Vector3.up * CameraOffset.y);
+    var rot                    = Quaternion.LookRotation(_curDir, Vector3.up);
+
+    _camera.transform.position = Vector3.SmoothDamp(_camera.transform.position, pos, ref _vel, LerpFactor * deltaTime);
+    _camera.transform.rotation = Quaternion.Slerp(_camera.transform.rotation, rot, LerpFactor * deltaTime);
+  }
+}
