@@ -10,6 +10,13 @@
       },
       "hash": "c22326ecd4355d61a5fd89387ffb93258886bcc4"
     },
+    "com.madstrawberry.dotween": {
+      "version": "https://github.com/StinkySteak/DoTween-UPM.git",
+      "depth": 0,
+      "source": "git",
+      "dependencies": {},
+      "hash": "3fc8db54d61d247a83018902fa5dedb3d2454d0f"
+    },
     "com.unity.addressables": {
       "version": "1.22.3",
       "depth": 1,
