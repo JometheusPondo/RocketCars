@@ -5,6 +5,7 @@ using TMPro;
 using Netick;
 using Netick.Unity;
 using Network = Netick.Unity.Network;
+using UnityEngine.UI;
 
 public class UIMainMenu : NetworkEventsListener
 {
@@ -14,10 +15,21 @@ public class UIMainMenu : NetworkEventsListener
   public TMP_InputField           ServerIPAddressText;
   public TMP_InputField           PlayerNameText;
 
+    public Button ButtonPlay;
+    public Button ButtonHost;
+    public Button ButtonJoin;
+    public Button ButtonConnect;
+    public Button ButtonBackToMain;
+    public Button ButtonBackToPlay;
+
+    public float CanvasGroupDisabledAlpha = 0.5f;
+    public CanvasGroup UIMain;
+    public CanvasGroup UIPlay;
+    public CanvasGroup UIConnect;
+
   public int                      Port;
   public int                      FirstLevelIndex    = 1;
   public int                      DedicatedServerFPS = 450;
-  public Transform                Arena;
 
   private NetworkSandbox          _clientSandbox;
 
@@ -30,12 +42,62 @@ public class UIMainMenu : NetworkEventsListener
       StartServer();
   }
 
-  private void Update()
-  {
-    Arena.Rotate(Vector2.up, 50f * Time.deltaTime);
-  }
+    private void Start()
+    {
+        ButtonPlay.onClick.AddListener(OnClickButtonPlay);
+        ButtonHost.onClick.AddListener(OnClickButtonHost);
+        ButtonJoin.onClick.AddListener(OnClickButtonJoin);
+        ButtonConnect.onClick.AddListener(OnClickButtonConnect);
+        ButtonBackToMain.onClick.AddListener(OnClickButtonBackToMain);
+        ButtonBackToPlay.onClick.AddListener(OnClickButtonBackToPlay);
 
-  public void StartHost()
+        UIPlay.alpha = 0f;
+        UIPlay.interactable = false;
+        UIConnect.alpha = 0f;
+        UIConnect.interactable = false;
+    }
+
+    private void OnClickButtonPlay()
+    {
+        UIMain.alpha = CanvasGroupDisabledAlpha;
+        UIMain.interactable = false;
+
+        UIPlay.alpha = 1f;
+        UIPlay.interactable = true;
+    }
+    private void OnClickButtonHost()
+    {
+        StartHost();
+    }
+    private void OnClickButtonJoin()
+    {
+        UIPlay.alpha = CanvasGroupDisabledAlpha;
+        UIPlay.interactable = false;
+
+        UIConnect.alpha = 1f;
+        UIConnect.interactable = true;
+    }
+    private void OnClickButtonConnect()
+    {
+        StartClientAndConnect();
+    }
+    private void OnClickButtonBackToMain()
+    {
+        UIPlay.alpha = 0f;
+        UIPlay.interactable = false;
+
+        UIMain.alpha = 1f;
+        UIMain.interactable = true;
+    }
+    private void OnClickButtonBackToPlay()
+    {
+        UIConnect.alpha = 0f;
+        UIConnect.interactable = false;
+
+        UIPlay.alpha = 1f;
+        UIPlay.interactable = true;
+    }
+    public void StartHost()
   {
     // if Netick is already running, we shut it down first.
     if (Network.IsRunning)
