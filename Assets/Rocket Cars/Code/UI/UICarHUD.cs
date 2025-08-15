@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -12,7 +10,7 @@ public class UICarHUD : NetworkBehaviour
   [SerializeField]
   private GameObject          _UICarHUD;
   [SerializeField]
-  private TextMeshProUGUI     _boosterText;
+  private UIFuelBar _uiFuelBar;
   [SerializeField]
   private TextMeshProUGUI     _cameraModeText;
 
@@ -55,7 +53,8 @@ public class UICarHUD : NetworkBehaviour
     else
       _cameraModeText.color  = Color.white;
 
-    _boosterText.text        = (Mathf.RoundToInt(Sandbox.TickToTime(_carController.FuelTickTime))).ToString();
+        float fuel = Mathf.RoundToInt(Sandbox.TickToTime(_carController.FuelTickTime));
+        _uiFuelBar.UpdateValue(fuel, _carController.MaxFuel);
   }
 
   /// <summary>

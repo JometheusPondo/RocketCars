@@ -9,6 +9,8 @@ using Netick.Unity;
 [ExecuteBefore(typeof(GameMode))]
 public class UISoccer : NetworkBehaviour
 {
+    [SerializeField]
+    private CanvasGroup _joinCanvasGroup;
   [SerializeField]
   private Button             _joinRedButton;
   [SerializeField]
@@ -85,8 +87,9 @@ public class UISoccer : NetworkBehaviour
 
     if (_soccer.GameState == Soccer.State.Replay || Sandbox.TryGetLocalPlayerObject(out Player localPlayer) && localPlayer.IsReady)
     {
-      _joinRedButton.gameObject.SetActive(false);
-      _joinBlueButton.gameObject.SetActive(false);
+            _joinCanvasGroup.interactable = false;
+            _joinCanvasGroup.alpha = 0f;
+            _joinCanvasGroup.blocksRaycasts = false;
     }
 
     var roundTimer                            = Sandbox.TickToTime(Sandbox.Tick - _soccer.RoundStartTick);

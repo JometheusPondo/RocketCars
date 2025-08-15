@@ -20,6 +20,7 @@ public class CarCameraController : NetworkBehaviour
   private Player          _player;
   private GameMode        _gm;
   private Transform       _ballRenderTransform;
+  private CameraSpectate  _cameraSpectate;
   private Vector3         _curDir;
   private Vector3         _vel;
   public override void NetworkStart()
@@ -29,12 +30,15 @@ public class CarCameraController : NetworkBehaviour
     _gm                   = Sandbox.FindObjectOfType<GameMode>();
     _camera               = Sandbox.FindObjectOfType<Camera>().transform;
     _ballRenderTransform  = Sandbox.FindObjectOfType<Ball>().  transform.GetChild(0);
+        _cameraSpectate = Sandbox.FindObjectOfType<CameraSpectate>();
   }
 
   public override void NetworkRender()
   {
     if (IsInputSource && _player.IsReady)
     {
+            _cameraSpectate.DisableSpectate();
+
       if (_gm.DisableCarCamera)
         return;
 
