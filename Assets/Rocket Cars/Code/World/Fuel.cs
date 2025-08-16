@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using Netick.Unity;
 using Netick;
@@ -34,6 +32,8 @@ public class Fuel : Replayable
 
   private void OnTriggerEnter(Collider other)
   {
+        if (!IsActive) return;
+
     var player  = other.gameObject.GetComponent<Player>();
 
     // we only apply fuel in the server, therefore fueling is not predicted.
