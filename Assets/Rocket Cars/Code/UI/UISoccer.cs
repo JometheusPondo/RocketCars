@@ -1,10 +1,11 @@
+using Netick;
+using Netick.Unity;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
-using Netick;
-using Netick.Unity;
 
 [ExecuteBefore(typeof(GameMode))]
 public class UISoccer : NetworkBehaviour
@@ -48,7 +49,9 @@ public class UISoccer : NetworkBehaviour
   private Camera             _camera;
   private UISoccerScoreboard _UIScoreboard;
 
-  public override void NetworkStart()
+    private char[] _textTimerBuffer = new char[16];
+
+    public override void NetworkStart()
   {
     if (Application.isBatchMode)
       return;
@@ -80,7 +83,7 @@ public class UISoccer : NetworkBehaviour
     }
   }
 
-  public override void NetworkRender()
+    public override void NetworkRender()
   {
     if (Application.isBatchMode)
       return;
@@ -92,11 +95,14 @@ public class UISoccer : NetworkBehaviour
             _joinCanvasGroup.blocksRaycasts = false;
     }
 
-    var roundTimer                            = Sandbox.TickToTime(Sandbox.Tick - _soccer.RoundStartTick);
-    _timerText.text                           = (roundTimer / 60f).ToString("00") + ":" + (roundTimer % 60).ToString("00");
+        float time                            = Sandbox.TickToTime(Sandbox.Tick - _soccer.RoundStartTick);
+        TimeSpan timeSpan = TimeSpan.FromSeconds(time);
 
-    // if the time remaining is less than one second, get an alpha from the remaining time, otherwise use 1f alpha.
-    var alpha                                 = _goalScoredTextShownTimer <= 1f ? Mathf.InverseLerp(0f, 1f, _goalScoredTextShownTimer) : 1f;
+        if (timeSpan.TryFormat(_textTimerBuffer.AsSpan(), out int charsWritten, @"mm\:ss"))
+            _timerText.SetText(_textTimerBuffer, 0, charsWritten);
+
+        // if the time remaining is less than one second, get an alpha from the remaining time, otherwise use 1f alpha.
+        var alpha                                 = _goalScoredTextShownTimer <= 1f ? Mathf.InverseLerp(0f, 1f, _goalScoredTextShownTimer) : 1f;
     _goalScoredText.color                     = Color.Lerp(new Color(1f,1f,1f,0f), Color.white, alpha);
     _goalScoredTextShownTimer                 = Mathf.Max(0f, _goalScoredTextShownTimer - Time.deltaTime);
 

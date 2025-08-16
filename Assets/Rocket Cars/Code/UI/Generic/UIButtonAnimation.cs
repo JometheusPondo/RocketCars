@@ -5,6 +5,7 @@ using UnityEngine.UI;
 
 public class UIButtonAnimation : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
 {
+    [SerializeField] private AudioClip _audioClip;
     [SerializeField] private RectTransform _textTransform;
     [SerializeField] private Outline _outline;
 
@@ -27,6 +28,7 @@ public class UIButtonAnimation : MonoBehaviour, IPointerEnterHandler, IPointerEx
 
         _tweenA = _textTransform.DOLocalMoveX(_textXTarget, _easeDuration);
         _tweenB = _outline.DOColor(_colorActive, _easeDuration);
+        AudioSource.PlayClipAtPoint(_audioClip, Camera.main.transform.position);
     }
 
     public void OnPointerExit(PointerEventData eventData)
@@ -36,5 +38,17 @@ public class UIButtonAnimation : MonoBehaviour, IPointerEnterHandler, IPointerEx
 
         _tweenA = _textTransform.DOLocalMoveX(0f, _easeDuration);
         _tweenB = _outline.DOColor(_colorDeactive, _easeDuration);
+    }
+
+    private void OnDisable()
+    {
+        _textTransform.localPosition = new Vector3(0f, 0f, 0f);
+        _outline.effectColor = _colorDeactive;
+    }
+
+    private void OnDestroy()
+    {
+        _tweenA?.Kill();
+        _tweenB?.Kill();
     }
 }
