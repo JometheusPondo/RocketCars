@@ -53,5 +53,9 @@ Rocket Cars is not a full-featured game—it's a carefully designed technical sa
 ## 🎨 Third Party Assets
 
 - [ParticlePack](https://assetstore.unity.com/packages/vfx/particles/particle-pack-127325) by Unity Technologies 
-- [Low Poly Car Pack 1](https://designersoup.itch.io/low-poly-car-pack-1) by Designer Soup
+- [Low Poly Car Pack 1](https://designersoup.itch.io/low-poly-car-pack-1) (Unused) by Designer Soup
 - [Vehicle - Essentials](https://assetstore.unity.com/packages/audio/sound-fx/transportation/vehicle-essentials-194951) by Nox_Sound - permission was granted from Nox_Sound to include this pack in Rocket Cars.
+- [Font Electrolize](https://fonts.google.com/specimen/Electrolize?preview.text=PUKIS&categoryFilters=Appearance:%2FTheme%2FTechno;Feeling:%2FExpressive%2FFuturistic) from google fonts
+- [American Muscle](https://t-allen-studios.itch.io/low-poly-car-american-muscle-01) by T Allen Studio
+- [Toon Shader](https://github.com/IronWarrior/UnityToonShader) by IronWarrior and roystan
+- [DOTween](https://assetstore.unity.com/packages/tools/animation/dotween-hotween-v2-27676) by Demigiant
