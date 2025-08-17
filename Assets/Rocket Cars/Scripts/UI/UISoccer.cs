@@ -10,8 +10,8 @@ using UnityEngine.UI;
 [ExecuteBefore(typeof(GameMode))]
 public class UISoccer : NetworkBehaviour
 {
-    [SerializeField]
-    private CanvasGroup _joinCanvasGroup;
+  [SerializeField]
+  private CanvasGroup        _joinCanvasGroup;
   [SerializeField]
   private Button             _joinRedButton;
   [SerializeField]
@@ -48,68 +48,67 @@ public class UISoccer : NetworkBehaviour
   private Soccer             _soccer;
   private Camera             _camera;
   private UISoccerScoreboard _UIScoreboard;
+  private char[]             _textTimerBuffer = new char[16];
 
-    private char[] _textTimerBuffer = new char[16];
-
-    public override void NetworkStart()
+  public override void NetworkStart()
   {
     if (Application.isBatchMode)
       return;
 
-    _camera                                  = Sandbox.FindObjectOfType<Camera>();
-    _UIScoreboard                            = GetComponent<UISoccerScoreboard>();
-    _soccer                                  = GetComponent<Soccer>();
-    _soccer.OnGoalsChangedEvent              += OnGoalsChanged;
-    _soccer.OnRoundStartedEvent              += HideRoundStartTimer;
-    _soccer.OnWaitingForRoundStartEvent      += ShowRoundStartTimer;
-    _soccer.OnWaitingForRoundStartEvent      += OnGameStarted;
+    _camera = Sandbox.FindObjectOfType<Camera>();
+    _UIScoreboard = GetComponent<UISoccerScoreboard>();
+    _soccer = GetComponent<Soccer>();
+    _soccer.OnGoalsChangedEvent += OnGoalsChanged;
+    _soccer.OnRoundStartedEvent += HideRoundStartTimer;
+    _soccer.OnWaitingForRoundStartEvent += ShowRoundStartTimer;
+    _soccer.OnWaitingForRoundStartEvent += OnGameStarted;
 
-    _soccer.OnRoundStartedEvent              += OnGameStarted;
-    _soccer.OnGameOverEvent                  += OnGameEnded;
+    _soccer.OnRoundStartedEvent += OnGameStarted;
+    _soccer.OnGameOverEvent += OnGameEnded;
 
-    _joinRedButton. onClick.AddListener(OnJoinRedPressed);
+    _joinRedButton.onClick.AddListener(OnJoinRedPressed);
     _joinBlueButton.onClick.AddListener(OnJoinBluePressed);
   }
 
   private void OnGoalsChanged(Player lastGoalScorer, bool didScoreGoal)
   {
-    _teamRedGoalsText.text                    = _soccer.TeamRedGoals. ToString();
-    _teamBlueGoalsText.text                   = _soccer.TeamBlueGoals.ToString();
+    _teamRedGoalsText.text = _soccer.TeamRedGoals.ToString();
+    _teamBlueGoalsText.text = _soccer.TeamBlueGoals.ToString();
 
     if (_soccer.GameState == Soccer.State.GoalScored)
     {
-      _goalScoredTextShownTimer               = 5f;
-      _goalScoredText.text                    = lastGoalScorer.Name + " Scored!";
+      _goalScoredTextShownTimer = 5f;
+      _goalScoredText.text = lastGoalScorer.Name + " Scored!";
     }
   }
 
-    public override void NetworkRender()
+  public override void NetworkRender()
   {
     if (Application.isBatchMode)
       return;
 
     if (_soccer.GameState == Soccer.State.Replay || Sandbox.TryGetLocalPlayerObject(out Player localPlayer) && localPlayer.IsReady)
     {
-            _joinCanvasGroup.interactable = false;
-            _joinCanvasGroup.alpha = 0f;
-            _joinCanvasGroup.blocksRaycasts = false;
+      _joinCanvasGroup.interactable           = false;
+      _joinCanvasGroup.alpha                  = 0f;
+      _joinCanvasGroup.blocksRaycasts         = false;
     }
 
-        float time                            = Sandbox.TickToTime(Sandbox.Tick - _soccer.RoundStartTick);
-        TimeSpan timeSpan = TimeSpan.FromSeconds(time);
+    float time                                = Sandbox.TickToTime(Sandbox.Tick - _soccer.RoundStartTick);
+    TimeSpan timeSpan                         = TimeSpan.FromSeconds(time);
 
-        if (timeSpan.TryFormat(_textTimerBuffer.AsSpan(), out int charsWritten, @"mm\:ss"))
-            _timerText.SetText(_textTimerBuffer, 0, charsWritten);
+    if (timeSpan.TryFormat(_textTimerBuffer.AsSpan(), out int charsWritten, @"mm\:ss"))
+      _timerText.SetText(_textTimerBuffer, 0, charsWritten);
 
-        // if the time remaining is less than one second, get an alpha from the remaining time, otherwise use 1f alpha.
-        var alpha                                 = _goalScoredTextShownTimer <= 1f ? Mathf.InverseLerp(0f, 1f, _goalScoredTextShownTimer) : 1f;
-    _goalScoredText.color                     = Color.Lerp(new Color(1f,1f,1f,0f), Color.white, alpha);
+    // if the time remaining is less than one second, get an alpha from the remaining time, otherwise use 1f alpha.
+    var alpha                                 = _goalScoredTextShownTimer <= 1f ? Mathf.InverseLerp(0f, 1f, _goalScoredTextShownTimer) : 1f;
+    _goalScoredText.color                     = Color.Lerp(new Color(1f, 1f, 1f, 0f), Color.white, alpha);
     _goalScoredTextShownTimer                 = Mathf.Max(0f, _goalScoredTextShownTimer - Time.deltaTime);
 
 
     if (_soccer.GameState == Soccer.State.WaitingForRoundStart)
     {
-      var timeToStart                         = Mathf.RoundToInt(Mathf.Max(0f, _soccer.DelayUntilRoundStart - Sandbox.TickToTime(Sandbox.Tick - _soccer.TransitionTick)));
+      var timeToStart                         = (int)(Mathf.Max(0f, _soccer.DelayUntilRoundStart - Sandbox.TickToTime(Sandbox.Tick - _soccer.TransitionTick)) + 1f);
       _roundStartTimer.text                   = timeToStart.ToString();
 
       if (_previousTimerValue != (int)timeToStart)
