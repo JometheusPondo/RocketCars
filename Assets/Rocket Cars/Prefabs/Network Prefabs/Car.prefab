@@ -843,7 +843,7 @@ MonoBehaviour:
   CarRenderTransform: {fileID: 5077202255460926304}
   LookAtBall: 1
   CameraParent: {fileID: 6530658534174501303}
-  CameraOffset: {x: 0, y: 0.58, z: -1.5}
+  CameraOffset: {x: 0, y: 0.675, z: -1.75}
   LerpFactor: 20
   ChangeCameraAudioClip: {fileID: 8300000, guid: dea41293b54726049990dad787e78927, type: 3}
 --- !u!114 &1974884719944547763
