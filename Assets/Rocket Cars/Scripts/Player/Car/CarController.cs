@@ -74,7 +74,8 @@ public class CarController : Replayable
   public float                   BallImpactMultiplier;
 
   [Header("Visual")]
-  public Transform               CarBody;
+  public Transform               RedCarBody;
+  public Transform               BlueCarBody;
   public GameObject              RedCarModel;
   public GameObject              BlueCarModel;
   public ParticleSystem[]        AfterburnerParticleSystems;
@@ -275,6 +276,7 @@ public class CarController : Replayable
           Rigidbody.AddRelativeForce(linear * AirBoostLinearForce, ForceMode.VelocityChange);
           AirBoostUsed      = true;
           AirBoostTickTimer = Sandbox.TimeToTick(1f);
+          JumpCounts++;
         }
       }
     }
@@ -427,6 +429,7 @@ public class CarController : Replayable
   /// </summary>
   private void RenderVisualSuspension()
   {
+    var carBody                        = RedCarModel.activeInHierarchy ? RedCarBody : BlueCarBody;
     var target                         = NetworkRigidbody.RenderTransform.position + ((NetworkRigidbody.RenderTransform.up + (NetworkRigidbody.RenderTransform.forward * 0.05f)) * 1f);
 
     if (Vector3.Distance(target, _suspensionPos) > 10f)
@@ -436,22 +439,22 @@ public class CarController : Replayable
     _v                                 = (D * _v) + (deltaTime * K * (target - _suspensionPos));
     _suspensionPos                     = _suspensionPos + (deltaTime * _v);
 
-    var localVel                       = CarBody.transform.InverseTransformVector(_v);
+    var localVel                       = carBody.transform.InverseTransformVector(_v);
     var maxSpeed                       = 0.2f;
     localVel                           = Vector3.ClampMagnitude(localVel, maxSpeed);
     var pitchAngle                     = MaxPitchAngle * PitchAngleCurve.Evaluate(Mathf.InverseLerp(-maxSpeed, maxSpeed, localVel.y));
     var rollAngle                      = Mathf.Lerp(-MaxRollAngle, MaxRollAngle, Mathf.InverseLerp(-maxSpeed, maxSpeed, -localVel.z));
-    CarBody.transform.localEulerAngles = new Vector3(0, rollAngle, pitchAngle);
+    carBody.transform.localEulerAngles = new Vector3(0, rollAngle, pitchAngle);
 
     if (IsGrounded)
     {
       var p                            = SuspensionAxis * Mathf.Lerp(-MaxSuspensionDistance, MaxSuspensionDistance, Mathf.InverseLerp(-maxSpeed, maxSpeed, localVel.x));
-      CarBody.transform.localPosition  = Vector3.Lerp(CarBody.transform.localPosition, p, Time.smoothDeltaTime * 20f);
+      carBody.transform.localPosition  = Vector3.Lerp(carBody.transform.localPosition, p, Time.smoothDeltaTime * 20f);
     }
 
     else
     {
-      CarBody.transform.localPosition  = Vector3.Lerp(CarBody.transform.localPosition, SuspensionAxis * MaxSuspensionDistance * 1.4f, Time.smoothDeltaTime * 10f);
+      carBody.transform.localPosition  = Vector3.Lerp(carBody.transform.localPosition, SuspensionAxis * MaxSuspensionDistance * 1.4f, Time.smoothDeltaTime * 10f);
     }
 
     if (SuspensionVisualizer != null)

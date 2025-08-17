@@ -33,7 +33,7 @@ public class UINametagManager : NetworkBehaviour
 
     for (int i = 0; i < Sandbox.Config.MaxPlayers; i++)
     {
-      var nametag                = Sandbox.Instantiate(NametagPrefab, default, default);
+      var nametag                = Sandbox.LocalInstantiate(NametagPrefab, default, default);
       nametag.transform.SetParent(canvas, false);
       nametag.gameObject.SetActive(false);
       _nametagPool.Push(nametag);

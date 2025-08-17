@@ -48,7 +48,7 @@ public class UISoccerScoreboard : NetworkBehaviour
 
     for (int i = 0; i < Sandbox.Config.MaxPlayers; i++)
     {
-      var score                               = Sandbox.Instantiate(_playerScorePrefab, default, Quaternion.identity).GetComponent<UISoccerScoreboardPlayerScore>();
+      var score                               = Sandbox.LocalInstantiate(_playerScorePrefab, default, Quaternion.identity).GetComponent<UISoccerScoreboardPlayerScore>();
       score.transform.SetParent(canvas, false);
       score.gameObject.SetActive(false);
       _scoresPool.     Push(score);
