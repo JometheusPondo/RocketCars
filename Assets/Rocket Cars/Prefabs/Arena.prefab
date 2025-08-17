@@ -478,7 +478,7 @@ GameObject:
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
+  m_StaticEditorFlags: 2147483647
   m_IsActive: 1
 --- !u!4 &3468139222598301587
 Transform:
@@ -516,7 +516,7 @@ Light:
     m_Type: 2
     m_Resolution: -1
     m_CustomResolution: -1
-    m_Strength: 1
+    m_Strength: 0.7
     m_Bias: 0.05
     m_NormalBias: 0.4
     m_NearPlane: 0.2
@@ -546,7 +546,7 @@ Light:
     serializedVersion: 2
     m_Bits: 4294967295
   m_RenderingLayerMask: 1
-  m_Lightmapping: 4
+  m_Lightmapping: 1
   m_LightShadowCasterMode: 0
   m_AreaSize: {x: 1, y: 1}
   m_BounceIntensity: 1
@@ -846,7 +846,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &3675758612329413288
 Transform:
   m_ObjectHideFlags: 0
@@ -938,7 +938,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: ecc0a3cbd8b12974285608d45d6413d2, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -0.999
+      value: -1
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: ecc0a3cbd8b12974285608d45d6413d2, type: 3}
       propertyPath: m_LocalPosition.z
@@ -991,6 +991,14 @@ PrefabInstance:
     - target: {fileID: 919132149155446097, guid: ecc0a3cbd8b12974285608d45d6413d2, type: 3}
       propertyPath: m_Name
       value: ArenaEdge
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: ecc0a3cbd8b12974285608d45d6413d2, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: ecc0a3cbd8b12974285608d45d6413d2, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 2147483647
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -1162,7 +1170,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: 0aaf332c7ac087e469656f1905e1fa68, type: 3}
       propertyPath: m_IsActive
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -1293,7 +1301,7 @@ PrefabInstance:
     - target: {fileID: -678588488315902003, guid: 3fb2251f4a25a5348a376c76753bffa5, type: 3}
       propertyPath: m_Materials.Array.data[8]
       value: 
-      objectReference: {fileID: 2100000, guid: 9c13465acb15bbe4998b7832737d4436, type: 2}
+      objectReference: {fileID: 2100000, guid: 2e993718cea44a64fbf92f1779e44d8b, type: 2}
     - target: {fileID: -678588488315902003, guid: 3fb2251f4a25a5348a376c76753bffa5, type: 3}
       propertyPath: m_Materials.Array.data[9]
       value: 
