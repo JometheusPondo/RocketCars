@@ -7,7 +7,7 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: GoalPostBlue
+  m_Name: GoalBlue
   m_Shader: {fileID: 4800000, guid: 1d76d976d4615ae46a231b752b098f55, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
