@@ -685,7 +685,7 @@ MonoBehaviour:
   EnableAirControl: 1
   EnableAutoStabilization: 1
   EngineForce: 6
-  FrictionMultiplier: 4
+  FrictionMultiplier: 3
   MaxFrictionSpeed: 25
   MinSteerSpeed: 30
   MaxSteerAngle: 15

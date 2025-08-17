@@ -369,7 +369,7 @@ MonoBehaviour:
   UIMain: {fileID: 8790017198938684500}
   UIPlay: {fileID: 1327881156}
   UIConnect: {fileID: 3871813794113401011}
-  Port: 51156
+  Port: 25565
   FirstLevelIndex: 1
   DedicatedServerFPS: 400
 --- !u!4 &1065598157
