@@ -1269,7 +1269,7 @@ PrefabInstance:
     - target: {fileID: -678588488315902003, guid: 3fb2251f4a25a5348a376c76753bffa5, type: 3}
       propertyPath: m_Materials.Array.data[2]
       value: 
-      objectReference: {fileID: 2100000, guid: b142e6692e941664cae5743096b9126b, type: 2}
+      objectReference: {fileID: 2100000, guid: d3624e0567f6ade4db71fe884499ac38, type: 2}
     - target: {fileID: -678588488315902003, guid: 3fb2251f4a25a5348a376c76753bffa5, type: 3}
       propertyPath: m_Materials.Array.data[3]
       value: 
@@ -1277,19 +1277,19 @@ PrefabInstance:
     - target: {fileID: -678588488315902003, guid: 3fb2251f4a25a5348a376c76753bffa5, type: 3}
       propertyPath: m_Materials.Array.data[4]
       value: 
-      objectReference: {fileID: 2100000, guid: 9a363154c6dccb246849bd097d86d498, type: 2}
+      objectReference: {fileID: 2100000, guid: ccc19b2982eefcb418292ac40ec46e02, type: 2}
     - target: {fileID: -678588488315902003, guid: 3fb2251f4a25a5348a376c76753bffa5, type: 3}
       propertyPath: m_Materials.Array.data[5]
       value: 
-      objectReference: {fileID: 2100000, guid: a044b32c43c9d6747826d5a7d07ed67d, type: 2}
+      objectReference: {fileID: 2100000, guid: 9a363154c6dccb246849bd097d86d498, type: 2}
     - target: {fileID: -678588488315902003, guid: 3fb2251f4a25a5348a376c76753bffa5, type: 3}
       propertyPath: m_Materials.Array.data[6]
       value: 
-      objectReference: {fileID: 2100000, guid: a044b32c43c9d6747826d5a7d07ed67d, type: 2}
+      objectReference: {fileID: 2100000, guid: b142e6692e941664cae5743096b9126b, type: 2}
     - target: {fileID: -678588488315902003, guid: 3fb2251f4a25a5348a376c76753bffa5, type: 3}
       propertyPath: m_Materials.Array.data[7]
       value: 
-      objectReference: {fileID: 2100000, guid: 9a363154c6dccb246849bd097d86d498, type: 2}
+      objectReference: {fileID: 2100000, guid: 319c72946c8baa8478f5b8bbb6d6562c, type: 2}
     - target: {fileID: -678588488315902003, guid: 3fb2251f4a25a5348a376c76753bffa5, type: 3}
       propertyPath: m_Materials.Array.data[8]
       value: 
