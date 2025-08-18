@@ -21,8 +21,6 @@ public class CarCameraController : NetworkBehaviour
   private Transform       _ballRenderTransform;
   private CameraSpectate  _cameraSpectate;
   private Vector3         _curDir;
-  private Vector3         _vel;
-
   private Vector3         _curPos;
   private Vector3         _prevPos;
   private Quaternion      _curRot;
@@ -31,51 +29,51 @@ public class CarCameraController : NetworkBehaviour
   public override void NetworkStart()
   {
     _player               = GetComponent<Player>();
-    _carController        = GetComponent<CarController>();   
+    _carController        = GetComponent<CarController>();
     _gm                   = Sandbox.FindObjectOfType<GameMode>();
     _camera               = Sandbox.FindObjectOfType<Camera>().transform;
-    _ballRenderTransform  = Sandbox.FindObjectOfType<Ball>().  transform.GetChild(0);
-        _cameraSpectate = Sandbox.FindObjectOfType<CameraSpectate>();
+    _ballRenderTransform  = Sandbox.FindObjectOfType<Ball>().transform.GetChild(0);
+    _cameraSpectate       = Sandbox.FindObjectOfType<CameraSpectate>();
   }
 
-    public override void NetworkRender()
+  public override void NetworkRender()
+  {
+    if (!(IsInputSource && _player.IsReady))
+      return;
+
+    _cameraSpectate.DisableSpectate();
+
+    if (_gm.DisableCarCamera)
+      return;
+
+    if (Sandbox.InputEnabled && Input.GetButtonDown("Camera Toggle")) // toggle camera mode.
     {
-        if (!(IsInputSource && _player.IsReady))
-            return;
-
-        _cameraSpectate.DisableSpectate();
-
-        if (_gm.DisableCarCamera)
-            return;
-
-        if (Sandbox.InputEnabled && Input.GetButtonDown("Camera Toggle")) // toggle camera mode.
-        {
-            LookAtBall = !LookAtBall;
-            // audio effect
-            if (Sandbox.IsVisible)
-                AudioSource.PlayClipAtPoint(ChangeCameraAudioClip, transform.position);
-        }
-
-        _camera.transform.position = Vector3.Lerp(_prevPos, _curPos, Sandbox.LocalInterpolation.Alpha);
-        _camera.transform.rotation = Quaternion.Slerp(_prevRot, _curRot, Sandbox.LocalInterpolation.Alpha);
+      LookAtBall = !LookAtBall;
+      // audio effect
+      if (Sandbox.IsVisible)
+        AudioSource.PlayClipAtPoint(ChangeCameraAudioClip, transform.position);
     }
 
-    public override void NetworkFixedUpdate()
-    {
-        if (IsResimulating)
-            return;
+    _camera.transform.position = Vector3.Lerp(_prevPos, _curPos, Sandbox.LocalInterpolation.Alpha);
+    _camera.transform.rotation = Quaternion.Slerp(_prevRot, _curRot, Sandbox.LocalInterpolation.Alpha);
+  }
 
-        if (!(IsInputSource && _player.IsReady))
-            return;
+  public override void NetworkFixedUpdate()
+  {
+    if (IsResimulating)
+      return;
 
-        _prevPos = _curPos;
-        _prevRot = _curRot;
+    if (!(IsInputSource && _player.IsReady))
+      return;
 
-        if (LookAtBall)
-            FollowCarAndLookAtBall(Sandbox.ScaledFixedDeltaTime);
-        else
-            FollowCarAndLookAtCar(Sandbox.ScaledFixedDeltaTime);
-    }
+    _prevPos = _curPos;
+    _prevRot = _curRot;
+
+    if (LookAtBall)
+      FollowCarAndLookAtBall(Sandbox.ScaledFixedDeltaTime);
+    else
+      FollowCarAndLookAtCar(Sandbox.ScaledFixedDeltaTime);
+  }
 
   private void FollowCarAndLookAtCar(float deltaTime)
   {
@@ -100,13 +98,8 @@ public class CarCameraController : NetworkBehaviour
     var pos                    = CarRenderTransform.parent.position + (_curDir * CameraOffset.z) + (Vector3.up * CameraOffset.y);
     var rot                    = Quaternion.LookRotation(_curDir, Vector3.up);
 
-
-        //_camera.transform.position = Vector3.Lerp(_camera.transform.position, pos, LerpFactor * deltaTime);
-        _curPos = Vector3.Lerp(_curPos, pos, LerpFactor * deltaTime);
-
-        // _camera.transform.position = Vector3.   SmoothDamp (_camera.transform.position, pos, ref _vel, LerpFactor * deltaTime); 
-        //_camera.transform.rotation = Quaternion.Slerp(_camera.transform.rotation, rot, LerpFactor * deltaTime);
-        _curRot = Quaternion.Slerp(_curRot, rot, LerpFactor * deltaTime);
+    _curPos                    = Vector3.Lerp(_curPos, pos, LerpFactor * deltaTime);
+    _curRot                    = Quaternion.Slerp(_curRot, rot, LerpFactor * deltaTime);
   }
 
   private void FollowCarAndLookAtBall(float deltaTime)
@@ -133,10 +126,7 @@ public class CarCameraController : NetworkBehaviour
     var pos                    = carPos + (carToBall * CameraOffset.z) + (Vector3.up * CameraOffset.y);
     var rot                    = Quaternion.LookRotation(_curDir, Vector3.up);
 
-    //_camera.transform.position = Vector3.SmoothDamp(_camera.transform.position, pos, ref _vel, LerpFactor * deltaTime);
-    //_curPos = Vector3.SmoothDamp(_curPos, pos, ref _vel, LerpFactor * deltaTime);
-    _curPos = Vector3.Lerp(_curPos, pos, LerpFactor * deltaTime);
-    //_camera.transform.rotation = Quaternion.Slerp(_camera.transform.rotation, rot, LerpFactor * deltaTime);
-    _curRot = Quaternion.Slerp(_curRot, rot, LerpFactor * deltaTime);
+    _curPos                    = Vector3.Lerp(_curPos, pos, LerpFactor * deltaTime);
+    _curRot                    = Quaternion.Slerp(_curRot, rot, LerpFactor * deltaTime);
   }
 }

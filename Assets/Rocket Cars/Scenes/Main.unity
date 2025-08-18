@@ -463,6 +463,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Car (1)
       objectReference: {fileID: 0}
+    - target: {fileID: 6862342050753165646, guid: b8ab3af591528cd449e670a574a96d6e, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 8544089004289855724, guid: b8ab3af591528cd449e670a574a96d6e, type: 3}
       propertyPath: m_IsActive
       value: 1
@@ -972,6 +976,10 @@ PrefabInstance:
       propertyPath: _audioClip
       value: 
       objectReference: {fileID: 8300000, guid: 56d1669bab87b7845942de66f4197b44, type: 3}
+    - target: {fileID: 2242765944054483648, guid: abe50c9d2df04ef45b357eba9682ed5c, type: 3}
+      propertyPath: m_Sprite
+      value: 
+      objectReference: {fileID: 21300000, guid: 87a01efba31422f4c95634540a24f6de, type: 3}
     - target: {fileID: 2324135970122899159, guid: abe50c9d2df04ef45b357eba9682ed5c, type: 3}
       propertyPath: _audioClip
       value: 
@@ -987,6 +995,10 @@ PrefabInstance:
     - target: {fileID: 3048156543819155171, guid: abe50c9d2df04ef45b357eba9682ed5c, type: 3}
       propertyPath: m_Name
       value: UIMainMenu
+      objectReference: {fileID: 0}
+    - target: {fileID: 3108406869762949646, guid: abe50c9d2df04ef45b357eba9682ed5c, type: 3}
+      propertyPath: m_IsActive
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 3120889712477596020, guid: abe50c9d2df04ef45b357eba9682ed5c, type: 3}
       propertyPath: m_AnchorMax.y
@@ -1309,7 +1321,9 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
-    m_RemovedGameObjects: []
+    m_RemovedGameObjects:
+    - {fileID: 7494589685492663489, guid: abe50c9d2df04ef45b357eba9682ed5c, type: 3}
+    - {fileID: 3108406869762949646, guid: abe50c9d2df04ef45b357eba9682ed5c, type: 3}
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: abe50c9d2df04ef45b357eba9682ed5c, type: 3}
