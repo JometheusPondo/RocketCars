@@ -28,7 +28,7 @@ public class UIButtonAnimation : MonoBehaviour, IPointerEnterHandler, IPointerEx
 
         _tweenA = _textTransform.DOLocalMoveX(_textXTarget, _easeDuration);
         _tweenB = _outline.DOColor(_colorActive, _easeDuration);
-        AudioSource.PlayClipAtPoint(_audioClip, Camera.main.transform.position);
+        SimpleAudioPlayer.Instance.AudioSource.PlayOneShot(_audioClip);
     }
 
     public void OnPointerExit(PointerEventData eventData)
