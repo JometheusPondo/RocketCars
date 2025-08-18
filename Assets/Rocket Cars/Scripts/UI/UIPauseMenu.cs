@@ -9,11 +9,11 @@ public class UIPauseMenu : NetworkBehaviour
   [SerializeField]
   private GameObject _pauseMenu;
   [SerializeField]
-  private Button _buttonResume;
+  private Button     _buttonResume;
   [SerializeField]
-  private Button _buttonLeave;
+  private Button     _buttonLeave;
   [SerializeField]
-  private Button _buttonQuit;
+  private Button     _buttonQuit;
 
   private Graphic[]  _graphics;
   private GameMode   _GM;
@@ -30,14 +30,14 @@ public class UIPauseMenu : NetworkBehaviour
     _graphics = _pauseMenu.GetComponentsInChildren<Graphic>();
   }
 
-    private void Start()
-    {
-        _buttonResume.onClick.AddListener(Resume);
-        _buttonLeave.onClick.AddListener(Leave);
-        _buttonQuit.onClick.AddListener(Quit);
-    }
+  private void Start()
+  {
+    _buttonResume.onClick.AddListener(Resume);
+    _buttonLeave.onClick.AddListener(Leave);
+    _buttonQuit.onClick.AddListener(Quit);
+  }
 
-    public override void NetworkUpdate()
+  public override void NetworkUpdate()
   {
     if (_GM != null && Input.GetKeyDown(KeyCode.Escape))
       TogglePause();
@@ -66,7 +66,7 @@ public class UIPauseMenu : NetworkBehaviour
       graphic.SetEnabled(_GM.Sandbox, visibility);
   }
 
-    private void Resume()
+  private void Resume()
   {
     TogglePause();
   }
@@ -84,5 +84,4 @@ public class UIPauseMenu : NetworkBehaviour
   {
     Application.Quit();
   }
-
 }

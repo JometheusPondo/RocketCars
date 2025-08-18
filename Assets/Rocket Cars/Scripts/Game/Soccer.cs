@@ -182,7 +182,7 @@ public class Soccer : GameMode
 
   Player CreateCar()
   {
-    var car    = Sandbox.NetworkInstantiate(PlayerPrefab);
+    var car    = Sandbox.NetworkInstantiate(PlayerPrefab, Vector3.up * -1000f);
     car.SetCarActive(false);
     return car.GetComponent<Player>();
   }

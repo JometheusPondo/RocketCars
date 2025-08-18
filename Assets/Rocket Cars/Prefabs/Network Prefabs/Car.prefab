@@ -687,7 +687,7 @@ MonoBehaviour:
   EngineForce: 6
   FrictionMultiplier: 3
   MaxFrictionSpeed: 25
-  MinSteerSpeed: 30
+  MinSteerVehicleSpeed: 30
   MaxSteerAngle: 15
   MinSteerAngle: 5
   GravityForce: 6.3
@@ -787,7 +787,6 @@ MonoBehaviour:
   AirBoostLinearForce: 6.5
   AirBoostTorque: 25
   AirborneLinearForce: 6
-  BallImpactMultiplier: 20
   RedCarBody: {fileID: 661366178922250293}
   BlueCarBody: {fileID: 6472330036929593412}
   RedCarModel: {fileID: 1060724129237249343}

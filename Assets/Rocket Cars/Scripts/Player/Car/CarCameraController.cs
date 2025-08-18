@@ -3,8 +3,6 @@ using System;
 using System.Collections;
 using Netick.Unity;
 using Netick;
-using static UnityEditor.PlayerSettings;
-
 public class CarCameraController : NetworkBehaviour
 {
   public Transform        CarRenderTransform;

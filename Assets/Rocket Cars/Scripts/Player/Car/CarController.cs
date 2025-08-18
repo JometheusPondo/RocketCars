@@ -39,7 +39,7 @@ public class CarController : Replayable
   public float                   EngineForce              = 6;
   public float                   FrictionMultiplier       = 1f;
   public float                   MaxFrictionSpeed         = 20f;
-  public float                   MinSteerSpeed            = 25;
+  public float                   MinSteerVehicleSpeed     = 25;
   public float                   MaxSteerAngle            = 30;
   public float                   MinSteerAngle            = 10;
   public float                   GravityForce             = 6;
@@ -69,9 +69,6 @@ public class CarController : Replayable
   public float                   AirBoostLinearForce;
   public float                   AirBoostTorque;
   public float                   AirborneLinearForce      = 6;
-
-  [Header("Ball Impact")]
-  public float                   BallImpactMultiplier;
 
   [Header("Visual")]
   public Transform               RedCarBody;
@@ -189,7 +186,7 @@ public class CarController : Replayable
   {
     int              numOfGroundedWheels = 0;
     Span<RaycastHit> hits                = stackalloc RaycastHit[Wheels.Length];
-    var steerAngle                       = Mathf.Lerp(MinSteerAngle , MaxSteerAngle, SteerCurve.Evaluate(Mathf.InverseLerp(0f, MinSteerSpeed, Rigidbody.velocity.magnitude)));
+    var steerAngle                       = Mathf.Lerp(MinSteerAngle , MaxSteerAngle, SteerCurve.Evaluate(Mathf.InverseLerp(0f, MinSteerVehicleSpeed, Rigidbody.velocity.magnitude)));
 
     for (int i = 0; i < Wheels.Length; i++)
     {

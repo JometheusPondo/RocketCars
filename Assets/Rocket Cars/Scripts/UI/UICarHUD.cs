@@ -10,7 +10,7 @@ public class UICarHUD : NetworkBehaviour
   [SerializeField]
   private GameObject          _UICarHUD;
   [SerializeField]
-  private UIFuelBar _uiFuelBar;
+  private UIFuelBar           _uiFuelBar;
   [SerializeField]
   private TextMeshProUGUI     _cameraModeText;
 
