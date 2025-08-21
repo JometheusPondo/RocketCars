@@ -62,7 +62,7 @@ public class Soccer : GameMode
   public float                                    ReplayCameraLerpFactor = 5f;
   public Vector3                                  ReplayCameraPosition   => LastGoalTarget == Team.Blue ? ReplayCameraRedPosition.position : ReplayCameraBluePosition.position;
 
-  [Header("Goal Push Away Effect")]
+  [Header("Goal Explosion Effect")]
   public float                                    GoalExplosionForce     = -50f;
   public float                                    GoalExplosionTorque    = 50f;
   public float                                    GoalExplosionRadius    = 30f;
@@ -86,7 +86,6 @@ public class Soccer : GameMode
   private int                                     _blueTeamNum;
   private Stack<Transform>                        _freeRedTeamSpawns;
   private Stack<Transform>                        _freeBlueTeamSpawns;
-
   private Stack<CarController>                    _freeCars;
   private ReplaySystem                            _replaySystem;
   private Camera                                  _camera;
@@ -146,7 +145,7 @@ public class Soccer : GameMode
     var plr                   = ctx.Source;
     int playersPerTeam        = Sandbox.Config.MaxPlayers / 2;
 
-    if (team == Team.Red  && playersPerTeam == _redTeamNum)  // if the player wants to join red team but it's full, we switches it to blue team.
+    if (team == Team.Red  && playersPerTeam == _redTeamNum)  // if the player wants to join red team but it's full, we switch it to blue team.
       team                    = Team.Blue;
 
     var player                = Sandbox.GetPlayerObject<Player>(plr);
@@ -241,7 +240,7 @@ public class Soccer : GameMode
         }
       case State.Replay:
         {
-          ReplayLookAtScorer              = _replaySystem.TimeUntilReplayFinish < 4;
+          ReplayLookAtScorer            = _replaySystem.TimeUntilReplayFinish < 4;
           // see if replay finished, and if so check if game should end if one of the team scored enough goals, if not go to SoccerState.WaitingForRoundStart state.
           if (!_replaySystem.IsReplaying)
           {
@@ -430,7 +429,7 @@ public class Soccer : GameMode
   }
 
 
-  // Since we have two network variables for goals count for each team, we use two [OnChanged] methods for each one to call OnGoalsChanged which will invoke OnGoalsChangedEvent.
+  // Since we have two network variables for goal count for each team, we use two [OnChanged] methods for each one to call OnGoalsChanged which will invoke OnGoalsChangedEvent.
   // we check if a new goal was scored during this change by checking against the previous value and see if the new value has increased.
   [OnChanged(nameof(TeamRedGoals))]  void OnTeamRedGoalsChanged (OnChangedData dat) => OnGoalScored(TeamRedGoals  > dat.GetPreviousValue<int>());
   [OnChanged(nameof(TeamBlueGoals))] void OnTeamBlueGoalsChanged(OnChangedData dat) => OnGoalScored(TeamBlueGoals > dat.GetPreviousValue<int>());
@@ -445,7 +444,7 @@ public class Soccer : GameMode
   }
 
   /// <summary>
-  /// This is an effect to push cars away from the goal box after scoring a goal.
+  /// This is an effect to push cars away from the goal box after a goal was scored.
   /// </summary>
   private void ExplodePlayer(Player scorer, GoalBox box, Ball ball)
   {
@@ -469,7 +468,7 @@ public class Soccer : GameMode
   }
 
   /// <summary>
-  /// Rotate the camera to look at the player who scored the last goal.
+  /// Rotates the camera to look at the ball and the player who scored the last goal.
   /// </summary>
   public void ControlReplayCamera()
   {

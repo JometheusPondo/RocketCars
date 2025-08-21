@@ -26,7 +26,7 @@ public class CarAudioController : NetworkBehaviour
     _ball                                 = Sandbox.FindObjectOfType<Ball>();
     _carController                        = Object.GetComponent<CarController>();
     _carController.OnCollisionEnterEvent += PlayCollisionAudio;
-    _carController.OnJumpAudioEvent      += PlayJumpAudio;
+    _carController.OnJumpEvent           += PlayJumpAudio;
   }
 
   private void PlayJumpAudio()
@@ -50,7 +50,7 @@ public class CarAudioController : NetworkBehaviour
     float pitchModifier         = _carController.IsGrounded ? Mathf.Lerp(1f, 1.7f, Mathf.InverseLerp(0f, 30f, _carController.Rigidbody.velocity.magnitude)) : 1.9f;
     EngineAudioSource.pitch     = Mathf.Lerp(EngineAudioSource.pitch, 1f * pitchModifier, Time.deltaTime * EngineAudioPitchLerpFactor);
 
-    var isBoosting              = _carController.LastInput.Rocket && _carController.FuelTickTime > 0f;
+    var isBoosting              = _carController.EnableRocket && _carController.LastInput.Rocket && _carController.FuelTickTime > 0f;
     RocketAudioSource.volume    = Mathf.Lerp(RocketAudioSource.volume, isBoosting ? 1f : 0, Time.deltaTime * (isBoosting ? RocketStartingAudioVolumeLerpFactor : RocketStoppingAudioVolumeLerpFactor));
   }
 

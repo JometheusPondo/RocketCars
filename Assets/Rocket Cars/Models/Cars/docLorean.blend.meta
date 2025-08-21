@@ -1,29 +1,9 @@
 fileFormatVersion: 2
-guid: 2d64ee584a763b14682162b6e6e2cd91
+guid: 24276619adc717d4cae4e4196663e86b
 ModelImporter:
   serializedVersion: 22200
   internalIDToNameTable: []
-  externalObjects:
-  - first:
-      type: UnityEngine:Material
-      assembly: UnityEngine.CoreModule
-      name: baseGradient.005
-    second: {fileID: 2100000, guid: bd620b7ee85c9f64e909841d05062f38, type: 2}
-  - first:
-      type: UnityEngine:Material
-      assembly: UnityEngine.CoreModule
-      name: blackGlass.005
-    second: {fileID: 2100000, guid: 5dfdfa148737d22488087c8fb2c699c6, type: 2}
-  - first:
-      type: UnityEngine:Material
-      assembly: UnityEngine.CoreModule
-      name: flatBlack.002
-    second: {fileID: 2100000, guid: a9fa5a1956ede1a47b7e94e6c914094d, type: 2}
-  - first:
-      type: UnityEngine:Material
-      assembly: UnityEngine.CoreModule
-      name: gradientEmmisive.005
-    second: {fileID: 2100000, guid: 0056891077abfa044b5d03d2653aa9ce, type: 2}
+  externalObjects: {}
   materials:
     materialImportMode: 2
     materialName: 0

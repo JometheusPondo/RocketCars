@@ -102,6 +102,7 @@ public class UIMainMenu : NetworkEventsListener
     UIPlay.alpha = 1f;
     UIPlay.interactable = true;
   }
+
   public void StartHost()
   {
     // if Netick is already running, we shut it down first.

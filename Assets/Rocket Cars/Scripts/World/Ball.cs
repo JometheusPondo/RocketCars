@@ -7,6 +7,7 @@ public class Ball : NetworkBehaviour
 {
   public float           GravityForce = 10f;
   public Player          LastTouchedPlayer;
+  [HideInInspector]
   public Vector3         InitialPosition;
   
   [HideInInspector]

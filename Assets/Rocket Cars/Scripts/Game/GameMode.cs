@@ -15,13 +15,14 @@ using Netick.Unity;
 public abstract class GameMode : NetworkBehaviour
 {
   // Networked State ********************
-  [Networked] public NetworkBool    DisableInputForEveryone { get; set; }          // when true, the car will no longer accept user inputs, but can still be simulated.
-  [Networked] public NetworkBool    DisableCarCamera        { get; set; } = false; // when true, the camera will no longer follow the car.
-  [Networked] public NetworkBool    DisableCarSimulation    { get; set; } = false; // when true the cars will no longer be physically simulated.
+  [Networked] public NetworkBool    DisableInputForEveryone { get; set; }  // when true, the car will no longer accept user inputs, but can still be simulated.
+  [Networked] public NetworkBool    DisableCarCamera        { get; set; }  // when true, the camera will no longer follow the car.
+  [Networked] public NetworkBool    DisableCarSimulation    { get; set; }  // when true the cars will no longer be physically simulated.
 
   public List<Player>               CurrentPlayers          { get; private set; } = new(6);
 
   public GlobalInfo                 GlobalInfo              { get; private set; }
+  [HideInInspector]
   public bool                       Paused                  = false;
 
   // Public Events
@@ -47,6 +48,18 @@ public abstract class GameMode : NetworkBehaviour
     }
   }
 
+  public virtual void OnPlayerAdded(Player player)
+  {
+    CurrentPlayers.Add(player);
+    OnPlayerAddedEvent?.Invoke(player);
+  }
+
+  public virtual void OnPlayerRemoved(Player player)
+  {
+    OnPlayerRemovedEvent?.Invoke(player);
+    CurrentPlayers.Remove(player);
+  }
+
   // Collecting user input.
   public override void NetworkUpdate()
   {
@@ -60,15 +73,4 @@ public abstract class GameMode : NetworkBehaviour
     Sandbox.SetInput(input);
   }
 
-  public virtual void OnPlayerAdded(Player player)
-  {
-    CurrentPlayers.Add(player);
-    OnPlayerAddedEvent?.Invoke(player);
-  }
-
-  public virtual void OnPlayerRemoved(Player player)
-  {
-    OnPlayerRemovedEvent?.Invoke(player);
-    CurrentPlayers.Remove(player);
-  }
 }

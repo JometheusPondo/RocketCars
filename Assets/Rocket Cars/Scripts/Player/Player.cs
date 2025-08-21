@@ -21,7 +21,8 @@ public class Player : NetworkBehaviour
   public Transform                   Spawn;
   [HideInInspector]
   public CarController               Car;
-  
+  public GameObject                  RedCarPrefab;
+  public GameObject                  BlueCarPrefab;
   void Awake()
   {
     Car = GetComponent<CarController>();
@@ -44,8 +45,8 @@ public class Player : NetworkBehaviour
   [OnChanged(nameof(Team))]
   private void OnTeamChanged(OnChangedData dat)
   {
-    Car.RedCarModel. SetActive(Team == Team.Red);
-    Car.BlueCarModel.SetActive(Team != Team.Red);
+    var carPrefab = Team == Team.Red ? RedCarPrefab : BlueCarPrefab;
+    Car.CarBody.GetComponentInChildren<Renderer>().materials = carPrefab.GetComponent<CarController>().CarBody.GetComponentInChildren<Renderer>().sharedMaterials;
   }
 
   // we use IsReady as a way to know when a player has entered the game and is ready.

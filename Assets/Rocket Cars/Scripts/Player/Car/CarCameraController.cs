@@ -14,6 +14,7 @@ public class CarCameraController : NetworkBehaviour
   public float            LerpFactor         = 20f;
   public AudioClip        ChangeCameraAudioClip;
 
+  // private
   private Transform       _camera;
   private CarController   _carController;
   private Player          _player;

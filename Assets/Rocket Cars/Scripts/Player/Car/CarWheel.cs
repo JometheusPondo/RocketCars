@@ -14,4 +14,5 @@ public class CarWheel : MonoBehaviour
   public bool      IsGrounded;
   [HideInInspector]
   public float     Speed;
+  public float     VisualSpeed;
 }

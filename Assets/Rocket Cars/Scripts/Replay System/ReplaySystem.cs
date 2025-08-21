@@ -17,7 +17,7 @@ public class ReplaySystem : NetworkBehaviour
   public int                        MaxRecordedTicks         { get; private set; }
   public float                      TimeUntilReplayFinish    => Sandbox.TickToTime(_recordedTicks - (_replayCurrentTick - _replayStartTick));
 
-  private List<Replayable>          _recordedObjects         = new (128);
+  private List<Replayable>          _trackedObjects         = new (128);
   private int                       _recordedTicks;
   private Tick                      _replayCurrentTick;
   private Tick                      _replayStartTick;
@@ -39,7 +39,7 @@ public class ReplaySystem : NetworkBehaviour
   /// <param name="obj"></param>
   public void TrackObject(Replayable obj)
   {
-    _recordedObjects.Add(obj);
+    _trackedObjects.Add(obj);
   }
 
   /// <summary>
@@ -48,7 +48,7 @@ public class ReplaySystem : NetworkBehaviour
   /// <param name="obj"></param>
   public void UntrackObject(Replayable obj)
   {
-    _recordedObjects.Remove(obj);
+    _trackedObjects.Remove(obj);
   }
 
   public void StartRecording()
@@ -82,12 +82,12 @@ public class ReplaySystem : NetworkBehaviour
     // invoke replay start/stop callbacks. 
     if (IsReplaying == true)
     {
-      foreach (var obj in _recordedObjects)
+      foreach (var obj in _trackedObjects)
         obj.OnReplayStarted();
     }
     else
     {
-      foreach (var obj in _recordedObjects)
+      foreach (var obj in _trackedObjects)
         obj.OnReplayStopped();
     }
   }
@@ -106,8 +106,8 @@ public class ReplaySystem : NetworkBehaviour
   {
     // applying the recorded snapshots on the replayable objects.
     int bufferIndex = _replayCurrentTick % MaxRecordedTicks;
-    for (int i = 0; i < _recordedObjects.Count; i++)
-      _recordedObjects[i].ApplyFromSnapshot(bufferIndex);
+    for (int i = 0; i < _trackedObjects.Count; i++)
+      _trackedObjects[i].ApplyFromSnapshot(bufferIndex);
 
     _replayCurrentTick++;
 
@@ -120,8 +120,8 @@ public class ReplaySystem : NetworkBehaviour
   {
     // recording the current states of the replayable objects.
     int bufferIndex = Sandbox.Tick % MaxRecordedTicks;
-    for (int i = 0; i < _recordedObjects.Count; i++)
-      _recordedObjects[i].StoreToSnapshot(bufferIndex);
+    for (int i = 0; i < _trackedObjects.Count; i++)
+      _trackedObjects[i].StoreToSnapshot(bufferIndex);
     _recordedTicks  = Mathf.Clamp(_recordedTicks + 1, 0, MaxRecordedTicks);
   }
 }
