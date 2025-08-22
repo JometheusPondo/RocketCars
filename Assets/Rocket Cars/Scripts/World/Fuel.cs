@@ -5,13 +5,13 @@ using Netick;
 public class Fuel : Replayable
 {
   // Networked State ********************
-  [Networked] public NetworkBool    IsActive            { get; set; } = true;
+  [Networked] public NetworkBool    IsActive             { get; set; } = true;
 
   public GameObject                 Render;
-
-  public float                      AutoRegenerateTime  = 3f;
-
-  private float                     _time               = 0f;
+  public float                      AutoRegenerateTime   = 3f;
+  public float                      RotateAnimationSpeed = 180f;
+     
+  private float                     _time                = 0f;
   private AudioSource               _audioSource;
 
   private void Awake()
@@ -52,5 +52,10 @@ public class Fuel : Replayable
     if (IsActive == false)
       _audioSource.NetworkPlayOneShot(Sandbox, _audioSource.clip);
     Render.SetActive(IsActive);
+  }
+
+  public override void NetworkRender()
+  {
+    Render.transform.Rotate(0f, RotateAnimationSpeed * Time.deltaTime, 0f);
   }
 }

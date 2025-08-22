@@ -14479,7 +14479,6 @@ GameObject:
   - component: {fileID: 2711420592499788921}
   - component: {fileID: 4048812309610469821}
   - component: {fileID: 8374152909159303994}
-  - component: {fileID: 7170137391865282308}
   m_Layer: 0
   m_Name: Fuel
   m_TagString: Untagged
@@ -14545,6 +14544,7 @@ MonoBehaviour:
     RawValue: 1
   Render: {fileID: 7900495981751297989}
   AutoRegenerateTime: 3
+  RotateAnimationSpeed: 180
 --- !u!135 &4048812309610469821
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -14662,20 +14662,6 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
---- !u!114 &7170137391865282308
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6985111396825753372}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d1f7fbf690d04a24c82a03349a5f7b45, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  RotateSpeed: 180
-  Render: {fileID: 3749152000176477844}
 --- !u!1 &7900495981751297989
 GameObject:
   m_ObjectHideFlags: 0
