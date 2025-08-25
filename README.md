@@ -1,10 +1,10 @@
 # Rocket Cars
 
-Rocket Cars is a free open-source server-authoritative physics-based multiplayer car game, inspired by Rocket League. It’s built with Netick, a powerful, free networking library that makes creating complex multiplayer games like Rocket League simple and easy for indie developers.
+Rocket Cars is a free open-source server-authoritative physics-based multiplayer car game, inspired by Rocket League. It’s built with Netick, a powerful free networking library that makes creating complex multiplayer games like Rocket League simple and easy for indie developers.
 
 **Note**: This project is not a Rocket League clone. It’s designed as a simplified learning sample for developers who want to understand how to build physics-based networked games using Netick.
 
-Discord: 
+Join our [discord](https://discord.com/invite/uV6bfG66Fx) for any questions.
 
 ## Features
 
