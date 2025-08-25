@@ -760,7 +760,7 @@ PlayerSettings:
   platformArchitecture: {}
   scriptingBackend:
     Server: 0
-    Standalone: 0
+    Standalone: 1
   il2cppCompilerConfiguration: {}
   il2cppCodeGeneration: {}
   managedStrippingLevel:

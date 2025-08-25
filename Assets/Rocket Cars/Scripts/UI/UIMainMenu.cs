@@ -11,6 +11,11 @@ public class UIMainMenu : NetworkEventsListener
 {
   public NetworkTransportProvider Transport;
   public GameObject               SandboxPrefab;
+  public int                      Port;
+  public int                      FirstLevelIndex    = 1;
+  public int                      DedicatedServerFPS = 450;
+
+  [Header("UI")]
   public TextMeshProUGUI          ConnectionErrorText;
   public TMP_InputField           ServerIPAddressText;
   public TMP_InputField           PlayerNameText;
@@ -26,10 +31,6 @@ public class UIMainMenu : NetworkEventsListener
   public CanvasGroup              UIMain;
   public CanvasGroup              UIPlay;
   public CanvasGroup              UIConnect;
-
-  public int                      Port;
-  public int                      FirstLevelIndex    = 1;
-  public int                      DedicatedServerFPS = 450;
 
   private NetworkSandbox          _clientSandbox;
 

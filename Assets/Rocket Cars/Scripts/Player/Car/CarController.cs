@@ -96,6 +96,10 @@ public class CarController : Replayable
   public Transform               SuspensionVisualizer;
 
   // private
+  private Vector3                _curCarBodyLocalPos;
+  private Quaternion             _curCarBodyLocalRot;
+  private Vector3                _prevCarBodyLocalPos;
+  private Quaternion             _prevCarBodyLocalRot;
   private Vector3                _springPos;
   private Vector3                _springVelocity;
   private float                  _currentWheelSteerAngle;
@@ -136,13 +140,16 @@ public class CarController : Replayable
   // -------------------- Simulation (Physics) Section
   public override void NetworkFixedUpdate()
   {
-    if (_gm.DisableCarSimulation)
-      return;
+    if (!_gm.DisableCarSimulation)
+    {
+      if (FetchInput(out GameInput input))
+        LastInput = input;
 
-    if (FetchInput(out GameInput input))
-      LastInput          = input;
+      SimulateVehicle(_gm.DisableInputForEveryone ? default : LastInput);
+    }
 
-    SimulateVehicle(_gm.DisableInputForEveryone ? default : LastInput);
+    if (!Netick.Unity.Network.IsHeadless) // when not in headless mode
+      AnimateSuspension(Sandbox.FixedDeltaTime); // we animate suspension with FixedDeltaTime to make it consistent regardless of framerate. And we interpolate the results in NetworkRender.
   }
 
   private void SimulateVehicle(GameInput input)
@@ -395,21 +402,23 @@ public class CarController : Replayable
   // -------------------- Render (Visuals/Audio) Section
   public override void NetworkRender()
   {
+    // interpolating suspension results.
+    CarBody.transform.localPosition         = Vector3.   Lerp (_prevCarBodyLocalPos, _curCarBodyLocalPos, Sandbox.LocalInterpolation.Alpha);
+    CarBody.transform.localRotation         = Quaternion.Slerp(_prevCarBodyLocalRot, _curCarBodyLocalRot, Sandbox.LocalInterpolation.Alpha);
+
+    AnimateWheels(Time.deltaTime);
+    TryInvokeJumpEvent();
+
     for (int i = 0; i < AfterburnerParticleSystems.Length; i++)
     {
       var emission                         = AfterburnerParticleSystems[i].emission;
       var rocketForce                      = EnableRocket && LastInput.Rocket ? (FuelTickTime > 0 ? (RocketForce) : 0f) : 0;
       emission.enabled                     = rocketForce > 0;
     }
-
-    AnimateWheels();
-    AnimateSuspension();
-    TryInvokeJumpEvent();
   }
 
-  private void AnimateWheels()
+  private void AnimateWheels(float deltaTime)
   {
-    var deltaTime                          = Time.deltaTime;
     var s                                  = LastInput.Movement.x >= 0.1f ? 1f : (LastInput.Movement.x <= -0.1f ? -1f : 0);
     _currentWheelSteerAngle                = Mathf.Lerp(_currentWheelSteerAngle, s * WheelMaxSteerAngle, deltaTime * 20f);
 
@@ -428,10 +437,10 @@ public class CarController : Replayable
   /// <summary>
   /// Simulates a visual-only suspension effect using a damped spring.
   /// </summary>
-  private void AnimateSuspension()
+  private void AnimateSuspension(float deltaTime)
   {
-    var deltaTime                          = Time.deltaTime;
-    var carBody                            = CarBody;
+    _prevCarBodyLocalPos                   = _curCarBodyLocalPos;
+    _prevCarBodyLocalRot                   = _curCarBodyLocalRot;
     var target                             = NetworkRigidbody.RenderTransform.position + ((NetworkRigidbody.RenderTransform.up + (NetworkRigidbody.RenderTransform.forward * 0.05f)) * 1f);
 
     if (Vector3.Distance(target, _springPos) > 10f)
@@ -442,8 +451,8 @@ public class CarController : Replayable
 
     if (GroundedWheelsNum == 0)
     {
-      _springVelocity                      = Vector3.Lerp(_springVelocity, default, Time.smoothDeltaTime * 20f);
-      _springPos                           = Vector3.Lerp(_springPos, target, Time.smoothDeltaTime * 20f);
+      _springVelocity                      = Vector3.Lerp(_springVelocity, default, deltaTime * 20f);
+      _springPos                           = Vector3.Lerp(_springPos, target, deltaTime * 20f);
     }
 
     var maxSpeed                           = 0.2f;
@@ -451,9 +460,8 @@ public class CarController : Replayable
     var pitchAngle                         = Mathf.Lerp(-MaxSuspensionPitchAngle,  MaxSuspensionPitchAngle,  Mathf.InverseLerp(-maxSpeed, maxSpeed, localVel.z));
     var rollAngle                          = Mathf.Lerp(-MaxSuspensionRollAngle,   MaxSuspensionRollAngle,   Mathf.InverseLerp(-maxSpeed, maxSpeed, localVel.x));
     var yOffset                            = Mathf.Lerp(-MaxSuspensionCompression, MaxSuspensionCompression, Mathf.InverseLerp(-maxSpeed, maxSpeed, localVel.y)) * SuspensionCompressionDirection;
-
-    carBody.transform.localPosition        = Vector3.Lerp(carBody.transform.localPosition, yOffset, Time.smoothDeltaTime * 20f);
-    carBody.transform.localEulerAngles     = (SuspensionPitchAxis * pitchAngle) + (SuspensionRollAxis * rollAngle);
+    _curCarBodyLocalPos                    = Vector3.Lerp(CarBody.transform.localPosition, yOffset, deltaTime * 20f);
+    _curCarBodyLocalRot                    = Quaternion.AngleAxis(pitchAngle, SuspensionPitchAxis) * Quaternion.AngleAxis(rollAngle, SuspensionRollAxis);
 
     if (SuspensionVisualizer != null)
       SuspensionVisualizer.position        = _springPos;

@@ -754,9 +754,9 @@ MonoBehaviour:
   SuspensionRollAxis: {x: 0, y: 0, z: 1}
   SuspensionPitchAxis: {x: 1, y: 0, z: 0}
   SpringStiffness: 80
-  SpringDamping: 0.996
+  SpringDamping: 0.93
   SpringSpeedFactor: 0.01
-  MaxSuspensionCompression: 0.05
+  MaxSuspensionCompression: 0.25
   MaxSuspensionRollAngle: 10
   MaxSuspensionPitchAngle: 6
   SuspensionVisualizer: {fileID: 6033807279883062560}

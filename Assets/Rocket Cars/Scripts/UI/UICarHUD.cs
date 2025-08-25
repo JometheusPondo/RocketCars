@@ -60,7 +60,6 @@ public class UICarHUD : NetworkBehaviour
   /// <summary>
   /// Show/hides the car HUD.
   /// </summary>
-  /// <param name="visibility"></param>
   public void SetVisibility(bool visibility)
   {
     foreach (var element in _UIElements)

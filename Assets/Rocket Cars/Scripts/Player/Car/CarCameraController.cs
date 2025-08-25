@@ -23,8 +23,8 @@ public class CarCameraController : NetworkBehaviour
   private CameraSpectate  _cameraSpectate;
   private Vector3         _curDir;
   private Vector3         _curPos;
-  private Vector3         _prevPos;
   private Quaternion      _curRot;
+  private Vector3         _prevPos;
   private Quaternion      _prevRot;
 
   public override void NetworkStart()
