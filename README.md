@@ -61,7 +61,7 @@ Massive thank you to [Steak](https://github.com/stinkysteak) and [Milk-Drinker01
 - [Low Poly Car Pack 1](https://designersoup.itch.io/low-poly-car-pack-1) by Designer Soup
 - [Vehicle - Essentials](https://assetstore.unity.com/packages/audio/sound-fx/transportation/vehicle-essentials-194951) by Nox_Sound (permission was granted from Nox_Sound to include this pack in Rocket Cars)
 - [Toon Shader](https://github.com/IronWarrior/UnityToonShader) by Erik Roystan
-- [Textures](https://freepbr.com/?s=grass) by [FreePBR](https://freepbr.com/) and [free-3dtextureshd.com](https://free-3dtextureshd.com)
+- Textures by [FreePBR](https://freepbr.com/) and [free-3dtextureshd.com](https://free-3dtextureshd.com)
 
 - [Font Electrolize](https://fonts.google.com/specimen/Electrolize?preview.text=PUKIS&categoryFilters=Appearance:%2FTheme%2FTechno;Feeling:%2FExpressive%2FFuturistic) from Google Fonts
 - [DOTween](https://assetstore.unity.com/packages/tools/animation/dotween-hotween-v2-27676) by Demigiant

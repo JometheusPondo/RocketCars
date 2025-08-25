@@ -148,7 +148,7 @@ public class CarController : Replayable
       SimulateVehicle(_gm.DisableInputForEveryone ? default : LastInput);
     }
 
-    if (!Netick.Unity.Network.IsHeadless) // when not in headless mode
+    if (!Netick.Unity.Network.IsHeadless && !IsResimulating) // when not in headless mode
       AnimateSuspension(Sandbox.FixedDeltaTime); // we animate suspension with FixedDeltaTime to make it consistent regardless of framerate. And we interpolate the results in NetworkRender.
   }
 
