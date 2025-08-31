@@ -40,7 +40,6 @@ public class UISoccerScoreboard : NetworkBehaviour
     _teamBlueCaption                          = _teamBlueScoreboard.GetComponentInChildren<UISoccerScoreboardPlayerScore>();
 
     _soccer                                   = GetComponent<Soccer>();
-    _soccer.OnRoundEndedEvent                += ShowScoreboard;
     _soccer.OnPlayerAddedEvent               += OnPlayerAdded;
     _soccer.OnPlayerRemovedEvent             += OnPlayerRemoved;
 

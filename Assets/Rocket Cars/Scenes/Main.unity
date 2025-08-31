@@ -501,6 +501,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Transport: {fileID: 11400000, guid: 93c6093f05fc9aa429140aee9704fad1, type: 2}
   SandboxPrefab: {fileID: 3671774035895770840, guid: 323880b4dda100840a3c49c6ad164c1f, type: 3}
+  Port: 25565
+  FirstLevelIndex: 1
+  DedicatedServerFPS: 400
   ConnectionErrorText: {fileID: 2926783278129339691}
   ServerIPAddressText: {fileID: 8029999236843383686}
   PlayerNameText: {fileID: 7944298304768096693}
@@ -514,9 +517,6 @@ MonoBehaviour:
   UIMain: {fileID: 8790017198938684500}
   UIPlay: {fileID: 1327881156}
   UIConnect: {fileID: 3871813794113401011}
-  Port: 25565
-  FirstLevelIndex: 1
-  DedicatedServerFPS: 400
 --- !u!4 &1065598157
 Transform:
   m_ObjectHideFlags: 0
@@ -1296,6 +1296,34 @@ PrefabInstance:
     - target: {fileID: 3951474185107100646, guid: abe50c9d2df04ef45b357eba9682ed5c, type: 3}
       propertyPath: m_AnchoredPosition.y
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4148027986590090180, guid: abe50c9d2df04ef45b357eba9682ed5c, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4148027986590090180, guid: abe50c9d2df04ef45b357eba9682ed5c, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Mode
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4148027986590090180, guid: abe50c9d2df04ef45b357eba9682ed5c, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
+      value: 
+      objectReference: {fileID: 1065598156}
+    - target: {fileID: 4148027986590090180, guid: abe50c9d2df04ef45b357eba9682ed5c, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_CallState
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 4148027986590090180, guid: abe50c9d2df04ef45b357eba9682ed5c, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
+      value: Quit
+      objectReference: {fileID: 0}
+    - target: {fileID: 4148027986590090180, guid: abe50c9d2df04ef45b357eba9682ed5c, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_TargetAssemblyTypeName
+      value: UIMainMenu, Assembly-CSharp
+      objectReference: {fileID: 0}
+    - target: {fileID: 4148027986590090180, guid: abe50c9d2df04ef45b357eba9682ed5c, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Arguments.m_ObjectArgumentAssemblyTypeName
+      value: UnityEngine.Object, UnityEngine
       objectReference: {fileID: 0}
     - target: {fileID: 4897404980478677829, guid: abe50c9d2df04ef45b357eba9682ed5c, type: 3}
       propertyPath: m_AnchorMax.y

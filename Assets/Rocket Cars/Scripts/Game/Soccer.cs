@@ -35,7 +35,6 @@ public class Soccer : GameMode
   // Public Events
   public event UnityAction<Player, bool>          OnGoalsChangedEvent;
   public event UnityAction<OnChangedData>         OnGameStateChangedEvent;
-  public event UnityAction                        OnRoundEndedEvent;
   public event UnityAction                        OnRoundStartedEvent;
   public event UnityAction                        OnWaitingForRoundStartEvent;
   public event UnityAction                        OnGameOverEvent;

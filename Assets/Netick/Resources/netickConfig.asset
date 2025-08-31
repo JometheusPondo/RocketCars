@@ -41,13 +41,13 @@ MonoBehaviour:
   EnableLogging: 1
   EnableProfiling: 1
   EnableLagCompensation: 0
-  FastSerialization: 1
   EnableInterestManagement: 0
-  SyncTransformOnSpawn: 1
   EnableNarrowphaseFiltering: 0
   CustomGroupCount: 2
   AoILayerCount: 1
   WorldSize: {x: 8000, y: 1, z: 8000}
+  FastSerialization: 1
+  SyncTransformOnSpawn: 1
   IncludeInactiveObjects: 0
   AoILayer0CellSize: 450
   AoILayer1CellSize: 750

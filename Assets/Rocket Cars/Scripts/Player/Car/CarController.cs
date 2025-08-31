@@ -1,4 +1,5 @@
 using Netick;
+using Netick.Samples;
 using Netick.Unity;
 using System;
 using UnityEngine;
@@ -52,9 +53,6 @@ public class CarController : Replayable
   public float                   SteerAngleMaxReductionVehicleVelocity = 25;
   public AnimationCurve          SteerAngleReductionCurve;
   public float                   FrictionMultiplier                    = 1f;
-  public float                   MaxWheelVsGroundContactPointSpeed     = 20f;
-  public AnimationCurve          FrictionCurve;
-
 
   [Header("Rocket")]
   public Transform               RocketForceTransform;
@@ -95,6 +93,9 @@ public class CarController : Replayable
   public float                   MaxSuspensionPitchAngle               = 5;
   public Transform               SuspensionVisualizer;
 
+  [Header("Networking")]
+  public int                     InputReductionMaxLatency              = 350; // max latency in ms after which input reduction will be at its maximum.
+
   // private
   private Vector3                _curCarBodyLocalPos;
   private Quaternion             _curCarBodyLocalRot;
@@ -102,6 +103,7 @@ public class CarController : Replayable
   private Quaternion             _prevCarBodyLocalRot;
   private Vector3                _springPos;
   private Vector3                _springVelocity;
+  private float                  _suspensionRotBlendFactor;
   private float                  _currentWheelSteerAngle;
   private float                  _currentWheelRollAngle;
   private int                    _localJumpCounts                      = -1;
@@ -148,17 +150,17 @@ public class CarController : Replayable
       SimulateVehicle(_gm.DisableInputForEveryone ? default : LastInput);
     }
 
-    if (!Netick.Unity.Network.IsHeadless && !IsResimulating) // when not in headless mode
+    if (!Application.isBatchMode && !IsResimulating) // when not in batch/headless mode, and not during resims
       AnimateSuspension(Sandbox.FixedDeltaTime); // we animate suspension with FixedDeltaTime to make it consistent regardless of framerate. And we interpolate the results in NetworkRender.
   }
 
   private void SimulateVehicle(GameInput input)
   {
-    // clamp movement inputs
-    input.Movement             = new Vector3(Mathf.Clamp(input.Movement.x, -1f, 1f), Mathf.Clamp(input.Movement.y, -1f, 1f), Mathf.Clamp(input.Movement.z, -1f, 1f));
+    ClampInput(ref input);  // clamp movement inputs   
+    ReduceInput(ref input); // reduce input based on latency for remote players - later predicted ticks get smaller input than earlier ticks.
 
-    Rigidbody.centerOfMass     = CenterOfMass.localPosition;
-    IsGrounded                 = PerformGroundRaycast();
+    Rigidbody.centerOfMass  = CenterOfMass.localPosition;
+    IsGrounded              = PerformGroundRaycast();
   
     // * linear motion and ground steering
     SimulateWheels(input.Movement.x, input.Movement.y * EngineForce, out var groundedWheels);
@@ -214,12 +216,10 @@ public class CarController : Replayable
 
     GroundedWheelsNum                    = numOfGroundedWheels;
 
-    // only simulate lateralFriction when there are 3 or more grounded wheels.
-    bool simulateFriction = numOfGroundedWheels >= 2;
     for (int i = 0; i < Wheels.Length; i++)
     {
       if (hits[i].collider != null)
-        SimulateWheel(Wheels[i], hits[i], simulateFriction, engineForce);
+        SimulateWheel(Wheels[i], hits[i], engineForce);
       else
         Wheels[i].Speed = 0;
     }
@@ -236,29 +236,28 @@ public class CarController : Replayable
   /// <summary>
   /// Simulates a simple car wheel.
   /// </summary>
-  private void SimulateWheel(CarWheel wheel, RaycastHit hitInfo, bool simulateFriction, float engineForce)
+  private void SimulateWheel(CarWheel wheel, RaycastHit hitInfo, float engineForce)
   {
     var wheelTransform        = wheel.transform;
     var sideAxis              = wheelTransform.TransformVector(wheel.SideNormal); 
     var forwardAxis           = wheelTransform.forward;
-    var vel                   = Vector3.ClampMagnitude(Rigidbody.GetPointVelocity(hitInfo.point), MaxWheelVsGroundContactPointSpeed);
+    var wheelVel              = Rigidbody.GetPointVelocity(hitInfo.point);
     var groundDot             = Vector3.Dot(hitInfo.normal, wheelTransform.up);
-    var forwardDot            = Vector3.Dot(forwardAxis * Mathf.Sign(engineForce), vel);
+    var forwardDot            = Vector3.Dot(forwardAxis * Mathf.Sign(engineForce), wheelVel);
 
     if (forwardDot < 0 && (engineForce < 0)) // is breaking
       engineForce             = engineForce + (- BreakForce);
 
-    var forwardSpeedAbs       = Mathf.Abs(Vector3.Dot(forwardAxis, vel));
-    var sideSpeed             = Mathf.Abs(Vector3.Dot(sideAxis,    vel));
-    var speedRatio            = vel.sqrMagnitude > 0.0001f ? sideSpeed / (sideSpeed + forwardSpeedAbs) : 0f;
-    var lateralFriction       = FrictionMultiplier * (FrictionCurve.Evaluate(1f - speedRatio)); 
-    var lateralFrictionForce  = lateralFriction  * - sideAxis * Vector3.Dot(sideAxis, vel) * groundDot * groundDot * (simulateFriction ? 1f : 0f);
+    var forwardSpeed          = Mathf.Abs(Vector3.Dot(forwardAxis, wheelVel));
+    var sideSpeed             = Mathf.Abs(Vector3.Dot(sideAxis,    wheelVel));
+    var speedRatio            = sideSpeed / (sideSpeed + forwardSpeed);
+    var lateralFrictionForce  = FrictionMultiplier * Mathf.Sqrt(1f - speedRatio) * -sideAxis * Vector3.Dot(sideAxis, wheelVel) * groundDot * groundDot;
     var forwardForce          = forwardAxis * engineForce * groundDot * groundDot * (!wheel.IsFront ? 1f : 0f);
-    Rigidbody.AddForceAtPosition(forwardForce, hitInfo.point, ForceMode.Acceleration);          // Motor Force
-    if (forwardSpeedAbs == 0 && sideSpeed == 0)
-      return;
-    Rigidbody.AddForceAtPosition(lateralFrictionForce, hitInfo.point, ForceMode.Acceleration);  // Friction Force
-    wheel.Speed               = Vector3.Dot(vel, forwardAxis) + (!wheel.IsFront ? engineForce * 100 : 0);   
+    Rigidbody.AddForceAtPosition(forwardForce, hitInfo.point, ForceMode.Acceleration);            // Motor Force
+
+    if (forwardSpeed != 0 || sideSpeed != 0)
+      Rigidbody.AddForceAtPosition(lateralFrictionForce, hitInfo.point, ForceMode.Acceleration);  // Friction Force
+    wheel.Speed               = Vector3.Dot(wheelVel, forwardAxis) + (!wheel.IsFront ? engineForce * 100 : 0);   
   }
 
   /// <summary>
@@ -388,6 +387,25 @@ public class CarController : Replayable
     return didHit;
   }
 
+  private void ClampInput(ref GameInput input)
+  {
+    input.Movement           = new Vector3(Mathf.Clamp(input.Movement.x, -1f, 1f), Mathf.Clamp(input.Movement.y, -1f, 1f), Mathf.Clamp(input.Movement.z, -1f, 1f));
+  }
+
+  private void ReduceInput(ref GameInput input)
+  {
+    var latencyMultiplier    = 1f;
+
+    if (IsClient && !IsInputSource)
+    {
+      var maxLatency         = InputReductionMaxLatency;
+      var minFactor          = 0.2f;  // controls max input reduction after exceeding `maxLatency` - should be a configurable setting in inspector
+      latencyMultiplier      = Mathf.Max(minFactor, Mathf.InverseLerp(maxLatency, 0f, Sandbox.TickToTime(Sandbox.Tick - Sandbox.AuthoritativeTick) * 1000));
+    }
+
+    input.Movement           = input.Movement * latencyMultiplier;
+  }
+
   public void ReceiveFuel()
   {
     FuelTickTime             = Sandbox.TimeToTick(Mathf.Min(MaxFuel, Sandbox.TickToTime(FuelTickTime) + TimeAddedPerFuel));
@@ -403,8 +421,8 @@ public class CarController : Replayable
   public override void NetworkRender()
   {
     // interpolating suspension results.
-    CarBody.transform.localPosition         = Vector3.   Lerp (_prevCarBodyLocalPos, _curCarBodyLocalPos, Sandbox.LocalInterpolation.Alpha);
-    CarBody.transform.localRotation         = Quaternion.Slerp(_prevCarBodyLocalRot, _curCarBodyLocalRot, Sandbox.LocalInterpolation.Alpha);
+    CarBody.transform.localPosition        = Vector3.   Lerp (_prevCarBodyLocalPos, _curCarBodyLocalPos, Sandbox.LocalInterpolation.Alpha);
+    CarBody.transform.localRotation        = Quaternion.Slerp(_prevCarBodyLocalRot, _curCarBodyLocalRot, Sandbox.LocalInterpolation.Alpha);
 
     AnimateWheels(Time.deltaTime);
     TryInvokeJumpEvent();
@@ -446,22 +464,16 @@ public class CarController : Replayable
     if (Vector3.Distance(target, _springPos) > 10f)
       _springPos                           = target;
 
-    _springVelocity                        = (SpringDamping * _springVelocity) + (deltaTime * SpringStiffness * (target - _springPos));
-    _springPos                             = _springPos + (deltaTime * _springVelocity);
-
-    if (GroundedWheelsNum == 0)
-    {
-      _springVelocity                      = Vector3.Lerp(_springVelocity, default, deltaTime * 20f);
-      _springPos                           = Vector3.Lerp(_springPos, target, deltaTime * 20f);
-    }
-
+    _springVelocity                        = (SpringDamping * _springVelocity) + (SpringStiffness * (target - _springPos) * deltaTime);
+    _springPos                             = _springPos + ( _springVelocity * deltaTime);
+    _suspensionRotBlendFactor              = Mathf.Lerp(_suspensionRotBlendFactor, GroundedWheelsNum == 0 ? 0f : 1f, deltaTime * 10f);
     var maxSpeed                           = 0.2f;
     var localVel                           = Vector3.ClampMagnitude(NetworkRigidbody.RenderTransform.InverseTransformVector(_springVelocity) * SpringSpeedFactor, maxSpeed);
     var pitchAngle                         = Mathf.Lerp(-MaxSuspensionPitchAngle,  MaxSuspensionPitchAngle,  Mathf.InverseLerp(-maxSpeed, maxSpeed, localVel.z));
     var rollAngle                          = Mathf.Lerp(-MaxSuspensionRollAngle,   MaxSuspensionRollAngle,   Mathf.InverseLerp(-maxSpeed, maxSpeed, localVel.x));
     var yOffset                            = Mathf.Lerp(-MaxSuspensionCompression, MaxSuspensionCompression, Mathf.InverseLerp(-maxSpeed, maxSpeed, localVel.y)) * SuspensionCompressionDirection;
-    _curCarBodyLocalPos                    = Vector3.Lerp(CarBody.transform.localPosition, yOffset, deltaTime * 20f);
-    _curCarBodyLocalRot                    = Quaternion.AngleAxis(pitchAngle, SuspensionPitchAxis) * Quaternion.AngleAxis(rollAngle, SuspensionRollAxis);
+    _curCarBodyLocalPos                    = Vector3.Lerp(default, Vector3.Lerp(CarBody.transform.localPosition, yOffset, deltaTime * 20f), _suspensionRotBlendFactor);
+    _curCarBodyLocalRot                    = Quaternion.Lerp(Quaternion.identity, Quaternion.AngleAxis(pitchAngle, SuspensionPitchAxis) * Quaternion.AngleAxis(rollAngle, SuspensionRollAxis), _suspensionRotBlendFactor);
 
     if (SuspensionVisualizer != null)
       SuspensionVisualizer.position        = _springPos;

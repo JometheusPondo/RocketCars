@@ -697,41 +697,7 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 0
-  FrictionMultiplier: 3
-  MaxWheelVsGroundContactPointSpeed: 25
-  FrictionCurve:
-    serializedVersion: 2
-    m_Curve:
-    - serializedVersion: 3
-      time: 0
-      value: 0.038781736
-      inSlope: 3.927738
-      outSlope: 3.927738
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0
-      outWeight: 0.046031464
-    - serializedVersion: 3
-      time: 0.44637826
-      value: 0.90022516
-      inSlope: 0.53717196
-      outSlope: 0.53717196
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0.08218032
-      outWeight: 0.0915038
-    - serializedVersion: 3
-      time: 1
-      value: 1
-      inSlope: 0.18022203
-      outSlope: 0.18022203
-      tangentMode: 34
-      weightedMode: 0
-      inWeight: 0.33333334
-      outWeight: 0
-    m_PreInfinity: 2
-    m_PostInfinity: 2
-    m_RotationOrder: 0
+  FrictionMultiplier: 3.5
   RocketForceTransform: {fileID: 7365915249806338187}
   RocketForce: 22
   MaxFuel: 25
@@ -758,8 +724,9 @@ MonoBehaviour:
   SpringSpeedFactor: 0.01
   MaxSuspensionCompression: 0.25
   MaxSuspensionRollAngle: 10
-  MaxSuspensionPitchAngle: 6
+  MaxSuspensionPitchAngle: 5
   SuspensionVisualizer: {fileID: 6033807279883062560}
+  InputReductionMaxLatency: 250
 --- !u!114 &774381909787068010
 MonoBehaviour:
   m_ObjectHideFlags: 0

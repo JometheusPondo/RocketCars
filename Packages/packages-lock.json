@@ -8,7 +8,7 @@
         "com.unity.nuget.mono-cecil": "1.11.4",
         "com.unity.addressables": "1.22.3"
       },
-      "hash": "b81c6a9409ebe2ab490ffdbd0b0e071029ef942f"
+      "hash": "23b8bc0da42048ae98bd45cf7ef9a5e7bc2a8ee3"
     },
     "com.madstrawberry.dotween": {
       "version": "https://github.com/StinkySteak/DoTween-UPM.git",
