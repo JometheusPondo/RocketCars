@@ -8,12 +8,12 @@ Join our [discord](https://discord.com/invite/uV6bfG66Fx) for any questions.
 
 ## Features
 
-- Clean, documented code designed as a learning resource
+- Clean and documented code 
 - Fully server-authoritative simulation (cheating is impossible)
 - Fully predicted physics for all cars and the ball
 - Custom vehicle physics model, inspired by Rocket League
 - Built-in goal replay system
-- Full-Match replay (using Netick's built-in full-game replay system)
+- Full-match replay mode (using Netick's built-in full-game replay system)
 - Custom field shader
 
 ## Code Overview
