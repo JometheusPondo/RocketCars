@@ -43,7 +43,7 @@ Because Rocket Cars uses physics prediction, it must resimulate the physics engi
 - Not deterministic: leading to potential mispredictions (that shouldn't happen otherwise), especially at high ping.
 - Slow during resimulation: problematic for lower-end or mobile devices.
 
-* Future improvement suggestion: Use a deterministic and CSP-ready third-party physics engine for better performance and accuracy.
+Future improvement suggestion: Use a deterministic and CSP-ready third-party physics engine for better performance and accuracy.
 
 ## Who Is This For?
 Rocket Cars is not a full-featured game, it's a technical sample for:
