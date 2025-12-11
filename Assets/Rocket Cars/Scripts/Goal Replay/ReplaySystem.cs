@@ -1,10 +1,12 @@
-using System.Collections.Generic;
-using UnityEngine;
+using JetBrains.Annotations;
 using Netick;
 using Netick.Unity;
+using System.Collections.Generic;
+using UnityEngine;
 
 /// <summary>
-/// Server-side replay system.
+/// Server-side goal replay system.
+/// Note that this is temp and in the future Netick will include a built-in system for mid-game replays.
 /// </summary>
 [ExecuteAfter(typeof(PhysicsSimulationStep))]
 public class ReplaySystem : NetworkBehaviour
@@ -76,7 +78,7 @@ public class ReplaySystem : NetworkBehaviour
     _replayCurrentTick       = Sandbox.Tick - _recordedTicks;
   }
 
-  [OnChanged(nameof(IsReplaying))]
+  [OnChanged(nameof(IsReplaying))][UsedImplicitly]
   private void OnIsReplayingChanged(OnChangedData dat)
   {
     // invoke replay start/stop callbacks. 

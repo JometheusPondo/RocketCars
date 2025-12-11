@@ -1,6 +1,7 @@
-using UnityEngine;
-using Netick.Unity;
+using JetBrains.Annotations;
 using Netick;
+using Netick.Unity;
+using UnityEngine;
 
 public class Fuel : Replayable
 {
@@ -32,7 +33,8 @@ public class Fuel : Replayable
 
   private void OnTriggerEnter(Collider other)
   {
-        if (!IsActive) return;
+    if (!IsActive) 
+      return;
 
     var player  = other.gameObject.GetComponent<Player>();
 
@@ -45,11 +47,11 @@ public class Fuel : Replayable
     }
   }
 
-  [OnChanged(nameof(IsActive))]
+  [OnChanged(nameof(IsActive))][UsedImplicitly]
   private void OnIsVisibleChanged(OnChangedData dat)
   {
     // play pick up audio.
-    if (IsActive == false)
+    if (IsActive == false && !dat.IsCatchingUp)
       _audioSource.NetworkPlayOneShot(Sandbox, _audioSource.clip);
     Render.SetActive(IsActive);
   }

@@ -55,18 +55,18 @@ public class UISoccer : NetworkBehaviour
     if (Application.isBatchMode)
       return;
 
-    _camera = Sandbox.FindObjectOfType<Camera>();
-    _UIScoreboard = GetComponent<UISoccerScoreboard>();
-    _soccer = GetComponent<Soccer>();
-    _soccer.OnGoalsChangedEvent += OnGoalsChanged;
-    _soccer.OnRoundStartedEvent += HideRoundStartTimer;
+    _camera                              = Sandbox.FindObjectOfType<Camera>();
+    _UIScoreboard                        = GetComponent<UISoccerScoreboard>();
+    _soccer                              = GetComponent<Soccer>();
+    _soccer.OnGoalsChangedEvent         += OnGoalsChanged;
+    _soccer.OnRoundStartedEvent         += HideRoundStartTimer;
     _soccer.OnWaitingForRoundStartEvent += ShowRoundStartTimer;
     _soccer.OnWaitingForRoundStartEvent += OnGameStarted;
 
-    _soccer.OnRoundStartedEvent += OnGameStarted;
-    _soccer.OnGameOverEvent += OnGameEnded;
+    _soccer.OnRoundStartedEvent         += OnGameStarted;
+    _soccer.OnGameOverEvent             += OnGameEnded;
 
-    _joinRedButton.onClick.AddListener(OnJoinRedPressed);
+    _joinRedButton.onClick. AddListener(OnJoinRedPressed);
     _joinBlueButton.onClick.AddListener(OnJoinBluePressed);
   }
 
@@ -87,7 +87,7 @@ public class UISoccer : NetworkBehaviour
     if (Application.isBatchMode)
       return;
 
-    if (_soccer.GameState == Soccer.State.Replay || Sandbox.TryGetLocalPlayerObject(out Player localPlayer) && localPlayer.IsReady)
+    if (_soccer.GameState == Soccer.State.GoalReplay || Sandbox.TryGetLocalPlayerObject(out Player localPlayer) && localPlayer.IsReady || Sandbox.IsReplay)
     {
       _joinCanvasGroup.interactable           = false;
       _joinCanvasGroup.alpha                  = 0f;
@@ -139,19 +139,25 @@ public class UISoccer : NetworkBehaviour
 
   void OnGameEnded()
   {
-    _gameOverTimerText.SetEnabled(Sandbox, true);
     _winnerText.       SetEnabled(Sandbox, true);
+    _gameOverTimerText.SetEnabled(Sandbox, true);
+
+    if (Sandbox.StartMode == NetickStartMode.ReplayClient)
+      return;
 
     foreach (var ui in _UIsToDisableAtGameOver)
       ui.SetActive(false);
 
-    _UIScoreboard.     ShowScoreboard();
+    _UIScoreboard?.    ShowScoreboard();
   }
 
   void OnGameStarted()
   {
+    _winnerText.SetEnabled(Sandbox, false);
     _gameOverTimerText.SetEnabled(Sandbox, false);
-    _winnerText.       SetEnabled(Sandbox, false);
+
+    if (Sandbox.StartMode == NetickStartMode.ReplayClient)
+      return;
 
     foreach (var ui in _UIsToDisableAtGameOver)
       ui.SetActive(true);

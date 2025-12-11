@@ -1,3 +1,4 @@
+using JetBrains.Annotations;
 using Netick;
 using Netick.Samples;
 using Netick.Unity;
@@ -67,7 +68,6 @@ public class CarController : Replayable
   public Vector3                 AirSteerTorque;
   public float                   AirBoostLinearForce;
   public float                   AirBoostTorque;
-  public float                   AirborneLinearForce                   = 6;
 
   [Space(20)]
   [Header("Visual")]
@@ -106,7 +106,7 @@ public class CarController : Replayable
   private float                  _suspensionRotBlendFactor;
   private float                  _currentWheelSteerAngle;
   private float                  _currentWheelRollAngle;
-  private int                    _localJumpCounts                      = -1;
+  private bool                   _resetSuspensionFlag;
   private int                    _numOfGroundedWheels;
   private int                    _envLayerMask;
   private int                    _ballLayerMask;
@@ -126,6 +126,8 @@ public class CarController : Replayable
   {
     base.NetworkStart();
     _gm                          = Sandbox.GetComponent<GlobalInfo>().GameMode;
+    if (IsReplay)
+      Sandbox.Replay.Playback.OnSeeked += (t1, t2) => {_resetSuspensionFlag = true; };
   }
 
   public void SetCarActive(bool active)
@@ -156,7 +158,7 @@ public class CarController : Replayable
 
   private void SimulateVehicle(GameInput input)
   {
-    ClampInput(ref input);  // clamp movement inputs   
+    ClampInput(ref input);  // clamp inputs   
     ReduceInput(ref input); // reduce input based on latency for remote players - later predicted ticks get smaller input than earlier ticks.
 
     Rigidbody.centerOfMass  = CenterOfMass.localPosition;
@@ -328,8 +330,6 @@ public class CarController : Replayable
   {
     if (!isGrounded)
     {
-      Rigidbody.AddForce(transform.forward * AirborneLinearForce * movement.y, ForceMode.Acceleration);
-
       // we use a flag (AirPitchFlag) to let the player not pitch-rotate when holding the move forward button, and only pitch when they release it and press it again.
       if (AirPitchFlag == false && movement.y <= 0.5f)
         AirPitchFlag = true;
@@ -423,10 +423,7 @@ public class CarController : Replayable
     // interpolating suspension results.
     CarBody.transform.localPosition        = Vector3.   Lerp (_prevCarBodyLocalPos, _curCarBodyLocalPos, Sandbox.LocalInterpolation.Alpha);
     CarBody.transform.localRotation        = Quaternion.Slerp(_prevCarBodyLocalRot, _curCarBodyLocalRot, Sandbox.LocalInterpolation.Alpha);
-
     AnimateWheels(Time.deltaTime);
-    TryInvokeJumpEvent();
-
     for (int i = 0; i < AfterburnerParticleSystems.Length; i++)
     {
       var emission                         = AfterburnerParticleSystems[i].emission;
@@ -461,12 +458,12 @@ public class CarController : Replayable
     _prevCarBodyLocalRot                   = _curCarBodyLocalRot;
     var target                             = NetworkRigidbody.RenderTransform.position + ((NetworkRigidbody.RenderTransform.up + (NetworkRigidbody.RenderTransform.forward * 0.05f)) * 1f);
 
-    if (Vector3.Distance(target, _springPos) > 10f)
+    if (Vector3.Distance(target, _springPos) > 10f || _resetSuspensionFlag)
       _springPos                           = target;
 
     _springVelocity                        = (SpringDamping * _springVelocity) + (SpringStiffness * (target - _springPos) * deltaTime);
     _springPos                             = _springPos + ( _springVelocity * deltaTime);
-    _suspensionRotBlendFactor              = Mathf.Lerp(_suspensionRotBlendFactor, GroundedWheelsNum == 0 ? 0f : 1f, deltaTime * 10f);
+    _suspensionRotBlendFactor              = Mathf.Lerp(_suspensionRotBlendFactor, (GroundedWheelsNum == 0 || _resetSuspensionFlag) ? 0f : 1f, deltaTime * 10f);
     var maxSpeed                           = 0.2f;
     var localVel                           = Vector3.ClampMagnitude(NetworkRigidbody.RenderTransform.InverseTransformVector(_springVelocity) * SpringSpeedFactor, maxSpeed);
     var pitchAngle                         = Mathf.Lerp(-MaxSuspensionPitchAngle,  MaxSuspensionPitchAngle,  Mathf.InverseLerp(-maxSpeed, maxSpeed, localVel.z));
@@ -477,17 +474,15 @@ public class CarController : Replayable
 
     if (SuspensionVisualizer != null)
       SuspensionVisualizer.position        = _springPos;
+
+    _resetSuspensionFlag = false;
   }
 
-  private void TryInvokeJumpEvent()
+  [OnChanged(nameof(JumpCounts))][UsedImplicitly]
+  void OnJumpCountsChanged(OnChangedData dat)
   {
-    if (_localJumpCounts == -1)
-      _localJumpCounts = JumpCounts;
-    else if (_localJumpCounts != JumpCounts)
-    {
+    if (!dat.IsCatchingUp)
       OnJumpEvent();
-      _localJumpCounts = JumpCounts;
-    }
   }
 
   private void OnDrawGizmos()

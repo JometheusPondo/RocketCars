@@ -11,4 +11,5 @@ public class GlobalInfo : NetworkBehaviour
   public string    PlayerName;
   public GameMode  GameMode ;
   public bool      StartedThroughMainMenu;
+  public Camera    Camera;
 }

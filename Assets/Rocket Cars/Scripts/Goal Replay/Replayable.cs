@@ -6,7 +6,7 @@ using Netick;
 using Netick.Unity;
 
 /// <summary>
-/// Add this script to any object you want to make replayable.
+/// Add this script to any object you want to make replayable during goal replay.
 /// </summary>
 public unsafe class Replayable : NetworkBehaviour
 {

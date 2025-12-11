@@ -9,7 +9,7 @@ using Netick.Unity;
 
 
 [ExecutionOrder(-10)]
-public class UIReplay : NetworkBehaviour
+public class UIGoalReplay : NetworkBehaviour
 {
   [SerializeField]
   private GameObject        _replayUI;
@@ -37,27 +37,34 @@ public class UIReplay : NetworkBehaviour
   private void OnGameStateChanged(OnChangedData dat)
   {
     // entering replay
-    if (_soccer.GameState == Soccer.State.Replay)
+    if (_soccer.GameState == Soccer.State.GoalReplay)
     {
       _vignetteEffect.active = true;
       _grainEffect.active    = true;
-      _UICarHUD.SetVisibility(false); // hide car HUD when entering replay.
 
-      // show replay UI.
-      foreach (var element in _UIElements)
-        element.SetEnabled(Sandbox, true);
+      if (Sandbox.StartMode != NetickStartMode.ReplayClient)
+      {
+        _UICarHUD.SetVisibility(false); // hide car HUD when entering replay.
+
+        // show replay UI.
+        foreach (var element in _UIElements)
+          element.SetEnabled(Sandbox, true);
+      }        
     }
 
     // exiting replay (we can know if we are exiting replay by checking the previous value of _soccer.GameState and see if it was equal to Replay).
-    else if (dat.GetPreviousValue<Soccer.State>() == Soccer.State.Replay)
+    else if (dat.GetPreviousValue<Soccer.State>() == Soccer.State.GoalReplay)
     {
       _vignetteEffect.active = false;
       _grainEffect.active    = false;
-      _UICarHUD.SetVisibility(true); // show car HUD when exiting replay.
+      if (Sandbox.StartMode != NetickStartMode.ReplayClient)
+      {
+        _UICarHUD.SetVisibility(true); // show car HUD when exiting goal replay.
 
-      // hide replay UI.
-      foreach (var element in _UIElements)
-        element.SetEnabled(Sandbox, false);
+        // hide replay UI.
+        foreach (var element in _UIElements)
+          element.SetEnabled(Sandbox, false);
+      }
     }
   }
 }
