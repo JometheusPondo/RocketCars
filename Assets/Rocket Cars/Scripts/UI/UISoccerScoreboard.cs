@@ -1,100 +1,40 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Events;
-using TMPro;
 using Netick;
 using Netick.Unity;
 
 [ExecuteAfter(typeof(GameMode))]
 public class UISoccerScoreboard : NetworkBehaviour
 {
-  [SerializeField]
-  public Transform                            _teamRedScoreboard;
-  [SerializeField]
-  public Transform                            _teamBlueScoreboard;
+  [SerializeField] 
+  private float        _timeToHide   = 0.3f;
+  [SerializeField] 
+  private Vector2      _boxSize      = new(400, 400);
 
-  [SerializeField]
-  public float                                _scoreOffset        = 5;
-  [SerializeField]
-  public GameObject                           _playerScorePrefab;
-
-  [SerializeField]
-  private float                               _timeToHide         = 0.3f;
-  private float                               _timer;
-
-  private List<UISoccerScoreboardPlayerScore> _redPlayersScores   = new(10);
-  private List<UISoccerScoreboardPlayerScore> _bluePlayersScores  = new(10);
-  private Stack<UISoccerScoreboardPlayerScore>_scoresPool         = new(6);
-
-  private UISoccerScoreboardPlayerScore       _teamRedCaption;
-  private UISoccerScoreboardPlayerScore       _teamBlueCaption;
-  private Soccer                              _soccer;
+  private float        _timer;
+  private Soccer       _soccer;
+  private GameMode     _gameMode;
+  private GUIStyle     _headerStyle;
+  private GUIStyle     _playerStyle;
+  private GUIStyle     _scoreStyle;
+  private List<Player> _playersCache = new(6);
 
   public override void NetworkStart()
   {
     if (Application.isBatchMode)
       return;
 
-    _teamRedCaption                           = _teamRedScoreboard. GetComponentInChildren<UISoccerScoreboardPlayerScore>();
-    _teamBlueCaption                          = _teamBlueScoreboard.GetComponentInChildren<UISoccerScoreboardPlayerScore>();
-
-    _soccer                                   = GetComponent<Soccer>();
-    _soccer.OnRoundEndedEvent                += ShowScoreboard;
-    _soccer.OnPlayerAddedEvent               += OnPlayerAdded;
-    _soccer.OnPlayerRemovedEvent             += OnPlayerRemoved;
-
-    var canvas                                = GetComponentInChildren<Canvas>().transform;
-
-    for (int i = 0; i < Sandbox.Config.MaxPlayers; i++)
-    {
-      var score                               = Sandbox.LocalInstantiate(_playerScorePrefab, default, Quaternion.identity).GetComponent<UISoccerScoreboardPlayerScore>();
-      score.transform.SetParent(canvas, false);
-      score.gameObject.SetActive(false);
-      _scoresPool.     Push(score);
-    }
-  }
-
-  public void OnPlayerAdded(Player player)
-  {
-    Transform                                 scoreboard;
-    List<UISoccerScoreboardPlayerScore>       playerToScores;
-        
-    scoreboard                                = player.Team == Team.Red ? _teamRedScoreboard : _teamBlueScoreboard;
-    playerToScores                            = player.Team == Team.Red ? _redPlayersScores  : _bluePlayersScores;
-
-    var newScore                              = _scoresPool.Pop();;
-    newScore.gameObject.SetActive(true);
-    newScore.transform.SetParent(scoreboard, false);
-    newScore.transform.localScale             = Vector3.one;
-    newScore.transform.localPosition          = playerToScores.Count * Vector3.down * _scoreOffset;
-    newScore.Init(player);
-
-    playerToScores.Add(newScore);
-  }
-
-  public void OnPlayerRemoved(Player player)
-  {
-    List<UISoccerScoreboardPlayerScore> playerToScores;
-
-    if (player.Team == Team.Red)
-      playerToScores = _redPlayersScores;
-    else
-      playerToScores = _bluePlayersScores;
-
-    var score        = playerToScores.Find(x => x.Player == player);
-    playerToScores.  Remove(score);
-    score.gameObject.SetActive(false);
-    _scoresPool.     Push(score);
+    _soccer      = GetComponent<Soccer>();
+    _gameMode    = GetComponent<GameMode>();
+    _headerStyle = null;
   }
 
   public override void NetworkRender()
   {
-    if (_soccer == null)
+    if (_soccer == null || _gameMode == null)
       return;
 
-    // show the scoreboard when the player presses tab, or when the game has ended.
-    if (Sandbox.InputEnabled)
+    if (Sandbox.InputEnabled || Sandbox.IsReplay)
     {
       if (Input.GetButtonDown("Scoreboard"))
         ShowScoreboard();
@@ -103,50 +43,102 @@ public class UISoccerScoreboard : NetworkBehaviour
         _timer = _timeToHide;
     }
 
-    // if scoreboard is shown
     if (_timer > 0)
-    {
-      SortScores(_redPlayersScores);
-      SortScores(_bluePlayersScores);
-
-      var newTime = _timer - UnityEngine.Time.deltaTime;
-
-      // we hide it when showing time is over.
-      if (newTime <= 0)
-        SetVisibility(false);
-
-      _timer      = newTime;
-    }
-  }
-
-  /// <summary>
-  /// Sorts the scores in a descending order based on goals. 
-  /// </summary>
-  public void SortScores(List<UISoccerScoreboardPlayerScore> scores)
-  {
-    scores.Sort((x, y) => y.Player.Goals.CompareTo(x.Player.Goals));
-
-    for (int i = 0; i < scores.Count; i++)
-      scores[i].transform.localPosition = i * Vector3.down * _scoreOffset;
+      _timer -= Time.deltaTime;
   }
 
   public void ShowScoreboard()
   {
-    SetVisibility(true);
+    _timer = _timeToHide;
   }
 
-  /// <summary>
-  /// Show/hides the scoreboard.
-  /// </summary>
-  private void SetVisibility(bool visibility)
+  private void OnGUI()
   {
-    _teamBlueCaption.       SetVisibility(Sandbox, visibility);
-    _teamRedCaption.        SetVisibility(Sandbox, visibility);
+    if (_timer <= 0 || _soccer == null || _gameMode == null)
+      return;
 
-    for (int i = 0; i < _redPlayersScores.Count; i++)
-      _redPlayersScores[i]. SetVisibility(Sandbox, visibility);
+    if (_headerStyle == null)
+    {
+      _headerStyle   = new GUIStyle(GUI.skin.label)
+      {
+        fontSize     = 20,
+        fontStyle    = FontStyle.Bold,
+        alignment    = TextAnchor.MiddleCenter
+      };
 
-    for (int i = 0; i < _bluePlayersScores.Count; i++)
-      _bluePlayersScores[i].SetVisibility(Sandbox, visibility);
+      _playerStyle = new GUIStyle(GUI.skin.label)
+      {
+        fontSize     = 16,
+        alignment    = TextAnchor.MiddleCenter
+      };
+
+      _scoreStyle    = new GUIStyle(GUI.skin.label)
+      {
+        fontSize     = 16,
+        alignment    = TextAnchor.MiddleCenter
+      };
+    }
+
+    float screenW    = Screen.width;
+    float screenH    = Screen.height;
+    float totalWidth = (_boxSize.x * 2) + 20; 
+    float startX     = (screenW - totalWidth) / 2f;
+    float startY     = (screenH - _boxSize.y) / 2f;
+
+    Rect redRect     = new Rect(startX, startY, _boxSize.x, _boxSize.y);
+    Rect blueRect    = new Rect(startX + _boxSize.x + 20, startY, _boxSize.x, _boxSize.y);
+
+    Color bgColor    = new Color(0, 0, 0, 0.4f); 
+    GUI.color        = bgColor;
+    GUI.DrawTexture(redRect, Texture2D.whiteTexture);
+    GUI.DrawTexture(blueRect, Texture2D.whiteTexture);
+    GUI.color        = Color.white;
+
+    GUILayout.BeginArea(new Rect(redRect.x + 10, redRect.y + 20, redRect.width - 20, redRect.height - 30));
+    DrawTeam(Team.Red, Color.white, "Red Team");
+    GUILayout.EndArea();
+
+    GUILayout.BeginArea(new Rect(blueRect.x + 10, blueRect.y + 20, blueRect.width - 20, blueRect.height - 30));
+    DrawTeam(Team.Blue, Color.white, "Blue Team");
+    GUILayout.EndArea();
+  }
+
+  private void DrawTeam(Team team, Color color, string teamName)
+  {
+    foreach (var player in _gameMode.ActivePlayers)
+      if (Sandbox.GetBehaviour(player).Team == team)
+        _playersCache.Add(Sandbox.GetBehaviour(player));
+
+    _playersCache.Sort((x, y) => y.Goals.CompareTo(x.Goals));
+
+    var prevColor = GUI.color;
+    GUI.color     = color;
+
+    // team title
+    GUILayout.Label(teamName, _headerStyle);
+    GUILayout.Space(5);
+
+    float columnWidthName  = 0.65f;
+    float columnWidthScore = 0.35f;
+
+    // header row
+    GUILayout.BeginHorizontal();
+    GUILayout.Label("Name", _headerStyle, GUILayout.Width(_boxSize.x * columnWidthName - 30));
+    GUILayout.Label("Score", _headerStyle, GUILayout.Width(_boxSize.x * columnWidthScore - 30));
+    GUILayout.EndHorizontal();
+
+    GUILayout.Space(5);
+
+    // player rows
+    foreach (var p in _playersCache)
+    {
+      GUILayout.BeginHorizontal();
+      GUILayout.Label(p.Name, _playerStyle, GUILayout.Width(_boxSize.x * columnWidthName - 30));
+      GUILayout.Label(p.Goals.ToString(), _scoreStyle, GUILayout.Width(_boxSize.x * columnWidthScore - 30));
+      GUILayout.EndHorizontal();
+    }
+
+    GUI.color = prevColor;
+    _playersCache.Clear();
   }
 }

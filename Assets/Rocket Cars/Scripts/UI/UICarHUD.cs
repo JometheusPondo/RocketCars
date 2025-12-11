@@ -18,23 +18,29 @@ public class UICarHUD : NetworkBehaviour
   private bool                _cameraModeLast;
   private CarController       _carController;
   private CarCameraController _carCameraController;
+  private GameMode            _gm;
 
   public override void NetworkStart()
   {
+    _gm         = Sandbox.GetComponent<GlobalInfo>().GameMode;
     _UIElements = _UICarHUD.GetComponentsInChildren<MaskableGraphic>();
   }
 
   public override void NetworkRender()
   {
-    if (Sandbox.TryGetLocalPlayerObject(out Player localPlayer) && localPlayer.IsReady)
+    var plrId = Sandbox.IsReplay ? _gm.ReplaySelectedPlayer : Sandbox.LocalPlayer.PlayerId;
+
+    Sandbox.TryGetPlayerObject(plrId, out Player player);
+
+    if (player != null && player.IsReady)
     {
-      _carController       = localPlayer.GetComponent<CarController>();
-      _carCameraController = localPlayer.GetComponent<CarCameraController>();
+      _carController       = player.GetComponent<CarController>();
+      _carCameraController = player.GetComponent<CarCameraController>();
       _UICarHUD.SetActive(true);
     }
     else
     {
-      _carController       = null;
+      _carController = null;
       _carCameraController = null;
       _UICarHUD.SetActive(false);
     }
@@ -53,8 +59,8 @@ public class UICarHUD : NetworkBehaviour
     else
       _cameraModeText.color  = Color.white;
 
-        float fuel = Mathf.RoundToInt(Sandbox.TickToTime(_carController.FuelTickTime));
-        _uiFuelBar.UpdateValue(fuel, _carController.MaxFuel);
+    float fuel = Mathf.RoundToInt(Sandbox.TickToTime(_carController.FuelTickTime));
+    _uiFuelBar.UpdateValue(fuel, _carController.MaxFuel);
   }
 
   /// <summary>

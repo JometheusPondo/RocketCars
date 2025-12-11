@@ -1,7 +1,8 @@
-using UnityEngine;
-using System.Collections;
-using Netick.Unity;
+using JetBrains.Annotations;
 using Netick;
+using Netick.Unity;
+using System.Collections;
+using UnityEngine;
 
 public enum Team
 {
@@ -42,20 +43,11 @@ public class Player : NetworkBehaviour
   }
 
   // set the active car model based on the team.
-  [OnChanged(nameof(Team))]
+  [OnChanged(nameof(Team))][UsedImplicitly]
   private void OnTeamChanged(OnChangedData dat)
   {
     var carPrefab = Team == Team.Red ? RedCarPrefab : BlueCarPrefab;
     Car.CarBody.GetComponentInChildren<Renderer>().materials = carPrefab.GetComponent<CarController>().CarBody.GetComponentInChildren<Renderer>().sharedMaterials;
   }
-
-  // we use IsReady as a way to know when a player has entered the game and is ready.
-  [OnChanged(nameof(IsReady))]
-  private void OnIsReadyChanged(OnChangedData dat)
-  {
-    if (IsReady) Sandbox.GetComponent<GlobalInfo>().GameMode.OnPlayerAdded(this); 
-    else         Sandbox.GetComponent<GlobalInfo>().GameMode.OnPlayerRemoved(this);
-  }
-
 }
 

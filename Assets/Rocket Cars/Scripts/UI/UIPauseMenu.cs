@@ -37,8 +37,11 @@ public class UIPauseMenu : NetworkBehaviour
     _buttonQuit.onClick.AddListener(Quit);
   }
 
-  public override void NetworkUpdate()
+  public void Update()
   {
+    if (Sandbox == null || !Sandbox.IsRunning)
+      return;
+
     if (_GM != null && Input.GetKeyDown(KeyCode.Escape))
       TogglePause();
   }
@@ -53,6 +56,9 @@ public class UIPauseMenu : NetworkBehaviour
 
     _pauseMenu.SetActive(_shown);
     SetVisibility(_shown);
+
+    if (IsReplay)
+      return;
 
     if (_shown)
       Cursor.lockState = CursorLockMode.None;

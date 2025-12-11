@@ -20,7 +20,6 @@ public class CarCameraController : NetworkBehaviour
   private Player          _player;
   private GameMode        _gm;
   private Transform       _ballRenderTransform;
-  private CameraSpectate  _cameraSpectate;
   private Vector3         _curDir;
   private Vector3         _curPos;
   private Quaternion      _curRot;
@@ -34,15 +33,14 @@ public class CarCameraController : NetworkBehaviour
     _gm                   = Sandbox.FindObjectOfType<GameMode>();
     _camera               = Sandbox.FindObjectOfType<Camera>().transform;
     _ballRenderTransform  = Sandbox.FindObjectOfType<Ball>().transform.GetChild(0);
-    _cameraSpectate       = Sandbox.FindObjectOfType<CameraSpectate>();
   }
 
   public override void NetworkRender()
   {
-    if (!(IsInputSource && _player.IsReady))
-      return;
+    var plrId = Sandbox.IsReplay ? _gm.ReplaySelectedPlayer : Sandbox.LocalPlayer.PlayerId;
 
-    _cameraSpectate.DisableSpectate();
+    if (InputSourcePlayerId != plrId || !_player.IsReady)
+      return;
 
     if (_gm.DisableCarCamera)
       return;
@@ -64,16 +62,18 @@ public class CarCameraController : NetworkBehaviour
     if (IsResimulating)
       return;
 
-    if (!(IsInputSource && _player.IsReady))
+    var plrId = Sandbox.IsReplay ? _gm.ReplaySelectedPlayer : Sandbox.LocalPlayer.PlayerId;
+
+    if (InputSourcePlayerId != plrId || !_player.IsReady)
       return;
 
     _prevPos = _curPos;
     _prevRot = _curRot;
 
     if (LookAtBall)
-      FollowCarAndLookAtBall(Sandbox.ScaledFixedDeltaTime);
+      FollowCarAndLookAtBall(Sandbox.FixedDeltaTime);
     else
-      FollowCarAndLookAtCar(Sandbox.ScaledFixedDeltaTime);
+      FollowCarAndLookAtCar(Sandbox.FixedDeltaTime);
   }
 
   private void FollowCarAndLookAtCar(float deltaTime)

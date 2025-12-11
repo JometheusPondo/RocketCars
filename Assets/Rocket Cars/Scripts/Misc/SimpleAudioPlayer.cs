@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class SimpleAudioPlayer : MonoBehaviour
 {
-  [SerializeField] private AudioSource _audioSource;
+  [SerializeField] private AudioSource  _audioSource;
   public AudioSource                    AudioSource => _audioSource;
   public static SimpleAudioPlayer       Instance { get; private set; }
 

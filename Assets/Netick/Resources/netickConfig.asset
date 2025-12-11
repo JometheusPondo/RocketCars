@@ -18,12 +18,12 @@ MonoBehaviour:
   - {fileID: 8439433461650480370, guid: 59f49f7cffe7e05449819897e431bf92, type: 3}
   AutoGetPrefabs: 1
   PrefabsPath: Assets/
-  TickRate: 35
+  TickRate: 40
   MaxAllowedTimestep: 0.1
   MaxPlayers: 6
-  MaxObjects: 255
-  MaxSendableDataSize: 50000
-  StateAllocatorBlockSize: 131072
+  MaxObjects: 128
+  MaxSendableDataSize: 15000
+  StateAllocatorBlockSize: 16384
   MetaAllocatorBlockSize: 1048576
   AggressivePreAllocation: 0
   MaxPredictedTicks: 64
@@ -34,21 +34,28 @@ MonoBehaviour:
   InvokeUpdate: 1
   RenderInvokeOrder: 0
   MaxAdditiveScenes: 4
-  InputReuseAtLowFPS: 1
+  InputReuseOnLowFPS: 1
   ExtraInterpolationDelay: 0
   AccurateLocalInterpolation: 1
   EnableMultithreading: 0
   EnableLogging: 1
   EnableProfiling: 1
   EnableLagCompensation: 0
-  FastSerialization: 1
   EnableInterestManagement: 0
-  SyncTransformOnSpawn: 1
   EnableNarrowphaseFiltering: 0
   CustomGroupCount: 2
   AoILayerCount: 1
   WorldSize: {x: 8000, y: 1, z: 8000}
+  FastSerialization: 1
+  SyncTransformOnSpawn: 1
   IncludeInactiveObjects: 0
+  EnableReplay: 1
+  ReplayRecordOnStartup: 1
+  ReplayKeyframeInterval: 20
+  ReplayFileSignature: 1380274252
+  ReplayFileExtension: nreplay
+  ReplayFileCompression: 1
+  ReplayEncoding: 1
   AoILayer0CellSize: 450
   AoILayer1CellSize: 750
   AoILayer2CellSize: 750
