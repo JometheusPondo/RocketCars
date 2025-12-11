@@ -45,13 +45,6 @@ Because Rocket Cars uses physics prediction, it must resimulate the physics engi
 
 Future improvement suggestion: Use a deterministic and CSP-ready third-party physics engine for better performance and accuracy.
 
-## Who Is This For?
-Rocket Cars is not a full-featured game, it's a technical sample for:
-
-- Game developers exploring multiplayer physics-based gameplay.
-- Developers looking to understand client-side prediction with Netick.
-- Anyone curious how games like Rocket League handle networking and physics.
-
 ## Credits
 
 Massive thank you to [Steak](https://github.com/stinkysteak) and [Milk-Drinker01](https://github.com/Milk-Drinker01) for being invaluable during the development of this sample. Steak completely cleaned up the project and overhauled the graphical style, and Milk-Drinker01 created a beautiful field shader and fixed the camera jitter issue.
