@@ -21,7 +21,7 @@ public class CarController : Replayable
   [Networked] public NetworkBool IsGrounded                            { get; set; } // is the car touching the ground.
   [Networked] public NetworkBool AirBoostUsed                          { get; set; } // did the car use the boost/double jump.
   [Networked] public NetworkBool AirPitchFlag                          { get; set; } // used to prevent the player from directly pitching when the move forward is still pressed when jumping.
-  [Networked] public int         JumpCounts                            { get; set; } // count of jumps, used to sync jump audio.
+  [Networked] public int         JumpTrigger                           { get; set; } // used to sync jump audio.
 
   public Rigidbody               Rigidbody                             { get; private set; }
   public NetworkRigidbody        NetworkRigidbody                      { get; private set; }
@@ -292,7 +292,7 @@ public class CarController : Replayable
           Rigidbody.AddRelativeForce(linear * AirBoostLinearForce, ForceMode.VelocityChange);
           AirBoostUsed      = true;
           AirBoostTickTimer = Sandbox.TimeToTick(1f);
-          JumpCounts++;
+          JumpTrigger++;
         }
       }
     }
@@ -312,7 +312,7 @@ public class CarController : Replayable
         AirPitchFlag        = false;
         Rigidbody.AddForce(transform.up * JumpForce, ForceMode.VelocityChange);
         JumpTickTimer       = Sandbox.TimeToTick(1f);
-        JumpCounts++;
+        JumpTrigger++;
       }
     }
     else
@@ -478,8 +478,8 @@ public class CarController : Replayable
     _resetSuspensionFlag = false;
   }
 
-  [OnChanged(nameof(JumpCounts))][UsedImplicitly]
-  void OnJumpCountsChanged(OnChangedData dat)
+  [OnChanged(nameof(JumpTrigger))][UsedImplicitly]
+  void OnJumpTriggerChanged(OnChangedData dat)
   {
     if (!dat.IsCatchingUp)
       OnJumpEvent();
