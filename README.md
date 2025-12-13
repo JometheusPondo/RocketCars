@@ -30,7 +30,9 @@ In general, and in most games, we only predict the local player character and so
 
 However, due to latency, it's impossible to properly predict other (remote) players, since we can't predict their inputs. Thus, the client's prediction of other players will often be wrong, and it gets much worse at higher pings (>100ms). To mitigate this problem, we use a feature of `NetworkTransform`/`NetworkRigidbody` called `Prediction Error Correction Smoothing` to smoothly correct the error over multiple frames. Without that, the game would appear jittery because each time a correction comes in from the server, we would reconcile with the server and appear in a vastly different location instantly (prediction error magnitude scales with ping).
 
-Any game where you predict other players will need some sort of smooth error correction.
+Read Netick's [Prediction In-Depth article](https://netick.net/docs/2/articles/prediction-in-depth.html) to learn more about Rocket Cars networking.
+
+In addition, [this](https://youtu.be/c373LsgiXBc) is a nice video about Rocket League that describes the same networking-related issues inherent to proxy/remote prediction.
 
 ## Performance
 The game is written performantly, and it should run over 300 FPS even on low end PCs.
