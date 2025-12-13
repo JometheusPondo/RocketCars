@@ -18,10 +18,10 @@ Join our [discord](https://discord.com/invite/uV6bfG66Fx) for any questions.
 
 ## Code Overview
 - `Soccer`: Implements the Soccer game mode and handles overall game management
-- `CarController`: Contains the vehicle simulation logic, using a custom lightweight physics model.
-- `ReplaySystem` & `Replayable`: Handles server-side goal replay system (recording and playback), using Netick state storing/reseting API.
-- `Ball`, `GoalBox`, `Booster`: Core interactive game elements.
-- `UI Folder`: Contains all user interface logic, designed to be independent from the gameplay layer for flexibility.
+- `CarController`: Contains the vehicle simulation logic, using a custom lightweight physics model
+- `ReplaySystem` & `Replayable`: Handles server-side goal replay system (recording and playback), using Netick state storing/reseting API
+- `Ball`, `GoalBox`, `Booster`: Core interactive game elements
+- `UI Folder`: Contains all user interface logic, designed to be independent from the gameplay layer for flexibility
 
 ## Networking 
 In most games, only the local player character and some environmental objects are predicted. However, in Rocket Cars, we predict everything: the local player car + other players and the ball (remote/proxy objects).
