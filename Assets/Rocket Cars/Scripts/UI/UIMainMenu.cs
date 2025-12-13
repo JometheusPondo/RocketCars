@@ -83,7 +83,7 @@ public class UIMainMenu : NetworkEventsListener
 
     _clientSandbox.GetComponent<GlobalInfo>().PlayerName             = (PlayerNameText.text != "" ? PlayerNameText.text : "Unnamed");
     _clientSandbox.GetComponent<GlobalInfo>().StartedThroughMainMenu = true;
-    _clientSandbox.Connect(Port, ServerIPAddressText.text);
+    _clientSandbox.Connect(Port, ServerIPAddressText.text == "" ? "localhost" : ServerIPAddressText.text);
   }
 
   public async void StartReplayClient()

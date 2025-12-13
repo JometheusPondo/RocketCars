@@ -9,9 +9,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 0}
+  m_Script: {fileID: 11500000, guid: 5b519f64e02c1ed48a5a00039c4f6c4e, type: 3}
   m_Name: LiteNetLibTransportProvider
-  m_EditorClassIdentifier: LiteNetLib:Netick.Transport:LiteNetLibTransportProvider
+  m_EditorClassIdentifier: 
   DisconnectTimeout: 5
   ReconnectInterval: 0.5
   MaxConnectAttempts: 10

@@ -90,8 +90,8 @@ public abstract class GameMode : NetworkBehaviour
     }
     else if (Input.inputString.Length > 0 && char.IsDigit(Input.inputString[0]))
     {
-      int numValue = int.Parse(Input.inputString[0].ToString());
-      if (numValue < players.Count)
+      int numValue = (int.Parse(Input.inputString[0].ToString()))-1;
+      if (numValue < players.Count && numValue >= 0)
         ReplaySelectedPlayer = players[numValue];
     }
   }

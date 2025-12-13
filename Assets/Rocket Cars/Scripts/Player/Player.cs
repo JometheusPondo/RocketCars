@@ -4,12 +4,6 @@ using Netick.Unity;
 using System.Collections;
 using UnityEngine;
 
-public enum Team
-{
-  Blue,
-  Red
-}
-
 public class Player : NetworkBehaviour
 {
   // Networked State ********************

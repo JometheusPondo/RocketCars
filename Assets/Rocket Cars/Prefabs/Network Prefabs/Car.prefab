@@ -633,13 +633,13 @@ MonoBehaviour:
     RawValue: 0
   <AirPitchFlag>k__BackingField:
     RawValue: 0
-  <JumpCounts>k__BackingField: 0
+  <JumpTrigger>k__BackingField: 0
   EnableJump: 1
   EnableRocket: 1
   EnableAirControl: 1
   EnableAutoStabilization: 1
   EngineForce: 6
-  BreakForce: 10
+  BreakForce: 5
   GravityForce: 6.3
   StabilizationForce: 14
   VelocityBendingFactor: 0.5
@@ -706,7 +706,6 @@ MonoBehaviour:
   AirSteerTorque: {x: 10, y: 10, z: 20}
   AirBoostLinearForce: 6.5
   AirBoostTorque: 25
-  AirborneLinearForce: 6
   CarBody: {fileID: 6008900682183671325}
   AfterburnerParticleSystems:
   - {fileID: 6773296490042082060}
@@ -727,6 +726,8 @@ MonoBehaviour:
   MaxSuspensionPitchAngle: 5
   SuspensionVisualizer: {fileID: 6033807279883062560}
   InputReductionMaxLatency: 250
+  InputReductionMinFactor: 0.1
+  canBrake: 0
 --- !u!114 &774381909787068010
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -777,7 +778,7 @@ MonoBehaviour:
   TransformSpace: 1
   UseForAOIPosition: 1
   EnablePredictionErrorCorrectionSmoothing: 1
-  CorrectionMultiplier: 3
+  CorrectionMultiplier: 6
   TeleportErrorThreshold: 50
   _interpolationSource: 0
 --- !u!114 &2435061680698831871
@@ -795,10 +796,10 @@ MonoBehaviour:
   _AoILayer: 0
   _BroadPhaseFilter: 0
   _NarrowPhaseFilter: 0
-  _SpatialPrioritization: 0
   _PredictionMode: 1
   _AddToNetworkLoop: 1
   _IsPersistent: 0
+  _ResetInterpOnInterest: 0
   PrefabRoot: {fileID: 0}
   Children: []
   PrefabIndex: -1

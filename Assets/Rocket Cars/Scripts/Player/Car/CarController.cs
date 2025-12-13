@@ -37,9 +37,9 @@ public class CarController : Replayable
   public bool                    EnableAutoStabilization               = true;
 
   [Header("General")]
-  public float                   EngineForce                           = 6;
-  public float                   BreakForce                            = 10f;
-  public float                   GravityForce                          = 6;
+  public float                   EngineForce                           = 6f;
+  public float                   BreakForce                            = 5f;
+  public float                   GravityForce                          = 6f;
   public float                   StabilizationForce                    = 14;
   public float                   VelocityBendingFactor                 = 0.5f;
   public float                   LinearDrag                            = 1f;
@@ -95,6 +95,7 @@ public class CarController : Replayable
 
   [Header("Networking")]
   public int                     InputReductionMaxLatency              = 350; // max latency in ms after which input reduction will be at its maximum.
+  public float                   InputReductionMinFactor               = 0.2f; // controls max input reduction after exceeding `maxLatency` 
 
   // private
   private Vector3                _curCarBodyLocalPos;
@@ -126,8 +127,15 @@ public class CarController : Replayable
   {
     base.NetworkStart();
     _gm                          = Sandbox.GetComponent<GlobalInfo>().GameMode;
+
     if (IsReplay)
-      Sandbox.Replay.Playback.OnSeeked += (t1, t2) => {_resetSuspensionFlag = true; };
+      Sandbox.Replay.Playback.OnSeeked += OnReplaySeeked;
+  }
+
+  public override void NetworkDestroy()
+  {
+    if (IsReplay)
+      Sandbox.Replay.Playback.OnSeeked -= OnReplaySeeked;
   }
 
   public void SetCarActive(bool active)
@@ -159,7 +167,7 @@ public class CarController : Replayable
   private void SimulateVehicle(GameInput input)
   {
     ClampInput(ref input);  // clamp inputs   
-    ReduceInput(ref input); // reduce input based on latency for remote players - later predicted ticks get smaller input than earlier ticks.
+    ReduceInput(ref input, out float latencyMultiplier); // reduce input based on latency for remote players - later predicted ticks get smaller input than earlier ticks.
 
     Rigidbody.centerOfMass  = CenterOfMass.localPosition;
     IsGrounded              = PerformGroundRaycast();
@@ -186,6 +194,21 @@ public class CarController : Replayable
     // * gravity
     if (AirBoostTickTimer <= 0)
      Rigidbody.AddForce(Vector3.down * GravityForce, ForceMode.Acceleration);
+
+    // This logic, exclusive to proxy cars, serves to mitigate visually jarring artifacts caused by mispredictions, specifically targeting forces that attempt to reverse the car's current movement direction. 
+    if (IsClient && IsProxy)
+    {
+      var totalPendingForce = Rigidbody.GetAccumulatedForce();    
+      Rigidbody.AddForce(-totalPendingForce, ForceMode.Force); // clear all accumulated forces.
+
+      var t = Vector3.Dot(totalPendingForce.normalized, Rigidbody.velocity.normalized);
+      if (t > 0.5f)
+        t = 1f;
+      if (t < 0f)
+        t = 0.2f;
+
+      Rigidbody.AddForce(totalPendingForce * t, ForceMode.Force);
+    }
 
     // * drag
     if (!Rigidbody.isKinematic)
@@ -235,6 +258,8 @@ public class CarController : Replayable
     groundedWheels = numOfGroundedWheels;
   }
 
+  public bool canBrake;
+
   /// <summary>
   /// Simulates a simple car wheel.
   /// </summary>
@@ -247,7 +272,7 @@ public class CarController : Replayable
     var groundDot             = Vector3.Dot(hitInfo.normal, wheelTransform.up);
     var forwardDot            = Vector3.Dot(forwardAxis * Mathf.Sign(engineForce), wheelVel);
 
-    if (forwardDot < 0 && (engineForce < 0)) // is breaking
+    if (forwardDot < 0 && engineForce < 0) // is breaking
       engineForce             = engineForce + (- BreakForce);
 
     var forwardSpeed          = Mathf.Abs(Vector3.Dot(forwardAxis, wheelVel));
@@ -383,7 +408,7 @@ public class CarController : Replayable
   {
     bool didHit              = Sandbox.Physics.Raycast(transform.position, -transform.up, out var hitInfo, _collider.bounds.size.y / 1.5f, _envLayerMask);
     if (!didHit)
-      didHit                 = Sandbox.Physics.Raycast(transform.position, transform.up, out hitInfo, _collider.bounds.size.y / 1.5f, _envLayerMask);
+      didHit                 = Sandbox.Physics.Raycast(transform.position, transform.up,  out hitInfo,     _collider.bounds.size.y / 1.5f, _envLayerMask);
     return didHit;
   }
 
@@ -392,16 +417,12 @@ public class CarController : Replayable
     input.Movement           = new Vector3(Mathf.Clamp(input.Movement.x, -1f, 1f), Mathf.Clamp(input.Movement.y, -1f, 1f), Mathf.Clamp(input.Movement.z, -1f, 1f));
   }
 
-  private void ReduceInput(ref GameInput input)
+  private void ReduceInput(ref GameInput input, out float latencyMultiplier)
   {
-    var latencyMultiplier    = 1f;
+    latencyMultiplier    = 1f;
 
     if (IsClient && !IsInputSource)
-    {
-      var maxLatency         = InputReductionMaxLatency;
-      var minFactor          = 0.2f;  // controls max input reduction after exceeding `maxLatency` - should be a configurable setting in inspector
-      latencyMultiplier      = Mathf.Max(minFactor, Mathf.InverseLerp(maxLatency, 0f, Sandbox.TickToTime(Sandbox.Tick - Sandbox.AuthoritativeTick) * 1000));
-    }
+      latencyMultiplier      = Mathf.Max(InputReductionMinFactor, Mathf.InverseLerp(InputReductionMaxLatency, 0f, Sandbox.TickToTime(Sandbox.Tick - Sandbox.AuthoritativeTick) * 1000));
 
     input.Movement           = input.Movement * latencyMultiplier;
   }
@@ -476,6 +497,11 @@ public class CarController : Replayable
       SuspensionVisualizer.position        = _springPos;
 
     _resetSuspensionFlag = false;
+  }
+
+  void OnReplaySeeked(Tick before, Tick current)
+  {
+    _resetSuspensionFlag = true;
   }
 
   [OnChanged(nameof(JumpTrigger))][UsedImplicitly]

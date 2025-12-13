@@ -29,7 +29,7 @@ public class FlyCameraController : NetworkBehaviour
 
   public void LateUpdate()
   {
-    if (Sandbox == null || _cam == null || !Sandbox.IsReplay)
+    if (Sandbox == null || Sandbox.IsRunning == false || _cam == null || !Sandbox.IsReplay)
       return;
 
     if (Sandbox.ContainsPlayer(_gm.ReplaySelectedPlayer))

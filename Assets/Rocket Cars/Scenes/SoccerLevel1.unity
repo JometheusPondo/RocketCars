@@ -987,9 +987,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   SandboxPrefab: {fileID: 3671774035895770840, guid: 323880b4dda100840a3c49c6ad164c1f, type: 3}
-  Transport: {fileID: 11400000, guid: 9d82f4575c1ce6f4f9ceed3e796d8556, type: 2}
+  Transport: {fileID: 11400000, guid: 84f8d6f79a266e141a9b102ecd56b151, type: 2}
   Mode: 3
-  Clients: 5
+  Clients: 1
   StartServerInMultiplePeersMode: 1
   AutoStart: 0
   AutoConnect: 0
@@ -14599,6 +14599,10 @@ PrefabInstance:
     - target: {fileID: 8371440473743300423, guid: 2bf66be69f3a45747a71d95c9345ee4a, type: 3}
       propertyPath: m_IsActive
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 9030430559966804699, guid: 2bf66be69f3a45747a71d95c9345ee4a, type: 3}
+      propertyPath: m_text
+      value: Goal Replay
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

@@ -28,9 +28,7 @@ https://netick.net/docs/2/articles/prediction-in-depth.html
 
 In general, and in most games, we only predict the local player character and some environmental objects. However, in Rocket Cars, we predict everything: remote (other) players, and the ball.
 
-To do all of this, we use Netick to handle the networking, as it takes care of all the prediction and replication logic for us. Even at high packet loss (>20%), the game is still going to be smooth and playable.
-
-However, due to latency, it's impossible to properly predict other (remote) players, since we can't predict their inputs. Thus, the client's prediction of other players will often be wrong. To mitigate this problem, we use a feature of `NetworkTransform`/`NetworkRigidbody` called `Prediction Error Correction Smoothing` to smoothly correct the error over multiple frames. Without that, the game would appear jittery because each time a correction comes in from the server, we would reconcile with the server and appear in a vastly different location instantly (prediction error magnitude scales with ping).
+However, due to latency, it's impossible to properly predict other (remote) players, since we can't predict their inputs. Thus, the client's prediction of other players will often be wrong, and it gets much worse at higher pings (>100ms). To mitigate this problem, we use a feature of `NetworkTransform`/`NetworkRigidbody` called `Prediction Error Correction Smoothing` to smoothly correct the error over multiple frames. Without that, the game would appear jittery because each time a correction comes in from the server, we would reconcile with the server and appear in a vastly different location instantly (prediction error magnitude scales with ping).
 
 Any game where you predict other players will need some sort of smooth error correction.
 
