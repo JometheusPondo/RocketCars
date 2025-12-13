@@ -35,11 +35,11 @@ In addition, [this](https://youtu.be/c373LsgiXBc) is a nice video about Rocket L
 ## Performance
 The game is written performantly, and it should run over 300 FPS even on low end PCs.
 
-### PhysX Resimulation Overhead
-Because Rocket Cars uses physics prediction, it must resimulate the physics engine (Unity's PhysX) during reconciliation. Unfortunately, PhysX is:
+### PhysX Resimulation Overhead and 
+Because Rocket Cars uses physics prediction, it must resimulate the physics engine (Unity's 3D physics engine PhysX) during reconciliation. Unfortunately, PhysX is:
 
-- Not deterministic: leading to potential mispredictions (that shouldn't happen otherwise), especially at high ping.
 - Slow during resimulation: problematic for lower-end or mobile devices.
+- Not deterministic: leading to potential mispredictions that shouldn't happen otherwise, especially at high ping.
 
 Future improvement suggestion: Use a deterministic and CSP-ready third-party physics engine for better performance and accuracy.
 
