@@ -20,7 +20,7 @@ public class CarController : Replayable
   [Networked] public int         GroundedWheelsNum                     { get; set; } // num of grounded wheels.
   [Networked] public NetworkBool IsGrounded                            { get; set; } // is the car touching the ground.
   [Networked] public NetworkBool AirBoostUsed                          { get; set; } // did the car use the boost/double jump.
-  [Networked] public NetworkBool AirPitchFlag                          { get; set; } // used to prevent the player from directly pitching when the move forward is still pressed when jumping.
+  [Networked] public NetworkBool AirPitchFlag                          { get; set; } // used to prevent the player from directly pitching when the move forward button is still pressed when jumping.
   [Networked] public int         JumpTrigger                           { get; set; } // used to sync jump audio.
 
   public Rigidbody               Rigidbody                             { get; private set; }
@@ -147,7 +147,7 @@ public class CarController : Replayable
 
   // This script is divided into two main sections: Simulation and Render.
   // Simulation part is where we do per-tick logic to handle car physics.
-  // Render part is where we do per-frame logic to handle visual-only things such as particle effects and suspension.
+  // Render part is where we do per-frame logic to handle visual/audio only things such as particle effects, suspension, and sound effects.
 
   // -------------------- Simulation (Physics) Section
   public override void NetworkFixedUpdate()
@@ -195,8 +195,8 @@ public class CarController : Replayable
     if (AirBoostTickTimer <= 0)
      Rigidbody.AddForce(Vector3.down * GravityForce, ForceMode.Acceleration);
 
-    // This logic, exclusive to proxy cars, serves to mitigate visually jarring artifacts caused by mispredictions, specifically targeting forces that attempt to reverse the car's current movement direction. 
-    if (IsClient && IsProxy)
+    // This logic, exclusive to remote/proxy cars, serves to mitigate visually jarring snaps caused by mispredictions, specifically targeting forces that oppose the car's current movement direction. 
+    if (IsProxy)
     {
       var totalPendingForce = Rigidbody.GetAccumulatedForce();    
       Rigidbody.AddForce(-totalPendingForce, ForceMode.Force); // clear all accumulated forces.
@@ -412,24 +412,24 @@ public class CarController : Replayable
     return didHit;
   }
 
+  public void ReceiveFuel()
+  {
+    FuelTickTime             = Sandbox.TimeToTick(Mathf.Min(MaxFuel, Sandbox.TickToTime(FuelTickTime) + TimeAddedPerFuel));
+  }
+
   private void ClampInput(ref GameInput input)
   {
-    input.Movement           = new Vector3(Mathf.Clamp(input.Movement.x, -1f, 1f), Mathf.Clamp(input.Movement.y, -1f, 1f), Mathf.Clamp(input.Movement.z, -1f, 1f));
+    input.Movement = new Vector3(Mathf.Clamp(input.Movement.x, -1f, 1f), Mathf.Clamp(input.Movement.y, -1f, 1f), Mathf.Clamp(input.Movement.z, -1f, 1f));
   }
 
   private void ReduceInput(ref GameInput input, out float latencyMultiplier)
   {
-    latencyMultiplier    = 1f;
+    latencyMultiplier = 1f;
 
     if (IsClient && !IsInputSource)
-      latencyMultiplier      = Mathf.Max(InputReductionMinFactor, Mathf.InverseLerp(InputReductionMaxLatency, 0f, Sandbox.TickToTime(Sandbox.Tick - Sandbox.AuthoritativeTick) * 1000));
+      latencyMultiplier = Mathf.Max(InputReductionMinFactor, Mathf.InverseLerp(InputReductionMaxLatency, 0f, Sandbox.TickToTime(Sandbox.Tick - Sandbox.AuthoritativeTick) * 1000));
 
-    input.Movement           = input.Movement * latencyMultiplier;
-  }
-
-  public void ReceiveFuel()
-  {
-    FuelTickTime             = Sandbox.TimeToTick(Mathf.Min(MaxFuel, Sandbox.TickToTime(FuelTickTime) + TimeAddedPerFuel));
+    input.Movement = input.Movement * latencyMultiplier;
   }
 
   public void OnCollisionEnter(Collision collision)
@@ -496,7 +496,7 @@ public class CarController : Replayable
     if (SuspensionVisualizer != null)
       SuspensionVisualizer.position        = _springPos;
 
-    _resetSuspensionFlag = false;
+    _resetSuspensionFlag                   = false;
   }
 
   void OnReplaySeeked(Tick before, Tick current)
