@@ -21,30 +21,30 @@ Join our [discord](https://discord.com/invite/uV6bfG66Fx) for any questions.
 
 Rocket Cars uses Unity’s legacy input system (`Input` API).
 
-### Car
+### Car Controls
 
 #### **Steering / Movement**
-- `A / D` – steer left / right (also controls pitch up / down while airborne)
-- `W / S` – accelerate / brake
-- `Q / E` – air roll left / right
+- A / D – steer left / right (also controls pitch up / down while airborne)
+- W / S – accelerate / brake
+- Q / E – air roll left / right
 
 #### **Actions**
-- `Left Mouse Button` (button) – rocket
-- `Right Mouse Button` (button down) – jump
+- Left Mouse Button (button) – rocket
+- Right Mouse Button (button down) – jump
 
-### Camera
-- `Space`: switches between car-oriented and ball-oriented camera modes
-- `Middle Mouse Button` (while grounded and on car-oriented camera): reverses the camera direction
+### Camera Controls
+- Space: switches between car-oriented and ball-oriented camera modes
+- Middle Mouse Button (while grounded and on car-oriented camera): reverses the camera direction
 
 ### Replay & Spectator Controls
 
 When the game is in replay mode (`Sandbox.IsReplay == true`), normal gameplay input is disabled and the following controls become available:
 
-#### `F` Key – Toggle replay camera between:
+#### F Key – Toggle replay camera between:
 - Free camera
 - Following a selected player
 
-#### `Number Keys (1–9)` – Select a specific player to spectate
+#### Number Keys (1–9) – Select a specific player to spectate
 - `1` selects player index 0
 - `2` selects player index 1
 - etc.
