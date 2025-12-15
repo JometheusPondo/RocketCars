@@ -9,7 +9,6 @@ Rocket Cars is a free open-source server-authoritative physics-based multiplayer
 Join our [discord](https://discord.com/invite/uV6bfG66Fx) for any questions.
 
 ## Features
-
 - Clean and documented code 
 - Fully server-authoritative simulation (cheating is impossible)
 - Fully predicted physics for all cars and the ball
@@ -17,6 +16,52 @@ Join our [discord](https://discord.com/invite/uV6bfG66Fx) for any questions.
 - Built-in goal replay system
 - Full-match replay mode (using Netick's built-in full-game replay system)
 - Custom field shader
+
+## Controls
+
+Rocket Cars uses Unity’s input system (legacy `Input` API) and separates **gameplay inputs** from **replay / spectator controls**.
+
+### Car
+
+These inputs are collected every network tick and sent to the server as part of the player’s `GameInput`:
+
+- **Steering / Movement**
+  - `A / D` axis – steer left / right
+  - `W / S` axis – accelerate / brake
+  - `Q / E` axis – air roll left / right
+
+- **Actions**
+  - `Left Mouse Button` (button) – boost / rocket
+  - `Right Mouse Button` (button down) – jump
+
+### Camera
+
+- **Space** – switches between:
+  - Car-oriented camera
+  - Ball-focused camera
+
+- **Middle Mouse Button** (while grounded)
+  - Temporarily reverses the camera direction
+
+### Replay & Spectator Controls
+
+When the game is in replay mode (`Sandbox.IsReplay == true`), normal gameplay input is disabled and the following controls become available:
+
+- **F** – Toggle replay camera between:
+  - Free camera
+  - Following a selected player
+
+- **Number Keys (1–9)** – Select a specific player to spectate
+  - `1` selects player index 0
+  - `2` selects player index 1
+  - etc.
+
+If the selected player is no longer valid (e.g. disconnected or not spawned), the replay camera automatically falls back to free mode.
+
+## Testing
+* Running a client player: start the game and connect to a server.
+* Running a host player: start the game and choose host. Now, with proper port-forwarding, other people can join the game by using your IP address.
+* Running a dedicated server: by simply starting the game in batch-mode, it would automatically run the game as a dedicated server.
 
 ## Code Overview
 - `Soccer`: Implements the Soccer game mode and handles overall game management
