@@ -33,18 +33,18 @@ Rocket Cars uses Unity’s legacy input system (`Input` API).
 - `Right Mouse Button` (button down) – jump
 
 ### Camera
-- **Space**: switches between car-oriented and ball-oriented camera modes
-- **Middle Mouse Button** (while grounded and on car-oriented camera): reverses the camera direction
+- `Space`: switches between car-oriented and ball-oriented camera modes
+- `Middle Mouse Button` (while grounded and on car-oriented camera): reverses the camera direction
 
 ### Replay & Spectator Controls
 
 When the game is in replay mode (`Sandbox.IsReplay == true`), normal gameplay input is disabled and the following controls become available:
 
-#### **F** – Toggle replay camera between:
+#### `F` Key – Toggle replay camera between:
 - Free camera
 - Following a selected player
 
-#### **Number Keys (1–9)** – Select a specific player to spectate
+#### `Number Keys (1–9)` – Select a specific player to spectate
 - `1` selects player index 0
 - `2` selects player index 1
 - etc.
