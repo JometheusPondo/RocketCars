@@ -26,12 +26,12 @@ Rocket Cars uses Unity’s legacy input system (`Input` API).
 These inputs are collected every network tick and sent to the server as part of the player’s `GameInput`:
 
 - **Steering / Movement**
-  - `A / D` axis – steer left / right
-  - `W / S` axis – accelerate / brake
-  - `Q / E` axis – air roll left / right
+  - `A / D` – steer left / right (also controls pitch up / down while airborne)
+  - `W / S` – accelerate / brake
+  - `Q / E` – air roll left / right
 
 - **Actions**
-  - `Left Mouse Button` (button) – boost / rocket
+  - `Left Mouse Button` (button) – rocket
   - `Right Mouse Button` (button down) – jump
 
 ### Camera
