@@ -23,43 +23,38 @@ Rocket Cars uses Unity’s legacy input system (`Input` API).
 
 ### Car
 
-- **Steering / Movement**
-  - `A / D` – steer left / right (also controls pitch up / down while airborne)
-  - `W / S` – accelerate / brake
-  - `Q / E` – air roll left / right
+#### **Steering / Movement**
+- `A / D` – steer left / right (also controls pitch up / down while airborne)
+- `W / S` – accelerate / brake
+- `Q / E` – air roll left / right
 
-- **Actions**
-  - `Left Mouse Button` (button) – rocket
-  - `Right Mouse Button` (button down) – jump
+#### **Actions**
+- `Left Mouse Button` (button) – rocket
+- `Right Mouse Button` (button down) – jump
 
 ### Camera
-
-- **Space** – switches between:
-  - Car-oriented camera
-  - Ball-focused camera
-
-- **Middle Mouse Button** (while grounded and on Car-oriented camera)
-  - Temporarily reverses the camera direction
+- **Space**: switches between car-oriented and ball-oriented camera modes
+- **Middle Mouse Button** (while grounded and on car-oriented camera): reverses the camera direction
 
 ### Replay & Spectator Controls
 
 When the game is in replay mode (`Sandbox.IsReplay == true`), normal gameplay input is disabled and the following controls become available:
 
-- **F** – Toggle replay camera between:
-  - Free camera
-  - Following a selected player
+#### **F** – Toggle replay camera between:
+- Free camera
+- Following a selected player
 
-- **Number Keys (1–9)** – Select a specific player to spectate
-  - `1` selects player index 0
-  - `2` selects player index 1
-  - etc.
+#### **Number Keys (1–9)** – Select a specific player to spectate
+- `1` selects player index 0
+- `2` selects player index 1
+- etc.
 
 If the selected player is no longer valid (e.g. disconnected or not spawned), the replay camera automatically falls back to free mode.
 
 ## Testing
-* Running a client player: start the game and connect to a server.
-* Running a host player: start the game and choose host. Now, with proper port-forwarding, other people can join the game by using your IP address.
-* Running a dedicated server: by simply starting the game in batch-mode, it would automatically run the game as a dedicated server.
+- Running a client player: start the game and connect to a server
+- Running a host player: start the game and choose host. Now, with proper port-forwarding, other people can join the game by using your IP address
+- Running a dedicated server: by simply starting the game in batch-mode, it would automatically run the game as a dedicated server
 
 ## Code Overview
 - `Soccer`: Implements the Soccer game mode and handles overall game management
