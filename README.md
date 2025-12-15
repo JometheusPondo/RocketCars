@@ -24,8 +24,8 @@ Rocket Cars uses Unity’s legacy input system (`Input` API).
 ### Car Controls
 
 #### **Steering / Movement**
-- A / D – steer left / right (also controls pitch up / down while airborne)
-- W / S – accelerate / brake
+- A / D – steer left / right 
+- W / S – accelerate / brake (also controls pitch up / down while airborne)
 - Q / E – air roll left / right
 
 #### **Actions**
