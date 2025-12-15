@@ -23,8 +23,6 @@ Rocket Cars uses Unity’s legacy input system (`Input` API).
 
 ### Car
 
-These inputs are collected every network tick and sent to the server as part of the player’s `GameInput`:
-
 - **Steering / Movement**
   - `A / D` – steer left / right (also controls pitch up / down while airborne)
   - `W / S` – accelerate / brake
