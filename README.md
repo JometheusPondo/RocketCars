@@ -19,7 +19,7 @@ Join our [discord](https://discord.com/invite/uV6bfG66Fx) for any questions.
 
 ## Controls
 
-Rocket Cars uses Unity’s input system (legacy `Input` API) and separates **gameplay inputs** from **replay / spectator controls**.
+Rocket Cars uses Unity’s legacy input system (`Input` API).
 
 ### Car
 
@@ -40,7 +40,7 @@ These inputs are collected every network tick and sent to the server as part of 
   - Car-oriented camera
   - Ball-focused camera
 
-- **Middle Mouse Button** (while grounded)
+- **Middle Mouse Button** (while grounded and on Car-oriented camera)
   - Temporarily reverses the camera direction
 
 ### Replay & Spectator Controls
