@@ -697,7 +697,7 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 0
-  FrictionMultiplier: 3.5
+  FrictionMultiplier: 2.5
   RocketForceTransform: {fileID: 7365915249806338187}
   RocketForce: 22
   MaxFuel: 25
@@ -725,9 +725,9 @@ MonoBehaviour:
   MaxSuspensionRollAngle: 10
   MaxSuspensionPitchAngle: 5
   SuspensionVisualizer: {fileID: 6033807279883062560}
-  InputReductionMaxLatency: 250
-  InputReductionMinFactor: 0.1
-  canBrake: 0
+  InputDecayMaxLatency: 300
+  InputDecayMinFactor: 0.1
+  VelocityDecayMinLatency: 250
 --- !u!114 &774381909787068010
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -778,7 +778,7 @@ MonoBehaviour:
   TransformSpace: 1
   UseForAOIPosition: 1
   EnablePredictionErrorCorrectionSmoothing: 1
-  CorrectionMultiplier: 6
+  CorrectionMultiplier: 5
   TeleportErrorThreshold: 50
   _interpolationSource: 0
 --- !u!114 &2435061680698831871

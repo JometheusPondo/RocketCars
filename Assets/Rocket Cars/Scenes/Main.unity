@@ -450,7 +450,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Transport: {fileID: 11400000, guid: 84f8d6f79a266e141a9b102ecd56b151, type: 2}
   SandboxPrefab: {fileID: 3671774035895770840, guid: 323880b4dda100840a3c49c6ad164c1f, type: 3}
-  Port: 25565
+  Port: 7777
   FirstLevelIndex: 1
   DedicatedServerFPS: 400
   ConnectionErrorText: {fileID: 2926783278129339691}

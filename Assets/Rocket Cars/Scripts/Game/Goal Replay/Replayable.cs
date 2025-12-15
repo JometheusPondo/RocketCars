@@ -12,31 +12,31 @@ public unsafe class Replayable : NetworkBehaviour
 {
   public NetworkBehaviour       ReplayableBehaviour;
 
-  protected ReplaySystem       _replaySystem;
+  protected ReplaySystem       _goalReplaySystem;
   private IntPtr[]             _historyBuffer;
   private ParticleSystem[]     _particleSystems;
 
   public override void NetworkStart()
   {
     _particleSystems      = GetComponentsInChildren<ParticleSystem>();
-    _replaySystem         = Sandbox.FindObjectOfType<ReplaySystem>();
+    _goalReplaySystem     = Sandbox.FindObjectOfType<ReplaySystem>();
 
     if (IsServer)
     {
-      _historyBuffer      = new IntPtr[_replaySystem.MaxRecordedTicks];
+      _historyBuffer      = new IntPtr[_goalReplaySystem.MaxRecordedTicks];
       // allocate the buffer elements
       for (int i = 0; i < _historyBuffer.Length; i++)
         _historyBuffer[i] = new IntPtr(Netick.MemoryAllocation.Malloc(ReplayableBehaviour.StateSize));
     }
 
     // register with replay system.
-    _replaySystem.TrackObject(this);
+    _goalReplaySystem.TrackObject(this);
   }
 
   public override void NetworkDestroy()
   {
     // unregister with replay system.
-    _replaySystem.UntrackObject(this);
+    _goalReplaySystem.UntrackObject(this);
   }
 
   ~Replayable()

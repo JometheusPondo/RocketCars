@@ -993,7 +993,7 @@ MonoBehaviour:
   StartServerInMultiplePeersMode: 1
   AutoStart: 0
   AutoConnect: 0
-  Port: 25565
+  Port: 7777
   ServerIPAddress: 127.0.0.1
   Cap: 1
   FPS: 450

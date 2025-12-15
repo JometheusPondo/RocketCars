@@ -1,4 +1,3 @@
-using JetBrains.Annotations;
 using Netick;
 using Netick.Unity;
 using System.Collections;

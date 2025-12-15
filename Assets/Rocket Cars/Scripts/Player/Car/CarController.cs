@@ -1,6 +1,5 @@
 using JetBrains.Annotations;
 using Netick;
-using Netick.Samples;
 using Netick.Unity;
 using System;
 using UnityEngine;
@@ -94,10 +93,12 @@ public class CarController : Replayable
   public Transform               SuspensionVisualizer;
 
   [Header("Networking")]
-  public int                     InputReductionMaxLatency              = 350; // max latency in ms after which input reduction will be at its maximum.
-  public float                   InputReductionMinFactor               = 0.2f; // controls max input reduction after exceeding `maxLatency` 
+  public int                     InputDecayMaxLatency                  = 200; // max latency in ms after which input reduction will be at its maximum.
+  public float                   InputDecayMinFactor                   = 0.1f;// controls max input reduction after exceeding `maxLatency` 
+  public int                     VelocityDecayMinLatency               = 150; // min latency in ms after which velocity decay will start.
 
   // private
+  private Vector3                _authVel;
   private Vector3                _curCarBodyLocalPos;
   private Quaternion             _curCarBodyLocalRot;
   private Vector3                _prevCarBodyLocalPos;
@@ -152,12 +153,27 @@ public class CarController : Replayable
   // -------------------- Simulation (Physics) Section
   public override void NetworkFixedUpdate()
   {
-    if (!_gm.DisableCarSimulation)
+    if (!_gm.DisableCarSimulation && !Rigidbody.isKinematic)
     {
-      if (FetchInput(out GameInput input))
-        LastInput = input;
+      if (IsResimulating && Sandbox.ResimulationStep == 0)
+        _authVel = Rigidbody.velocity;
 
-      SimulateVehicle(_gm.DisableInputForEveryone ? default : LastInput);
+      if (FetchInput(out GameInput fetchedInput))
+        LastInput = fetchedInput;
+
+      var input = LastInput;
+      ClampInput(ref input);
+
+      if (IsProxy)
+        DecayInput(ref input); // decay input based on latency for remote players - later predicted ticks get smaller input than earlier ticks.
+
+      SimulateVehicle(_gm.DisableInputForEveryone ? default : input); // simulate the car
+
+      if (IsProxy)
+      {
+        DecayVelocity();
+        ReduceForces(_authVel);
+      }
     }
 
     if (!Application.isBatchMode && !IsResimulating) // when not in batch/headless mode, and not during resims
@@ -166,12 +182,9 @@ public class CarController : Replayable
 
   private void SimulateVehicle(GameInput input)
   {
-    ClampInput(ref input);  // clamp inputs   
-    ReduceInput(ref input, out float latencyMultiplier); // reduce input based on latency for remote players - later predicted ticks get smaller input than earlier ticks.
-
     Rigidbody.centerOfMass  = CenterOfMass.localPosition;
     IsGrounded              = PerformGroundRaycast();
-  
+
     // * linear motion and ground steering
     SimulateWheels(input.Movement.x, input.Movement.y * EngineForce, out var groundedWheels);
 
@@ -194,21 +207,6 @@ public class CarController : Replayable
     // * gravity
     if (AirBoostTickTimer <= 0)
      Rigidbody.AddForce(Vector3.down * GravityForce, ForceMode.Acceleration);
-
-    // This logic, exclusive to remote/proxy cars, serves to mitigate visually jarring snaps caused by mispredictions, specifically targeting forces that oppose the car's current movement direction. 
-    if (IsProxy)
-    {
-      var totalPendingForce = Rigidbody.GetAccumulatedForce();    
-      Rigidbody.AddForce(-totalPendingForce, ForceMode.Force); // clear all accumulated forces.
-
-      var t = Vector3.Dot(totalPendingForce.normalized, Rigidbody.velocity.normalized);
-      if (t > 0.5f)
-        t = 1f;
-      if (t < 0f)
-        t = 0.2f;
-
-      Rigidbody.AddForce(totalPendingForce * t, ForceMode.Force);
-    }
 
     // * drag
     if (!Rigidbody.isKinematic)
@@ -257,8 +255,6 @@ public class CarController : Replayable
 
     groundedWheels = numOfGroundedWheels;
   }
-
-  public bool canBrake;
 
   /// <summary>
   /// Simulates a simple car wheel.
@@ -412,9 +408,26 @@ public class CarController : Replayable
     return didHit;
   }
 
-  public void ReceiveFuel()
+  private void ReduceForces(Vector3 authVel)
   {
-    FuelTickTime             = Sandbox.TimeToTick(Mathf.Min(MaxFuel, Sandbox.TickToTime(FuelTickTime) + TimeAddedPerFuel));
+    // This logic, exclusive to remote/proxy cars, serves to mitigate visually jarring snaps caused by mispredictions, specifically targeting forces that oppose the car's current movement direction in the forward/backward axis. 
+    var totalPendingForce     = Rigidbody.GetAccumulatedForce();
+    var t                     = Mathf.Clamp(Vector3.Dot(totalPendingForce.normalized, authVel.normalized), 0.01f, 1f);
+    Vector3 longitudinalForce = Vector3.Project(totalPendingForce, transform.forward);  // the force along the car's forward/backward axis
+    Rigidbody.AddForce(-longitudinalForce, ForceMode.Force); // clear all accumulated forces.
+    Rigidbody.AddForce(longitudinalForce * t, ForceMode.Force); // add filtered accumulated forces.
+  }
+
+  private void DecayVelocity()
+  {
+    var latencyMultiplier = Mathf.InverseLerp(1000f, VelocityDecayMinLatency, Sandbox.TickToTime(Sandbox.Tick - Sandbox.AuthoritativeTick) * 1000);
+    Rigidbody.velocity = Rigidbody.velocity * latencyMultiplier;
+  }
+
+  private void DecayInput(ref GameInput input)
+  {
+    var latencyMultiplier = Mathf.Max(InputDecayMinFactor, Mathf.InverseLerp(InputDecayMaxLatency, 0f, Sandbox.TickToTime(Sandbox.Tick - Sandbox.AuthoritativeTick) * 1000));
+    input.Movement = input.Movement * latencyMultiplier;
   }
 
   private void ClampInput(ref GameInput input)
@@ -422,14 +435,9 @@ public class CarController : Replayable
     input.Movement = new Vector3(Mathf.Clamp(input.Movement.x, -1f, 1f), Mathf.Clamp(input.Movement.y, -1f, 1f), Mathf.Clamp(input.Movement.z, -1f, 1f));
   }
 
-  private void ReduceInput(ref GameInput input, out float latencyMultiplier)
+  public void ReceiveFuel()
   {
-    latencyMultiplier = 1f;
-
-    if (IsClient && !IsInputSource)
-      latencyMultiplier = Mathf.Max(InputReductionMinFactor, Mathf.InverseLerp(InputReductionMaxLatency, 0f, Sandbox.TickToTime(Sandbox.Tick - Sandbox.AuthoritativeTick) * 1000));
-
-    input.Movement = input.Movement * latencyMultiplier;
+    FuelTickTime = Sandbox.TimeToTick(Mathf.Min(MaxFuel, Sandbox.TickToTime(FuelTickTime) + TimeAddedPerFuel));
   }
 
   public void OnCollisionEnter(Collision collision)

@@ -23,7 +23,7 @@ public class Fuel : Replayable
   public override void NetworkFixedUpdate()
   {
     // we make sure this code only runs in the server, or when we are not replaying.
-    if (!IsServer || _replaySystem.IsReplaying)
+    if (!IsServer || _goalReplaySystem.IsReplaying)
       return;
 
     if (!IsActive)
