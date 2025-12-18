@@ -87,7 +87,7 @@ Future improvement suggestion: Use a deterministic and CSP-ready third-party phy
 
 Massive thank you to [Steak](https://github.com/stinkysteak) and [Milk-Drinker01](https://github.com/Milk-Drinker01) for being invaluable during the development of this sample. Steak completely cleaned up the project and overhauled the graphical style, and Milk-Drinker01 created a beautiful field shader and fixed the camera jitter issue.
 
-License & Third-Party Assets
+### License & Third-Party Assets
 
 The **source code** of this project is licensed under the **MIT License**. 
 
