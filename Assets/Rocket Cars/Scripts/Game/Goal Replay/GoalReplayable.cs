@@ -8,38 +8,38 @@ using Netick.Unity;
 /// <summary>
 /// Add this script to any object you want to make replayable during goal replay.
 /// </summary>
-public unsafe class Replayable : NetworkBehaviour
+public unsafe class GoalReplayable : NetworkBehaviour
 {
-  public NetworkBehaviour       ReplayableBehaviour;
+  public NetworkBehaviour  ReplayableBehaviour;
 
-  protected ReplaySystem       _goalReplaySystem;
-  private IntPtr[]             _historyBuffer;
-  private ParticleSystem[]     _particleSystems;
+  protected GoalReplay     _goalReplay;
+  private IntPtr[]         _historyBuffer;
+  private ParticleSystem[] _particleSystems;
 
   public override void NetworkStart()
   {
-    _particleSystems      = GetComponentsInChildren<ParticleSystem>();
-    _goalReplaySystem     = Sandbox.FindObjectOfType<ReplaySystem>();
+    _particleSystems   = GetComponentsInChildren<ParticleSystem>();
+    _goalReplay        = Sandbox.FindObjectOfType<GoalReplay>();
 
     if (IsServer)
     {
-      _historyBuffer      = new IntPtr[_goalReplaySystem.MaxRecordedTicks];
+      _historyBuffer      = new IntPtr[_goalReplay.MaxRecordedTicks];
       // allocate the buffer elements
       for (int i = 0; i < _historyBuffer.Length; i++)
         _historyBuffer[i] = new IntPtr(Netick.MemoryAllocation.Malloc(ReplayableBehaviour.StateSize));
     }
 
     // register with replay system.
-    _goalReplaySystem.TrackObject(this);
+    _goalReplay.TrackObject(this);
   }
 
   public override void NetworkDestroy()
   {
     // unregister with replay system.
-    _goalReplaySystem.UntrackObject(this);
+    _goalReplay.UntrackObject(this);
   }
 
-  ~Replayable()
+  ~GoalReplayable()
   {
     if (Sandbox != null && IsClient)
       return;

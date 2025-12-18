@@ -2,9 +2,9 @@
 
 <img width="2692" height="1571" alt="Promo2" src="https://github.com/user-attachments/assets/36167790-b493-4bbb-89e3-28ec38db5a32" />
 
-Rocket Cars is a free open-source server-authoritative physics-based multiplayer car game sample, inspired by Rocket League. It’s made in Unity using [Netick](https://github.com/karrarrahim/NetickForUnity), a powerful free networking library that makes creating complex multiplayer games like Rocket League simple and easy for indie developers.
+Rocket Cars is a free open-source server-authoritative physics-based multiplayer car game sample, inspired by Rocket League. It’s made in Unity using [Netick](https://github.com/NetickNetworking/NetickForUnity), a powerful free networking library that makes creating complex multiplayer games like Rocket League simple and easy for indie developers.
 
-**Note**: This project is not a Rocket League clone. It’s designed as a simplified learning sample for developers who want to understand how to build physics-based networked games using [Netick](https://github.com/karrarrahim/NetickForUnity).
+**Note**: This project is not a Rocket League clone. It’s designed as a simplified learning sample for developers who want to understand how to build physics-based networked games using [Netick](https://github.com/NetickNetworking/NetickForUnity).
 
 Join our [discord](https://discord.com/invite/uV6bfG66Fx) for any questions.
 
@@ -13,7 +13,7 @@ Join our [discord](https://discord.com/invite/uV6bfG66Fx) for any questions.
 - Fully server-authoritative simulation (cheating is impossible)
 - Fully predicted physics for all cars and the ball
 - Custom vehicle physics model, inspired by Rocket League
-- Built-in goal replay system
+- Goal replay system
 - Full-match replay mode (using Netick's built-in full-game replay system)
 - Custom field shader
 
@@ -87,12 +87,23 @@ Future improvement suggestion: Use a deterministic and CSP-ready third-party phy
 
 Massive thank you to [Steak](https://github.com/stinkysteak) and [Milk-Drinker01](https://github.com/Milk-Drinker01) for being invaluable during the development of this sample. Steak completely cleaned up the project and overhauled the graphical style, and Milk-Drinker01 created a beautiful field shader and fixed the camera jitter issue.
 
-## Third Party Assets
+## ⚖️ License & Third-Party Assets
 
-- [ParticlePack](https://assetstore.unity.com/packages/vfx/particles/particle-pack-127325) by Unity Technologies 
-- [Low Poly Car Pack 1](https://designersoup.itch.io/low-poly-car-pack-1) by Designer Soup
-- [Vehicle - Essentials](https://assetstore.unity.com/packages/audio/sound-fx/transportation/vehicle-essentials-194951) by Nox_Sound (permission was granted from Nox_Sound to include this pack in Rocket Cars)
-- [Toon Shader](https://github.com/IronWarrior/UnityToonShader) by Erik Roystan
-- [Textures](https://freepbr.com/?s=grass) by [FreePBR](https://freepbr.com/) and [free-3dtextureshd.com](https://free-3dtextureshd.com)
-- [Font Electrolize](https://fonts.google.com/specimen/Electrolize?preview.text=PUKIS&categoryFilters=Appearance:%2FTheme%2FTechno;Feeling:%2FExpressive%2FFuturistic) from Google Fonts
-- [DOTween](https://assetstore.unity.com/packages/tools/animation/dotween-hotween-v2-27676) by Demigiant
+The **source code** of this project is licensed under the **MIT License**. 
+
+However, this project includes several **third-party assets** (art, audio, and plugins) that are **not** open-source. These assets are provided for educational use within this sample only and are subject to their own original licenses.
+
+| Asset | Source | License / Terms |
+| :--- | :--- | :--- |
+| **Vehicle - Essentials** | [Nox_Sound](https://assetstore.unity.com/packages/audio/sound-fx/transportation/vehicle-essentials-194951) | Permission granted for this project; Redistribution restricted. |
+| **ParticlePack** | [Unity Technologies](https://assetstore.unity.com/packages/vfx/particles/particle-pack-127325) | [Unity Asset Store EULA](https://unity.com/legal/as-terms) |
+| **DOTween** | [Demigiant](https://assetstore.unity.com/packages/tools/animation/dotween-hotween-v2-27676) | [Standard EULA](http://dotween.demigiant.com/license.php) |
+| **Low Poly Car Pack 1** | [Designer Soup](https://designersoup.itch.io/low-poly-car-pack-1) | itch.io Terms |
+| **Toon Shader** | [Erik Roystan](https://github.com/IronWarrior/UnityToonShader) | MIT |
+| **Textures** | [FreePBR](https://freepbr.com/) & [Free3DTextures](https://free-3dtextureshd.com) | Free for use |
+| **Game Countdown 62** | [Pixabay](https://pixabay.com/) | Pixabay License |
+| **Font Electrolize** | [Google Fonts](https://fonts.google.com/specimen/Electrolize) | Open Font License (OFL) |
+
+> [!WARNING]
+> If you intend to use this project for a commercial product, you must replace the third-party assets or acquire your own licenses for them.
+

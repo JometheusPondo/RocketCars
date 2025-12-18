@@ -9,7 +9,7 @@ using UnityEngine.Events;
 /// A simple physics controller for the car vehicle. Implements a custom vehicle model. Inspired by https://youtu.be/ueEmiDM94IE?t=863.
 /// NOTE: We use the word 'force' here even though we mean acceleration. Force = acceleration when we ignore mass, given F = M * A.
 /// </summary>
-public class CarController : Replayable
+public class CarController : GoalReplayable
 {
   // Networked State ********************
   [Networked] public GameInput   LastInput                             { get; set; } // we sync the last input used for the vehicle. So we can use it to predict cars of remote players.
@@ -94,7 +94,7 @@ public class CarController : Replayable
 
   [Header("Networking")]
   public int                     InputDecayMaxLatency                  = 200; // max latency in ms after which input reduction will be at its maximum.
-  public float                   InputDecayMinFactor                   = 0.1f;// controls max input reduction after exceeding `maxLatency` 
+  public float                   InputDecayMinFactor                   = 0.1f;// controls max input reduction after exceeding `maxLatency`.
   public int                     VelocityDecayMinLatency               = 150; // min latency in ms after which velocity decay will start.
 
   // private
@@ -139,13 +139,6 @@ public class CarController : Replayable
       Sandbox.Replay.Playback.OnSeeked -= OnReplaySeeked;
   }
 
-  public void SetCarActive(bool active)
-  {
-    Rigidbody.isKinematic = !active;
-    if (active == false)
-      Rigidbody.position = Vector3.one * -1000f;
-  }
-
   // This script is divided into two main sections: Simulation and Render.
   // Simulation part is where we do per-tick logic to handle car physics.
   // Render part is where we do per-frame logic to handle visual/audio only things such as particle effects, suspension, and sound effects.
@@ -153,11 +146,8 @@ public class CarController : Replayable
   // -------------------- Simulation (Physics) Section
   public override void NetworkFixedUpdate()
   {
-    if (!_gm.DisableCarSimulation && !Rigidbody.isKinematic)
+    if (!_gm.DisableCarSimulation)
     {
-      if (IsResimulating && Sandbox.ResimulationStep == 0)
-        _authVel = Rigidbody.velocity;
-
       if (FetchInput(out GameInput fetchedInput))
         LastInput = fetchedInput;
 
@@ -171,8 +161,9 @@ public class CarController : Replayable
 
       if (IsProxy)
       {
-        DecayVelocity();
-        ReduceForces(_authVel);
+        if (!Rigidbody.isKinematic)
+          DecayVelocity();
+        ReduceForces();
       }
     }
 
@@ -207,6 +198,10 @@ public class CarController : Replayable
     // * gravity
     if (AirBoostTickTimer <= 0)
      Rigidbody.AddForce(Vector3.down * GravityForce, ForceMode.Acceleration);
+
+    // * bending velocity
+    if (groundedWheels >= 3 && !Rigidbody.isKinematic)
+      BendVelocity();
 
     // * drag
     if (!Rigidbody.isKinematic)
@@ -249,9 +244,6 @@ public class CarController : Replayable
 
     if (numOfGroundedWheels >= 1)
       Rigidbody.AddForceAtPosition(-transform.up * StabilizationForce, transform.position + (transform.up * 1.5f), ForceMode.Acceleration);
-
-    if (numOfGroundedWheels >= 3)
-      BendVelocity();
 
     groundedWheels = numOfGroundedWheels;
   }
@@ -303,7 +295,7 @@ public class CarController : Replayable
 
   private void SimulateJumpAndAirBoost(Vector3 movement, bool jumpInput, bool isGrounded)
   {
-    if (!IsProxy) // proxies don't predict air boost - proxies are remote players, meaning everyone who's not the local player.
+    if (!IsProxy) // proxies don't predict air boost (proxies are remote players, meaning everyone who's not the local player)
     {
       if (JumpTickTimer != 0 && !AirBoostUsed)
       {
@@ -382,9 +374,6 @@ public class CarController : Replayable
 
   private void BendVelocity()
   {
-    if (Rigidbody.isKinematic)
-      return;
-
     // we bend velocity towards the desired direction to make changing directions faster.
     // we only bend the xy plane velocity, we don't bend the velocity in the upward/downward direction.
     var currentVel           = Rigidbody.velocity;
@@ -408,11 +397,14 @@ public class CarController : Replayable
     return didHit;
   }
 
-  private void ReduceForces(Vector3 authVel)
+  private void ReduceForces()
   {
-    // This logic, exclusive to remote/proxy cars, serves to mitigate visually jarring snaps caused by mispredictions, specifically targeting forces that oppose the car's current movement direction in the forward/backward axis. 
+    if (IsResimulating && Sandbox.ResimulationStep == 0)
+      _authVel = Rigidbody.velocity;
+
+    // this logic, exclusive to remote/proxy cars, serves to mitigate visually jarring snaps caused by mispredictions, specifically targeting forces that oppose the car's current movement direction in the forward/backward axis. 
     var totalPendingForce     = Rigidbody.GetAccumulatedForce();
-    var t                     = Mathf.Clamp(Vector3.Dot(totalPendingForce.normalized, authVel.normalized), 0.01f, 1f);
+    var t                     = Mathf.Clamp(Vector3.Dot(totalPendingForce.normalized, _authVel.normalized), 0.01f, 1f);
     Vector3 longitudinalForce = Vector3.Project(totalPendingForce, transform.forward);  // the force along the car's forward/backward axis
     Rigidbody.AddForce(-longitudinalForce, ForceMode.Force); // clear all accumulated forces.
     Rigidbody.AddForce(longitudinalForce * t, ForceMode.Force); // add filtered accumulated forces.
@@ -507,16 +499,23 @@ public class CarController : Replayable
     _resetSuspensionFlag                   = false;
   }
 
-  void OnReplaySeeked(Tick before, Tick current)
+  private void OnReplaySeeked(Tick before, Tick current)
   {
     _resetSuspensionFlag = true;
   }
 
   [OnChanged(nameof(JumpTrigger))][UsedImplicitly]
-  void OnJumpTriggerChanged(OnChangedData dat)
+  private void OnJumpTriggerChanged(OnChangedData dat)
   {
     if (!dat.IsCatchingUp)
       OnJumpEvent();
+  }
+
+  public void SetCarActive(bool active)
+  {
+    Rigidbody.isKinematic = !active;
+    if (active == false)
+      Rigidbody.position = Vector3.one * -1000f;
   }
 
   private void OnDrawGizmos()

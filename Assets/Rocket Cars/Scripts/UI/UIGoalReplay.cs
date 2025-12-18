@@ -7,12 +7,17 @@ using UnityEngine.UI;
 using Netick;
 using Netick.Unity;
 
-
 [ExecutionOrder(-10)]
 public class UIGoalReplay : NetworkBehaviour
 {
   [SerializeField]
   private GameObject        _replayUI;
+  [SerializeField]
+  private Image             _circleIcon;
+  [SerializeField]
+  private TextMeshProUGUI   _skipersText;
+  [SerializeField]
+  private TextMeshProUGUI   _scorerText;
 
   private Vignette          _vignetteEffect;
   private Grain             _grainEffect;
@@ -42,7 +47,7 @@ public class UIGoalReplay : NetworkBehaviour
       _vignetteEffect.active = true;
       _grainEffect.active    = true;
 
-      if (Sandbox.StartMode != NetickStartMode.ReplayClient)
+      if (!Sandbox.IsReplay)
       {
         _UICarHUD.SetVisibility(false); // hide car HUD when entering replay.
 
@@ -57,7 +62,7 @@ public class UIGoalReplay : NetworkBehaviour
     {
       _vignetteEffect.active = false;
       _grainEffect.active    = false;
-      if (Sandbox.StartMode != NetickStartMode.ReplayClient)
+      if (!Sandbox.IsReplay)
       {
         _UICarHUD.SetVisibility(true); // show car HUD when exiting goal replay.
 
@@ -65,6 +70,19 @@ public class UIGoalReplay : NetworkBehaviour
         foreach (var element in _UIElements)
           element.SetEnabled(Sandbox, false);
       }
+    }
+  }
+
+  public override void NetworkRender()
+  {
+    if (Application.isBatchMode)
+      return;
+
+    if (_soccer.GameState == Soccer.State.GoalReplay)
+    {
+      _circleIcon.color = Color.Lerp(new Color(0.5f, 0f, 0f, 1f), Color.red, Mathf.InverseLerp(-1f, 1f, Mathf.Sin(25f * Time.unscaledTime)));
+      _skipersText.text = $"{_soccer.GoalReplaySkipersCount}/{_soccer.ActivePlayersCount}";
+      _scorerText.text  = _soccer.LastGoalScorer.GetBehaviour(Sandbox).Name;
     }
   }
 }

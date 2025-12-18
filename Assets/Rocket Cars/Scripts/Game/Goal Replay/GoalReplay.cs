@@ -9,7 +9,7 @@ using UnityEngine;
 /// Note that this is temp and in the future Netick will include a built-in system for mid-game replays.
 /// </summary>
 [ExecuteAfter(typeof(PhysicsSimulationStep))]
-public class ReplaySystem : NetworkBehaviour
+public class GoalReplay : NetworkBehaviour
 {
   // Networked State ********************
   [Networked] public NetworkBool    IsReplaying              { get; set; }
@@ -19,7 +19,7 @@ public class ReplaySystem : NetworkBehaviour
   public int                        MaxRecordedTicks         { get; private set; }
   public float                      TimeUntilReplayFinish    => Sandbox.TickToTime(_recordedTicks - (_replayCurrentTick - _replayStartTick));
 
-  private List<Replayable>          _trackedObjects         = new (128);
+  private List<GoalReplayable>      _trackedObjects          = new (128);
   private int                       _recordedTicks;
   private Tick                      _replayCurrentTick;
   private Tick                      _replayStartTick;
@@ -39,7 +39,7 @@ public class ReplaySystem : NetworkBehaviour
   /// Registers an object to be tracked by the replay system for record/replay.
   /// </summary>
   /// <param name="obj"></param>
-  public void TrackObject(Replayable obj)
+  public void TrackObject(GoalReplayable obj)
   {
     _trackedObjects.Add(obj);
   }
@@ -48,7 +48,7 @@ public class ReplaySystem : NetworkBehaviour
   /// Unregisters an object from the replay system.
   /// </summary>
   /// <param name="obj"></param>
-  public void UntrackObject(Replayable obj)
+  public void UntrackObject(GoalReplayable obj)
   {
     _trackedObjects.Remove(obj);
   }

@@ -34,7 +34,7 @@ public class UISoccerScoreboard : NetworkBehaviour
     if (_soccer == null || _gameMode == null)
       return;
 
-    if (Sandbox.InputEnabled || Sandbox.IsReplay)
+    if ((Sandbox.InputEnabled || Sandbox.IsReplay) && Sandbox.IsVisible)
     {
       if (Input.GetButtonDown("Scoreboard"))
         ShowScoreboard();
@@ -95,19 +95,19 @@ public class UISoccerScoreboard : NetworkBehaviour
     GUI.color        = Color.white;
 
     GUILayout.BeginArea(new Rect(redRect.x + 10, redRect.y + 20, redRect.width - 20, redRect.height - 30));
-    DrawTeam(Team.Red, Color.white, "Red Team");
+    DrawTeam(Team.Red, Color.white, "RED TEAM");
     GUILayout.EndArea();
 
     GUILayout.BeginArea(new Rect(blueRect.x + 10, blueRect.y + 20, blueRect.width - 20, blueRect.height - 30));
-    DrawTeam(Team.Blue, Color.white, "Blue Team");
+    DrawTeam(Team.Blue, Color.white, "BLUE TEAM");
     GUILayout.EndArea();
   }
 
   private void DrawTeam(Team team, Color color, string teamName)
   {
-    foreach (var player in _gameMode.ActivePlayers)
-      if (Sandbox.GetBehaviour(player).Team == team)
-        _playersCache.Add(Sandbox.GetBehaviour(player));
+    foreach (var playerId in Sandbox.Players)
+      if (Sandbox.TryGetPlayerObject(playerId, out Player player) && player.Team == team)
+        _playersCache.Add(player);
 
     _playersCache.Sort((x, y) => y.Goals.CompareTo(x.Goals));
 
@@ -123,8 +123,8 @@ public class UISoccerScoreboard : NetworkBehaviour
 
     // header row
     GUILayout.BeginHorizontal();
-    GUILayout.Label("Name", _headerStyle, GUILayout.Width(_boxSize.x * columnWidthName - 30));
-    GUILayout.Label("Score", _headerStyle, GUILayout.Width(_boxSize.x * columnWidthScore - 30));
+    GUILayout.Label("NAME", _headerStyle, GUILayout.Width(_boxSize.x * columnWidthName - 30));
+    GUILayout.Label("SCORE", _headerStyle, GUILayout.Width(_boxSize.x * columnWidthScore - 30));
     GUILayout.EndHorizontal();
 
     GUILayout.Space(5);
@@ -133,8 +133,8 @@ public class UISoccerScoreboard : NetworkBehaviour
     foreach (var p in _playersCache)
     {
       GUILayout.BeginHorizontal();
-      GUILayout.Label(p.Name, _playerStyle, GUILayout.Width(_boxSize.x * columnWidthName - 30));
-      GUILayout.Label(p.Goals.ToString(), _scoreStyle, GUILayout.Width(_boxSize.x * columnWidthScore - 30));
+      GUILayout.Label(p.Name.ToString(), _playerStyle, GUILayout.Width(_boxSize.x * columnWidthName - 30));
+      GUILayout.Label(p.Goals.ToString().ToUpper(), _scoreStyle, GUILayout.Width(_boxSize.x * columnWidthScore - 30));
       GUILayout.EndHorizontal();
     }
 

@@ -3,7 +3,7 @@ using Netick;
 using Netick.Unity;
 using UnityEngine;
 
-public class Fuel : Replayable
+public class Fuel : GoalReplayable
 {
   // Networked State ********************
   [Networked] public NetworkBool    IsActive             { get; set; } = true;
@@ -23,7 +23,7 @@ public class Fuel : Replayable
   public override void NetworkFixedUpdate()
   {
     // we make sure this code only runs in the server, or when we are not replaying.
-    if (!IsServer || _goalReplaySystem.IsReplaying)
+    if (!IsServer || _goalReplay.IsReplaying)
       return;
 
     if (!IsActive)

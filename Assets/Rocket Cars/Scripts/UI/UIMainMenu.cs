@@ -79,7 +79,7 @@ public class UIMainMenu : NetworkEventsListener
     ConnectionErrorText.text                                         = "Connecting...";
 
     if (_clientSandbox == null)
-      _clientSandbox                                                 = Network.StartAsClient(Transport, Port, SandboxPrefab);
+      _clientSandbox                                                 = Network.StartAsClient(Transport, SandboxPrefab);
 
     _clientSandbox.GetComponent<GlobalInfo>().PlayerName             = (PlayerNameText.text != "" ? PlayerNameText.text : "Unnamed");
     _clientSandbox.GetComponent<GlobalInfo>().StartedThroughMainMenu = true;

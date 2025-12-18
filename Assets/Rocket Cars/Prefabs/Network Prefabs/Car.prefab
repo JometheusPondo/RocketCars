@@ -603,6 +603,7 @@ MonoBehaviour:
     RawValue: 0
   <Team>k__BackingField: 0
   <Goals>k__BackingField: 0
+  SkipGoalReplay: 0
   Spawn: {fileID: 0}
   Car: {fileID: 0}
   RedCarPrefab: {fileID: 6957089359115430956, guid: 59f49f7cffe7e05449819897e431bf92, type: 3}
@@ -716,7 +717,7 @@ MonoBehaviour:
   WheelMaxRollSpeed: 10
   WheelRollSpeedFactor: 15
   SuspensionCompressionDirection: {x: 0, y: 1, z: 0}
-  SuspensionRollAxis: {x: 0, y: 0, z: 1}
+  SuspensionRollAxis: {x: 0, y: 0, z: -1}
   SuspensionPitchAxis: {x: 1, y: 0, z: 0}
   SpringStiffness: 80
   SpringDamping: 0.93

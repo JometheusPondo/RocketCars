@@ -56,14 +56,6 @@ public class UIPauseMenu : NetworkBehaviour
 
     _pauseMenu.SetActive(_shown);
     SetVisibility(_shown);
-
-    if (IsReplay)
-      return;
-
-    if (_shown)
-      Cursor.lockState = CursorLockMode.None;
-    else
-      Cursor.lockState = CursorLockMode.Locked;
   }
 
   void SetVisibility(bool visibility)

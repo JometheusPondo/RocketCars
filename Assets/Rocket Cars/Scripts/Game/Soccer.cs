@@ -25,6 +25,7 @@ public class Soccer : GameMode
   [Networked] public State                        GameState              { get; set; } // the current state of the game.
   [Networked] public Tick                         TransitionTick         { get; set; } // used for state transitions.
   [Networked] public Tick                         RoundStartTick         { get; set; } // the tick at which the round started.
+  [Networked] public int                          ActivePlayersCount     { get; set; } // the number of active players.
   [Networked] public int                          TeamRedGoals           { get; set; } // number of goals for the red team.
   [Networked] public int                          TeamBlueGoals          { get; set; } // number of goals for the blue team.
   [Networked] public Team                         WinnerTeam             { get; set; } // the winning team when the game ends.
@@ -32,6 +33,7 @@ public class Soccer : GameMode
   [Networked] public Team                         LastGoalTarget         { get; set; } // the team that was scored at.
   [Networked] public Tick                         LastGoalTick           { get; set; } // the tick at which the last goal was scored at.
   [Networked] public NetworkBool                  GoalReplayLookAtScorer { get; set; } // indicate if we should look at the scorer (instead of the ball) during replay.
+  [Networked] public int                          GoalReplaySkipersCount { get; set; } // number of players who want to skip goal replay.
 
   // Public Events
   public event UnityAction<Player, bool>          OnGoalsChangedEvent;
@@ -44,12 +46,11 @@ public class Soccer : GameMode
   public bool                                     SpawnPlayerImmediately = false;
 
   [Header("General")]
-
   public CarController                            PlayerPrefab;
   public Transform[]                              RedTeamSpawns;
   public Transform[]                              BlueTeamSpawns;
   public Ball                                     Ball;
-  public int                                      GoalsToWin             = 5;  // number of goals required for the game to end.
+  public int                                      GoalsToWin             = 5;  // number of goals required for the match to end.
   public float                                    DelayUntilReplay       = 3f; // how long until we transition to replay after a goal was scored.
   public float                                    DelayUntilRoundStart   = 3f; // how long until the round starts after replay finishes.
   public float                                    DelayUntilRestart      = 5f; // how long until the game is restarted after it game over.
@@ -81,86 +82,96 @@ public class Soccer : GameMode
   public AudioSource                              AudioSource;
 
   // private
-  private int                                     _redTeamNum;
   private Stack<Transform>                        _freeRedTeamSpawns;
   private Stack<Transform>                        _freeBlueTeamSpawns;
   private Stack<CarController>                    _freeCars;
-  private ReplaySystem                            _goalReplay;
+  private GoalReplay                              _goalReplay;
   private Camera                                  _camera;
   private float                                   _originalFOV;
   private Vector4                                 _originalArenaRoofEmissionColor;
 
   public override void NetworkStart()
   {
-    _goalReplay                     = GetComponent<ReplaySystem>();
+    _goalReplay                     = GetComponent<GoalReplay>();
      AudioSource                    = GetComponent<AudioSource>();
     _camera                         = Sandbox.FindObjectOfType<Camera>();
     _originalFOV                    = _camera.fieldOfView;
     _originalArenaRoofEmissionColor = ArenaRoofMaterial.GetVector("_EmissionColor");
-  
-    base.NetworkStart();
+    Sandbox.Events.OnPlayerJoined  += OnPlayerJoined;
+    Sandbox.Events.OnPlayerLeft    += OnPlayerLeft;
+
+    if (Sandbox.Config.MaxPlayers % 2 != 0)
+      Sandbox.LogError("Incorrect MaxPlayers value! In Rocket Cars, MaxPlayers must be an even number.");
 
     if (IsServer)
       PreAllocateCars();
 
-    // asking the server to join the game and assign us a car.
-    if (SpawnPlayerImmediately && IsClient)
-      RPC_EnterGame(Random.value > 0.5f ? Team.Blue : Team.Red, "Unnamed"); 
-
-    if (IsServer && Sandbox.GetPlayerObject(Sandbox.LocalPlayer) == null)
-      AcquireCar(Sandbox.LocalPlayer.PlayerId);
-
-    Sandbox.Events.OnPlayerJoined += OnPlayerJoined;
-    Sandbox.Events.OnPlayerLeft   += OnPlayerLeft;
+    if (SpawnPlayerImmediately && IsHost)
+      JoinAnyTeam(Sandbox.LocalPlayer.PlayerId, "Unnamed"); 
   }
 
   public void OnPlayerJoined(NetworkSandbox sandbox, NetworkPlayerId plr)
   {
-    if (IsClient)
-      return;
-    
-    AcquireCar(plr);
-
-    if (SpawnPlayerImmediately)
-      RPC_EnterGame(Random.value > 0.5f ? Team.Red : Team.Blue, "Unnamed");
+    if (IsServer && SpawnPlayerImmediately)
+      JoinAnyTeam(plr, "Unnamed");
   }
 
   public void OnPlayerLeft(NetworkSandbox sandbox, NetworkPlayerId plr)
   {
-    if (IsClient)
-      return;
-    var player = Sandbox.GetPlayerObject<Player>(plr);
-    if (player != null)
-    {
-      ActivePlayers.Remove(player.GetRef<Player>());
+    if (IsServer && Sandbox.TryGetPlayerObject(plr, out Player player))
       ReleaseCar(player);
-    }
+  }
+
+  public void JoinAnyTeam(NetworkPlayerId plr, string name)
+  {
+    var team = Random.value > 0.5f ? Team.Red : Team.Blue;
+    if (GetTeamSize(team) == (Sandbox.Config.MaxPlayers / 2)) // if full, join other team.
+      team = team == Team.Red ? Team.Blue : Team.Red;
+    AccuireCar(plr, team, name);
   }
 
   /// <summary>
   /// An RPC used to request to join the game. This can be called by anyone, but only executed in the Owner (the server/host in Netick is called Owner).
   /// </summary>
   [Rpc(RpcPeers.Everyone, RpcPeers.Owner, isReliable: true)]
-  public void RPC_EnterGame(Team team, NetworkString16 name, RpcContext ctx = default)
+  public void RPC_Join(Team team, NetworkString16 name, RpcContext ctx = default)
   {
-    if (GameState == State.GoalReplay) // return when in replay
+    // return if in goal replay or team is full.
+    if (GameState == State.GoalReplay || (team == Team.Red && _freeRedTeamSpawns.Count == 0) || (team == Team.Blue && _freeBlueTeamSpawns.Count == 0))
       return;
 
-    var plr                   = ctx.Source;
-    int playersPerTeam        = Sandbox.Config.MaxPlayers / 2;
+    AccuireCar(ctx.Source, team, name);
+  }
 
-    if (team == Team.Red && playersPerTeam == _redTeamNum)  // if the player wants to join red team but it's full, we switch it to blue team.
-      team                    = Team.Blue;
+  void AccuireCar(NetworkPlayerId playerId, Team team, NetworkString16 name)
+  {
+    if (Sandbox.GetPlayerObject(playerId) != null) // return if player already has a car.
+      return;
 
-    var player                = Sandbox.GetPlayerObject<Player>(plr);
-    var car                   = player.Car;
+    var netPlayer             = Sandbox.GetPlayerById(playerId);
+    var car                   = _freeCars.Pop(); // getting a car from the pool of free cars.
+    var player                = car.GetComponent<Player>();
+    car.InputSource           = netPlayer;  // set the input source of the car to the Rpc calling player.
     car.SetCarActive(true);
-    player.SetTeam(team);
-    player.Spawn              = player.Team == Team.Red ? _freeRedTeamSpawns.Pop() : _freeBlueTeamSpawns.Pop();
-    car.NetworkRigidbody.     Teleport(player.Spawn.position, player.Spawn.rotation);
+    Sandbox.SetPlayerObject(netPlayer, player.Object); 
     player.Name               = name;
-    player.IsReady            = true; // setting the player as ready, which will cause the player to be registered using the OnChanged callback on IsReady.
-    ActivePlayers.Add(player.GetRef<Player>());
+    player.Team               = team;
+    player.Spawn              = player.Team == Team.Red ? _freeRedTeamSpawns.Pop() : _freeBlueTeamSpawns.Pop();
+    player.IsReady            = true;
+    car.NetworkRigidbody.Teleport(player.Spawn.position, player.Spawn.rotation);  
+    ActivePlayersCount++;
+  }
+
+  void ReleaseCar(Player plr)
+  {
+    ActivePlayersCount--;
+    _freeCars.Push(plr.Car);
+    plr.Car.SetCarActive(false);
+
+    if (plr.Team == Team.Red)
+      _freeRedTeamSpawns.Push(plr.Spawn);
+    else if (plr.Team == Team.Blue)
+      _freeBlueTeamSpawns.Push(plr.Spawn);
   }
 
   /// <summary>
@@ -172,52 +183,31 @@ public class Soccer : GameMode
   void PreAllocateCars()
   {
     int playersPerTeam        = Sandbox.Config.MaxPlayers / 2;
-    _freeCars                 = new(playersPerTeam);
+    _freeCars                 = new(Sandbox.Config.MaxPlayers);
     _freeBlueTeamSpawns       = new(playersPerTeam);
     _freeRedTeamSpawns        = new(playersPerTeam);
+
+    for (int i = 0; i < Sandbox.Config.MaxPlayers; i++)
+    {
+      var car = Sandbox.NetworkInstantiate(PlayerPrefab, Vector3.up * -1000f);
+      car.SetCarActive(false);
+      _freeCars.Push(car);
+    }
 
     for (int i = 0; i < playersPerTeam; i++)
       _freeBlueTeamSpawns.    Push(BlueTeamSpawns[i]);
     for (int i = 0; i < playersPerTeam; i++)
       _freeRedTeamSpawns.     Push(RedTeamSpawns[i]);
-    for (int i = 0; i < Sandbox.Config.MaxPlayers; i++)
-      _freeCars.              Push(CreateCar().Car);
   }
 
-  Player CreateCar()
+  public int GetTeamSize(Team team)
   {
-    var car    = Sandbox.NetworkInstantiate(PlayerPrefab, Vector3.up * -1000f);
-    car.SetCarActive(false);
-    return car.GetComponent<Player>();
-  }
+    int count          = 0;
+    foreach (var playerId in Sandbox.Players)
+      if (Sandbox.TryGetPlayerObject(playerId, out Player player) && player.Team == team)
+        count++;
 
-  Player AcquireCar(NetworkPlayerId netPlayerId)
-  {
-    var netPlayer   = Sandbox.GetPlayerById(netPlayerId);
-    var car         = _freeCars.Pop(); // getting a car from the pool of free cars.
-    var player      = car.GetComponent<Player>();
-    car.InputSource = netPlayer;  // set the input source of the car to the Rpc calling player.
-    Sandbox.SetPlayerObject(netPlayer, player.Object);
-    return player;
-  }
-
-  void ReleaseCar(Player plr)
-  {
-    _freeCars.Push(plr.Car);
-    plr.Car.SetCarActive(false);
-
-    if (Sandbox.GetPlayerObject(plr.InputSourcePlayerId) == null)
-      return;
-
-    if (plr.Team == Team.Red)
-    {
-      _redTeamNum--;
-      _freeRedTeamSpawns.Push(plr.Spawn);
-    }
-    else if (plr.Team == Team.Blue)
-    {
-      _freeBlueTeamSpawns.Push(plr.Spawn);
-    }
+    return count;
   }
 
   /// <summary>
@@ -225,58 +215,77 @@ public class Soccer : GameMode
   /// </summary>
   public override void NetworkFixedUpdate()
   {
-    if (IsClient)
-      return;
-
     switch (GameState)
     {
       case State.Started:
         {
-          if (_camera.fieldOfView != _originalFOV)
-            _camera.fieldOfView = _originalFOV;
-         
           break;
         }
       case State.GoalScored:
         {
-          // this is just a state to wait a little bit after scoring a goal, then switching to replay mode.
+          if (IsClient)
+            return;
+
+          // this is just a state to wait a little bit after scoring a goal, then switching to goal replay state.
           if (Sandbox.TickToTime(Sandbox.Tick - TransitionTick) >= DelayUntilReplay)
-            GameState = State.GoalReplay;
+            ChangeState(State.GoalReplay);
+          
+          // reset skip state for everyone
+          foreach (var playerId in Sandbox.Players)
+            if (Sandbox.TryGetPlayerObject(playerId, out Player player))
+              player.SkipGoalReplay = false;
 
           break;
         }
       case State.GoalReplay:
         {
-          GoalReplayLookAtScorer            = _goalReplay.TimeUntilReplayFinish < 4;
-          // see if replay finished, and if so check if game should end if one of the team scored enough goals, if not go to SoccerState.WaitingForRoundStart state.
+          if (IsClient)
+            return;
+
+          GoalReplayLookAtScorer = _goalReplay.TimeUntilReplayFinish < 4;
+          GoalReplaySkipersCount = 0;
+
+          // see who wants to skip goal replay
+          foreach (var playerId in Sandbox.Players)
+          {
+            if (Sandbox.TryGetPlayerObject(playerId, out Player player) && _goalReplay.TimeUntilReplayFinish <= (_goalReplay.MaxReplayTime - 0.5f))
+            {
+              if (player.FetchInput(out GameInput input) && input.Jump == true) // jump is used as the skip input
+                player.SkipGoalReplay = true;
+
+              if (player.SkipGoalReplay)
+                GoalReplaySkipersCount++;
+            }
+          }
+
+          if (GoalReplaySkipersCount == ActivePlayersCount) // everyone wants to skip
+            _goalReplay.StopReplaying(); // skip replay
+          
+          // see if replay finished, and if so check if the match should end if one of the team scored enough goals, if not go to SoccerState.WaitingForRoundStart state.
           if (!_goalReplay.IsReplaying)
           {
             // if a team has won.
             if (TeamRedGoals >= GoalsToWin || TeamBlueGoals >= GoalsToWin)
             {
-              WinnerTeam                = TeamRedGoals >= GoalsToWin ? Team.Red : Team.Blue;
-              GameState                 = State.GameOver;
+              WinnerTeam                 = TeamRedGoals >= GoalsToWin ? Team.Red : Team.Blue;
+              ChangeState(State.GameOver);
             }
             // if no one one, we just start a new round.
             else
             {
-              GameState                 = State.WaitingForRoundStart;
+              ChangeState(State.WaitingForRoundStart);
             }
 
             if (!Sandbox.IsReplay || Sandbox.ContainsPlayer(ReplaySelectedPlayer))
             {
-              // change the camera fov in goal replay.
-              _camera.fieldOfView = ReplayCameraFOV;
-              // snap the camera rotation to look at the scorer.
-              var scorer = LastGoalScorer.GetBehaviour<Player>(Sandbox).Car;
+              _camera.fieldOfView        = ReplayCameraFOV;  // change the camera fov in goal replay.    
+              var scorer                 = LastGoalScorer.GetBehaviour<Player>(Sandbox).Car;  // snap the camera rotation to look at the scorer.
               _camera.transform.rotation = Quaternion.LookRotation((scorer.transform.position - ReplayCameraPosition).normalized, Vector3.up);
             }
 
             // make sure the players who left during relay are reset properly.
             foreach (var car in _freeCars)
-            {
               car.SetCarActive(false);
-            }
           }
           break;
         }
@@ -284,23 +293,34 @@ public class Soccer : GameMode
         {
           // see if round starts timer finished and go to SoccerState.Started if so.
           if (Sandbox.TickToTime(Sandbox.Tick - TransitionTick) >= DelayUntilRoundStart)
-            GameState = State.Started;
+          {
+            if (IsServer)
+              _goalReplay.StartRecording(); // start recording.
+
+            ChangeState(State.Started);
+            RoundStartTick          = Sandbox.Tick;
+            DisableInputForEveryone = false; // enable input.
+          }
 
           break;
         }
       case State.GameOver:
         {
+          if (IsClient)
+            return;
+
           // see if restart timer finished and go to SoccerState.WaitingForRoundStart if so.
           if (Sandbox.TickToTime(Sandbox.Tick - TransitionTick) >= DelayUntilRestart)
           {
-            GameState      = State.WaitingForRoundStart;
+            ChangeState(State.WaitingForRoundStart);
 
             // reset goals
             TeamBlueGoals  = 0;
             TeamRedGoals   = 0;
 
-            foreach (var player in ActivePlayers)
-              player.GetBehaviour(Sandbox).Goals = 0;
+            foreach (var playerId in Sandbox.Players)
+              if (Sandbox.TryGetPlayerObject(playerId, out Player player))
+                player.Goals = 0;
           }
 
           break;
@@ -309,6 +329,12 @@ public class Soccer : GameMode
         break;
     }
 
+  }
+
+  private void ChangeState(State state)
+  {
+    GameState      = state;
+    TransitionTick = Sandbox.Tick;
   }
 
   /// <summary>
@@ -320,28 +346,16 @@ public class Soccer : GameMode
   {
     OnGameStateChangedEvent?.Invoke(dat);
 
-    if (IsServer)
-      TransitionTick = Sandbox.Tick;
-
     switch (GameState)
     {
       case State.Started:
         {
-          if (IsServer)
-          {
-            RoundStartTick          = Sandbox.Tick;
-
-            // make sure to enable input.
-            DisableInputForEveryone = false;
-            // start recording.
-            _goalReplay.StartRecording();
-          }
+          OnRoundStartedEvent?.Invoke();
 
           // playing round start audio.
           if (dat.IsCatchingUp == false)
             AudioSource.NetworkPlayOneShot(Sandbox, RoundStartAudioClip);
 
-          OnRoundStartedEvent?.Invoke();
           break;
         }
       case State.GoalScored:
@@ -359,8 +373,9 @@ public class Soccer : GameMode
           }
 
           // reset the cars to their spawn positions.
-          foreach (var player in ActivePlayers)
-            player.GetBehaviour(Sandbox).GetComponent<CarCameraController>().LookAtBall = true;
+          foreach (var playerId in Sandbox.Players)
+            if (Sandbox.TryGetPlayerObject(playerId, out Player player))
+              player.GetComponent<CarCameraController>().LookAtBall = true;
 
           break;
         }
@@ -374,11 +389,13 @@ public class Soccer : GameMode
             DisableCarSimulation                        = false;
 
             // reset the cars to their spawn positions.
-            foreach (var player in ActivePlayers)
+            foreach (var playerId in Sandbox.Players)
             {
-              var plr = player.GetBehaviour(Sandbox);
-              plr.Car.                               ClearState();
-              plr.Car.NetworkRigidbody.              Teleport(plr.Spawn.position, plr.Spawn.rotation);
+              if (Sandbox.TryGetPlayerObject(playerId, out Player player))
+              {
+                player.Car.ClearState();
+                player.Car.NetworkRigidbody.Teleport(player.Spawn.position, player.Spawn.rotation);
+              }
             }
 
             // reset the ball to its spawn position.
@@ -425,19 +442,19 @@ public class Soccer : GameMode
       if (box.Team != scorer.Team)
         scorer.Goals++;
 
-      // explode effect on players near the goal.
-      foreach (var player in ActivePlayers)
-        ExplodePlayer(player.GetBehaviour(Sandbox), box, Ball);
+      // explode effect on players near the goal area.
+      foreach (var playerId in Sandbox.Players)
+        if (Sandbox.TryGetPlayerObject(playerId, out Player player))
+          ExplodePlayer(player, box, Ball); 
     }
 
-    GameState = State.GoalScored;
+    ChangeState(State.GoalScored);
 
     if (box.Team == Team.Red)
       TeamBlueGoals++;  
     else
-      TeamRedGoals++;
+      TeamRedGoals++; 
   }
-
 
   // Since we have two network variables for goal count for each team, we use two [OnChanged] methods for each one to call OnGoalsChanged which will invoke OnGoalsChangedEvent.
   // we check if a new goal was scored during this change by checking against the previous value and see if the new value has increased.

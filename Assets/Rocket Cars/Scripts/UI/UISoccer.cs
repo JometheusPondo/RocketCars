@@ -18,6 +18,11 @@ public class UISoccer : NetworkBehaviour
   private Button             _joinBlueButton;
 
   [SerializeField]
+  private TextMeshProUGUI    _redTeamCountText;
+  [SerializeField]
+  private TextMeshProUGUI    _blueTeamCountText;
+
+  [SerializeField]
   private TextMeshProUGUI    _timerText;
   [SerializeField]
   private TextMeshProUGUI    _roundStartTimer;
@@ -72,13 +77,13 @@ public class UISoccer : NetworkBehaviour
 
   private void OnGoalsChanged(Player lastGoalScorer, bool didScoreGoal)
   {
-    _teamRedGoalsText.text = _soccer.TeamRedGoals.ToString();
-    _teamBlueGoalsText.text = _soccer.TeamBlueGoals.ToString();
+    _teamRedGoalsText.text      = _soccer.TeamRedGoals.ToString();
+    _teamBlueGoalsText.text     = _soccer.TeamBlueGoals.ToString();
 
     if (_soccer.GameState == Soccer.State.GoalScored)
     {
       _goalScoredTextShownTimer = 5f;
-      _goalScoredText.text = lastGoalScorer.Name + " Scored!";
+      _goalScoredText.text      = lastGoalScorer.Name + "\nSCORED!";
     }
   }
 
@@ -87,11 +92,22 @@ public class UISoccer : NetworkBehaviour
     if (Application.isBatchMode)
       return;
 
-    if (_soccer.GameState == Soccer.State.GoalReplay || Sandbox.TryGetLocalPlayerObject(out Player localPlayer) && localPlayer.IsReady || Sandbox.IsReplay)
+    Sandbox.TryGetLocalPlayerObject(out Player localPlayer);
+
+    if (_soccer.GameState == Soccer.State.GoalReplay || localPlayer != null && localPlayer.IsReady || Sandbox.IsReplay)
     {
       _joinCanvasGroup.interactable           = false;
       _joinCanvasGroup.alpha                  = 0f;
       _joinCanvasGroup.blocksRaycasts         = false;
+    }
+
+    if (localPlayer == null)
+    {
+      var playersPerTeam                      = Sandbox.Config.MaxPlayers / 2;
+      var redTeamPlayersCount                 = _soccer.GetTeamSize(Team.Red);
+      var blueTeamPlayersCount                = _soccer.GetTeamSize(Team.Blue);
+      _redTeamCountText.text                  = $"{redTeamPlayersCount. ToString()}/{playersPerTeam} {(redTeamPlayersCount  == playersPerTeam ? "(FULL)" : "" )}";
+      _blueTeamCountText.text                 = $"{blueTeamPlayersCount.ToString()}/{playersPerTeam} {(blueTeamPlayersCount == playersPerTeam ? "(FULL)" : "")}";
     }
 
     float time                                = Sandbox.TickToTime(Sandbox.Tick - _soccer.RoundStartTick);
@@ -120,8 +136,8 @@ public class UISoccer : NetworkBehaviour
     if (_soccer.GameState == Soccer.State.GameOver)
     {
       var timeToStart                         = Mathf.Max(0f, _soccer.DelayUntilRestart - Sandbox.TickToTime(Sandbox.Tick - _soccer.TransitionTick));
-      _gameOverTimerText.text                 = $"Next game starts in {(int)timeToStart} seconds";
-      _winnerText.text                        = $"{_soccer.WinnerTeam} Team Won";
+      _gameOverTimerText.text                 = $"Next game starts in {(int)timeToStart} seconds".ToUpper();
+      _winnerText.text                        = $"{_soccer.WinnerTeam} Team Won".ToUpper();
     }
 
     UpdateBallIndicator();
@@ -142,7 +158,7 @@ public class UISoccer : NetworkBehaviour
     _winnerText.       SetEnabled(Sandbox, true);
     _gameOverTimerText.SetEnabled(Sandbox, true);
 
-    if (Sandbox.StartMode == NetickStartMode.ReplayClient)
+    if (Sandbox.IsReplay)
       return;
 
     foreach (var ui in _UIsToDisableAtGameOver)
@@ -156,7 +172,7 @@ public class UISoccer : NetworkBehaviour
     _winnerText.SetEnabled(Sandbox, false);
     _gameOverTimerText.SetEnabled(Sandbox, false);
 
-    if (Sandbox.StartMode == NetickStartMode.ReplayClient)
+    if (Sandbox.IsReplay)
       return;
 
     foreach (var ui in _UIsToDisableAtGameOver)
@@ -165,6 +181,6 @@ public class UISoccer : NetworkBehaviour
 
   private void ShowRoundStartTimer()          => _roundStartTimer.SetEnabled(Sandbox, true);
   private void HideRoundStartTimer()          => _roundStartTimer.SetEnabled(Sandbox, false);
-  private void OnJoinRedPressed()             => _soccer.RPC_EnterGame(Team.Red,  _soccer.GlobalInfo.PlayerName);
-  private void OnJoinBluePressed()            => _soccer.RPC_EnterGame(Team.Blue, _soccer.GlobalInfo.PlayerName);
+  private void OnJoinRedPressed()             => _soccer.RPC_Join(Team.Red,  _soccer.GlobalInfo.PlayerName);
+  private void OnJoinBluePressed()            => _soccer.RPC_Join(Team.Blue, _soccer.GlobalInfo.PlayerName);
 }

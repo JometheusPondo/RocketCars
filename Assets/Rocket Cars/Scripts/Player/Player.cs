@@ -7,25 +7,23 @@ using UnityEngine;
 public class Player : NetworkBehaviour
 {
   // Networked State ********************
-  [Networked] public NetworkString16 Name    { get; set; }
-  [Networked] public NetworkBool     IsReady { get; set; } 
-  [Networked] public Team            Team    { get; set; }
-  [Networked] public int             Goals   { get; set; }
-  
+  [Networked] public NetworkString16 Name               { get; set; }
+  [Networked] public NetworkBool     IsReady            { get; set; } 
+  [Networked] public Team            Team               { get; set; }
+  [Networked] public int             Goals              { get; set; }
+
+  [HideInInspector]
+  public bool                        SkipGoalReplay;
   [HideInInspector]
   public Transform                   Spawn;
   [HideInInspector]
   public CarController               Car;
   public GameObject                  RedCarPrefab;
   public GameObject                  BlueCarPrefab;
+
   void Awake()
   {
     Car = GetComponent<CarController>();
-  }
-
-  public void SetTeam(Team team)
-  {
-    Team = team;
   }
 
   public override void OnInputSourceLeft()

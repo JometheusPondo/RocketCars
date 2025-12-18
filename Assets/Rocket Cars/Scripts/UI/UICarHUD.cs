@@ -29,7 +29,6 @@ public class UICarHUD : NetworkBehaviour
   public override void NetworkRender()
   {
     var plrId = Sandbox.IsReplay ? _gm.ReplaySelectedPlayer : Sandbox.LocalPlayer.PlayerId;
-
     Sandbox.TryGetPlayerObject(plrId, out Player player);
 
     if (player != null && player.IsReady)
@@ -37,6 +36,9 @@ public class UICarHUD : NetworkBehaviour
       _carController       = player.GetComponent<CarController>();
       _carCameraController = player.GetComponent<CarCameraController>();
       _UICarHUD.SetActive(true);
+
+      if (!Sandbox.IsReplay && Netick.Unity.Network.StartMode != StartMode.MultiplePeers)
+        Cursor.lockState = _gm.Paused == true ? CursorLockMode.None : CursorLockMode.Locked;
     }
     else
     {

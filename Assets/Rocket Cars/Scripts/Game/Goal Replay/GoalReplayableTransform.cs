@@ -5,7 +5,7 @@ using UnityEngine;
 using Netick;
 using Netick.Unity;
 
-public unsafe class ReplayableTransform : Replayable
+public unsafe class GoalReplayableTransform : GoalReplayable
 {
   private Rigidbody        _rb;
   private NetworkTransform _nt;

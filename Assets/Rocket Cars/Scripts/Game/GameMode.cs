@@ -8,7 +8,6 @@ using Netick;
 using Netick.Unity;
 using Network = Netick.Unity.Network;
 
-
 /// <summary>
 /// This is the Game Mode script, the parent script of all game modes. 
 /// </summary>
@@ -16,17 +15,15 @@ using Network = Netick.Unity.Network;
 public abstract class GameMode : NetworkBehaviour
 {
   // Networked State ********************
-  [Networked (size: 32)]
-  public NetworkUnorderedList<NetworkBehaviourRef<Player>>  ActivePlayers           = new(32);
-  [Networked] public NetworkBool                            DisableInputForEveryone { get; set; }  // when true, the car will no longer accept user inputs, but can still be simulated.
-  [Networked] public NetworkBool                            DisableCarCamera        { get; set; }  // when true, the camera will no longer follow the car.
-  [Networked] public NetworkBool                            DisableCarSimulation    { get; set; }  // when true the cars will no longer be physically simulated.
+  [Networked] public NetworkBool             DisableInputForEveryone { get; set; }  // when true, the car will no longer accept user inputs, but can still be simulated.
+  [Networked] public NetworkBool             DisableCarCamera        { get; set; }  // when true, the camera will no longer follow the car.
+  [Networked] public NetworkBool             DisableCarSimulation    { get; set; }  // when true the cars will no longer be physically simulated.
 
-  public GlobalInfo                                         GlobalInfo              { get; private set; }
+  public GlobalInfo                          GlobalInfo              { get; private set; }
   [HideInInspector]
-  public bool                                               Paused                  = false;
+  public bool                                Paused                  = false;
   [HideInInspector]
-  public NetworkPlayerId                                    ReplaySelectedPlayer    = NetworkPlayerId.Invalid;
+  public NetworkPlayerId                     ReplaySelectedPlayer    = NetworkPlayerId.Invalid;
 
   public override void NetworkAwake()
   {
@@ -50,10 +47,11 @@ public abstract class GameMode : NetworkBehaviour
 
   public override void NetworkUpdate()
   {
-    ReactToReplayControls();
+    if (Sandbox.IsReplay)
+      ReactToReplayControls();
 
-    // collecting user input.
-    if (DisableInputForEveryone || Paused || !Sandbox.InputEnabled)
+    // collecting network user input.
+    if (Paused || !Sandbox.InputEnabled)
       return;
 
     var input       = Sandbox.GetInput<GameInput>();
@@ -65,9 +63,6 @@ public abstract class GameMode : NetworkBehaviour
 
   public virtual void ReactToReplayControls()
   {
-    if (!Sandbox.IsReplay)
-      return;
-
     if (!Sandbox.ContainsPlayer(ReplaySelectedPlayer))
       ReplaySelectedPlayer = NetworkPlayerId.Invalid;
 

@@ -7,23 +7,25 @@ using Netick.Unity;
 public class UINametags : NetworkBehaviour
 {
   public float        NametagHeight = 5f;
+  public float        FovLimit      = 70f;
 
   private GameMode    _gameMode;
   private Camera      _camera;
-  private GUIStyle    _nametagStyle;
+  private GUIStyle    _redPlayerNametagStyle;
+  private GUIStyle    _bluePlayerNametagStyle;
   private GUIStyle    _boxStyle;
   private Texture2D   _boxBackgroundTexture;
 
-  private const float FovLimit = 70f;
-
+  
   public override void NetworkStart()
   {
     if (Application.isBatchMode)
       return;
 
-    _gameMode = GetComponent<GameMode>();
-    _camera = Sandbox.FindObjectOfType<Camera>();
-    _nametagStyle = null;
+    _gameMode               = GetComponent<GameMode>();
+    _camera                 = Sandbox.FindObjectOfType<Camera>();
+    _redPlayerNametagStyle  = null;
+    _bluePlayerNametagStyle = null;
   }
 
   private void OnGUI()
@@ -34,18 +36,21 @@ public class UINametags : NetworkBehaviour
     if (!Sandbox.IsVisible || Sandbox.IsRunning == false)
       return;
 
-    if (_nametagStyle == null)
+    if (_redPlayerNametagStyle == null)
     {
-      _nametagStyle = new GUIStyle(GUI.skin.label)
+      _redPlayerNametagStyle = new GUIStyle(GUI.skin.label)
       {
         alignment = TextAnchor.MiddleCenter,
         fontSize  = 16,
         fontStyle = FontStyle.Bold,
-        normal    = { textColor = Color.white },
+        normal    = { textColor = new Color(1.00f, 0.70f, 0.70f, 1f) },
       };
 
+      _bluePlayerNametagStyle        = new GUIStyle(_redPlayerNametagStyle);
+      _bluePlayerNametagStyle.normal = new GUIStyleState { textColor = new Color(0.68f, 0.85f, 0.90f, 1f)};
+
       _boxBackgroundTexture = new Texture2D(1, 1);
-      _boxBackgroundTexture.SetPixel(0, 0, new Color(0f, 0f, 0f, 0.3f)); 
+      _boxBackgroundTexture.SetPixel(0, 0, new Color(0f, 0f, 0f, 0.2f)); 
       _boxBackgroundTexture.Apply();
 
       _boxStyle = new GUIStyle
@@ -56,19 +61,18 @@ public class UINametags : NetworkBehaviour
       };
     }
 
-    foreach (var player in _gameMode.ActivePlayers)
+    foreach (var playerId in Sandbox.Players)
     {
-      if (Sandbox.GetBehaviour(player) == null)
-        continue;
-      // skip the local player's nametag
-      if (Sandbox.LocalPlayer == Sandbox.GetBehaviour(player).InputSource)
-        continue;
+      Sandbox.TryGetPlayerObject(playerId, out Player player);
 
-      if (Sandbox.GetBehaviour(player).Car == null)
+      if (player == null || player.Car == null)
         continue;
-
-      var carRenderPos = Sandbox.GetBehaviour(player).Car.NetworkRigidbody.RenderTransform.transform.position;
-      var angle        = Vector3.Angle(_camera.transform.forward, (carRenderPos - _camera.transform.position).normalized);
+      // skip if local player
+      if (Sandbox.LocalPlayer == player.InputSource)
+        continue;
+     
+      var carRenderPos      = player.Car.NetworkRigidbody.RenderTransform.transform.position;
+      var angle             = Vector3.Angle(_camera.transform.forward, (carRenderPos - _camera.transform.position).normalized);
 
       if (angle < FovLimit)
       {
@@ -82,7 +86,7 @@ public class UINametags : NetworkBehaviour
 
         Rect nametagRect    = new Rect(x - (labelWidth / 2f), y - (labelHeight / 2f), labelWidth, labelHeight);
         GUI.Box(nametagRect, GUIContent.none, _boxStyle);
-        GUI.Label(nametagRect, Sandbox.GetBehaviour(player).Name, _nametagStyle);
+        GUI.Label(nametagRect, player.Name, player.Team == Team.Red ? _redPlayerNametagStyle : _bluePlayerNametagStyle);
       }
     }
   }
