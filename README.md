@@ -87,7 +87,7 @@ Future improvement suggestion: Use a deterministic and CSP-ready third-party phy
 
 Massive thank you to [Steak](https://github.com/stinkysteak) and [Milk-Drinker01](https://github.com/Milk-Drinker01) for being invaluable during the development of this sample. Steak completely cleaned up the project and overhauled the graphical style, and Milk-Drinker01 created a beautiful field shader and fixed the camera jitter issue.
 
-## ⚖️ License & Third-Party Assets
+License & Third-Party Assets
 
 The **source code** of this project is licensed under the **MIT License**. 
 
@@ -103,7 +103,3 @@ However, this project includes several **third-party assets** (art, audio, and p
 | **Textures** | [FreePBR](https://freepbr.com/) & [Free3DTextures](https://free-3dtextureshd.com) | Free for use |
 | **Game Countdown 62** | [Pixabay](https://pixabay.com/) | Pixabay License |
 | **Font Electrolize** | [Google Fonts](https://fonts.google.com/specimen/Electrolize) | Open Font License (OFL) |
-
-> [!WARNING]
-> If you intend to use this project for a commercial product, you must replace the third-party assets or acquire your own licenses for them.
-
