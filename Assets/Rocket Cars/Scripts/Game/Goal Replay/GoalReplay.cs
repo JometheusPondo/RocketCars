@@ -14,11 +14,12 @@ public class GoalReplay : NetworkBehaviour
   // Networked State ********************
   [Networked] public NetworkBool    IsReplaying              { get; set; }
 
-  public bool                       IsRecording              { get; set; }= false;
+  public bool                       IsRecording              { get; set; } = false;
   public float                      MaxReplayTime            = 10f;
   public int                        MaxRecordedTicks         { get; private set; }
   public float                      TimeUntilReplayFinish    => Sandbox.TickToTime(_recordedTicks - (_replayCurrentTick - _replayStartTick));
-
+  public GlobalInfo                 GlobalInfo               { get; private set; }
+  
   private List<GoalReplayable>      _trackedObjects          = new (128);
   private int                       _recordedTicks;
   private Tick                      _replayCurrentTick;
@@ -26,6 +27,7 @@ public class GoalReplay : NetworkBehaviour
  
   public override void NetworkAwake()
   {
+    GlobalInfo                      = Sandbox.GetComponent<GlobalInfo>();
     // since the tickrate is the number of ticks in a second, we multiply it by the replay time to find the number of ticks to record.
     MaxRecordedTicks                = (int)(MaxReplayTime * Sandbox.Config.TickRate);
   }

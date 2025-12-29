@@ -30,7 +30,9 @@ public unsafe class GoalReplayableTransform : GoalReplayable
       _rb.isKinematic         = true;
     }
 
-    // when we are replaying the game in the client, we switch interpolation source to RemoteSnapshot to have smooth rendering of the cars and ball since they will only be controlled remotely by the server during replay.
+    if (IsServer)
+      _nt.Teleport(transform.position);
+
     if (_nt != null && IsClient)
       _nt.InterpolationSource = InterpolationSource.RemoteSnapshot;
   }
@@ -42,7 +44,6 @@ public unsafe class GoalReplayableTransform : GoalReplayable
     if (_rb != null)
       _rb.isKinematic         = _isKinematic;
 
-    // we change it back to Auto when replay finishes.
     if (_nt != null && IsClient)
       _nt.InterpolationSource = InterpolationSource.Auto;
   }

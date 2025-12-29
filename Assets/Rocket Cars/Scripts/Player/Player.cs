@@ -18,6 +18,7 @@ public class Player : NetworkBehaviour
   public Transform                   Spawn;
   [HideInInspector]
   public CarController               Car;
+
   public GameObject                  RedCarPrefab;
   public GameObject                  BlueCarPrefab;
 

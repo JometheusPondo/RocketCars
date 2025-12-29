@@ -4,6 +4,7 @@ using Netick.Unity;
 using System;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.EventSystems;
 
 /// <summary>
 /// A simple physics controller for the car vehicle. Implements a custom vehicle model. Inspired by https://youtu.be/ueEmiDM94IE?t=863.
@@ -52,7 +53,10 @@ public class CarController : GoalReplayable
   public float                   MaxSteerAngle                         = 30; 
   public float                   SteerAngleMaxReductionVehicleVelocity = 25;
   public AnimationCurve          SteerAngleReductionCurve;
+  public AnimationCurve          FrictionCurve;
+  public float                   FrictionCurveMin                      = 0.1f;
   public float                   FrictionMultiplier                    = 1f;
+  public float                   DriftFrictionMultiplier               = 0.1f;
 
   [Header("Rocket")]
   public Transform               RocketForceTransform;
@@ -68,10 +72,20 @@ public class CarController : GoalReplayable
   public float                   AirBoostLinearForce;
   public float                   AirBoostTorque;
 
+  [Header("Networking")]
+  public float                   InputDecayMaxLatency                  = 200; // max latency in ms after which input reduction will be at its maximum.
+  public float                   InputDecayMinFactor                   = 0.1f;// controls max input reduction after exceeding `maxLatency`.
+  public int                     VelocityDecayMinLatency               = 150; // min latency in ms after which velocity decay will start.
+
   [Space(20)]
   [Header("Visual")]
   public Transform               CarBody;
   public ParticleSystem[]        AfterburnerParticleSystems;
+  public ParticleSystem[]        DriftParticleSystems;
+  public float                   DriftMinVelocity                      = 5f;
+  public bool                    IsSlipping                            { get; private set; } = false;
+  public float                   SideSpeed                             { get; private set; } = 0f;
+
 
   [Header("Wheel Rolling & Steering")]
   public Vector3                 WheelSteerAxis                        = Vector3.up;
@@ -91,11 +105,6 @@ public class CarController : GoalReplayable
   public float                   MaxSuspensionRollAngle                = 5;
   public float                   MaxSuspensionPitchAngle               = 5;
   public Transform               SuspensionVisualizer;
-
-  [Header("Networking")]
-  public int                     InputDecayMaxLatency                  = 200; // max latency in ms after which input reduction will be at its maximum.
-  public float                   InputDecayMinFactor                   = 0.1f;// controls max input reduction after exceeding `maxLatency`.
-  public int                     VelocityDecayMinLatency               = 150; // min latency in ms after which velocity decay will start.
 
   // private
   private Vector3                _authVel;
@@ -151,13 +160,17 @@ public class CarController : GoalReplayable
       if (FetchInput(out GameInput fetchedInput))
         LastInput = fetchedInput;
 
+      if (_gm.DisableInputForAll)
+        LastInput = default;
+
       var input = LastInput;
+
       ClampInput(ref input);
 
       if (IsProxy)
         DecayInput(ref input); // decay input based on latency for remote players - later predicted ticks get smaller input than earlier ticks.
 
-      SimulateVehicle(_gm.DisableInputForEveryone ? default : input); // simulate the car
+      SimulateVehicle(input); // simulate the car
 
       if (IsProxy)
       {
@@ -177,7 +190,7 @@ public class CarController : GoalReplayable
     IsGrounded              = PerformGroundRaycast();
 
     // * linear motion and ground steering
-    SimulateWheels(input.Movement.x, input.Movement.y * EngineForce, out var groundedWheels);
+    SimulateWheels(input.Movement.x, input.Movement.y * EngineForce, input.Drift, out var groundedWheels);
 
     // * auto stabilizing the car when flipping
     if (EnableAutoStabilization)
@@ -200,20 +213,18 @@ public class CarController : GoalReplayable
      Rigidbody.AddForce(Vector3.down * GravityForce, ForceMode.Acceleration);
 
     // * bending velocity
-    if (groundedWheels >= 3 && !Rigidbody.isKinematic)
+    if (!IsGrounded && input.Rocket && FuelTickTime > 0 && !Rigidbody.isKinematic)
       BendVelocity();
 
     // * drag
     if (!Rigidbody.isKinematic)
     {
-      // linear drag
-      Rigidbody.velocity        *= Mathf.Exp(-LinearDrag  * Sandbox.FixedDeltaTime);
-      // angular drag
-      Rigidbody.angularVelocity *= Mathf.Exp(-AngularDrag * Sandbox.FixedDeltaTime);
+      Rigidbody.velocity        *= Mathf.Exp(-LinearDrag * Sandbox.FixedDeltaTime);  // linear drag
+      Rigidbody.angularVelocity *= Mathf.Exp(-AngularDrag * Sandbox.FixedDeltaTime);  // angular drag
     }
   }
 
-  private void SimulateWheels(float steer, float engineForce, out int groundedWheels)
+  private void SimulateWheels(float steer, float engineForce, bool isDrifting, out int groundedWheels)
   {
     Span<RaycastHit> hits                = stackalloc RaycastHit[Wheels.Length];
     var steerAngle                       = Mathf.Lerp(MinSteerAngle , MaxSteerAngle, SteerAngleReductionCurve.Evaluate(Mathf.InverseLerp(0f, SteerAngleMaxReductionVehicleVelocity, Rigidbody.velocity.magnitude)));
@@ -237,7 +248,7 @@ public class CarController : GoalReplayable
     for (int i = 0; i < Wheels.Length; i++)
     {
       if (hits[i].collider != null)
-        SimulateWheel(Wheels[i], hits[i], engineForce);
+        SimulateWheel(Wheels[i], hits[i], engineForce, isDrifting);
       else
         Wheels[i].Speed = 0;
     }
@@ -249,47 +260,58 @@ public class CarController : GoalReplayable
   }
 
   /// <summary>
-  /// Simulates a simple car wheel.
+  /// Simulates a simple car wheel including motor force, braking, and lateral friction (grip).
   /// </summary>
-  private void SimulateWheel(CarWheel wheel, RaycastHit hitInfo, float engineForce)
+  private void SimulateWheel(CarWheel wheel, RaycastHit hitInfo, float engineForce, bool isDrifting)
   {
-    var wheelTransform        = wheel.transform;
-    var sideAxis              = wheelTransform.TransformVector(wheel.SideNormal); 
-    var forwardAxis           = wheelTransform.forward;
-    var wheelVel              = Rigidbody.GetPointVelocity(hitInfo.point);
-    var groundDot             = Vector3.Dot(hitInfo.normal, wheelTransform.up);
-    var forwardDot            = Vector3.Dot(forwardAxis * Mathf.Sign(engineForce), wheelVel);
+    var wheelTransform           = wheel.transform;
+    var lateralAxis              = wheelTransform.TransformVector(wheel.SideNormal);
+    var forwardAxis              = wheelTransform.forward;
+    var wheelVelocity            = Rigidbody.GetPointVelocity(hitInfo.point);
+    var forwardSpeed             = Vector3.Dot(forwardAxis, wheelVelocity);
+    var lateralSpeed             = Vector3.Dot(lateralAxis, wheelVelocity);
+    var absForwardSpeed          = Mathf.Abs(forwardSpeed);
+    var absLateralSpeed          = Mathf.Abs(lateralSpeed);
+    var groundAlignment          = Vector3.Dot(hitInfo.normal, wheelTransform.up);
+    var slopeModifier            = groundAlignment * groundAlignment;
+    var isOpposingMotion         = absForwardSpeed > 0.1f && (engineForce * forwardSpeed < 0);
 
-    if (forwardDot < 0 && engineForce < 0) // is breaking
-      engineForce             = engineForce + (- BreakForce);
+    if (isOpposingMotion)
+      engineForce               += BreakForce * Mathf.Sign(engineForce);
 
-    var forwardSpeed          = Mathf.Abs(Vector3.Dot(forwardAxis, wheelVel));
-    var sideSpeed             = Mathf.Abs(Vector3.Dot(sideAxis,    wheelVel));
-    var speedRatio            = sideSpeed / (sideSpeed + forwardSpeed);
-    var lateralFrictionForce  = FrictionMultiplier * Mathf.Sqrt(1f - speedRatio) * -sideAxis * Vector3.Dot(sideAxis, wheelVel) * groundDot * groundDot;
-    var forwardForce          = forwardAxis * engineForce * groundDot * groundDot * (!wheel.IsFront ? 1f : 0f);
-    Rigidbody.AddForceAtPosition(forwardForce, hitInfo.point, ForceMode.Acceleration);            // Motor Force
+    // slip
+    var totalSpeed               = absLateralSpeed + absForwardSpeed;
+    var slipRatio                = totalSpeed > 0 ? absLateralSpeed / totalSpeed : 0;
 
-    if (forwardSpeed != 0 || sideSpeed != 0)
-      Rigidbody.AddForceAtPosition(lateralFrictionForce, hitInfo.point, ForceMode.Acceleration);  // Friction Force
-    wheel.Speed               = Vector3.Dot(wheelVel, forwardAxis) + (!wheel.IsFront ? engineForce * 100 : 0);   
+    // drfiting: reduce friction on specific wheels when isDrifting == true
+    var driftFactor              = (isDrifting && (forwardSpeed > 0 != wheel.IsFront)) ? DriftFrictionMultiplier : 1f;
+    var gripIntensity            = FrictionMultiplier * Mathf.Max(FrictionCurve.Evaluate(slipRatio), FrictionCurveMin) * driftFactor;
+
+    var lateralFrictionForce     = -lateralAxis * lateralSpeed * gripIntensity * slopeModifier;
+    var forwardMotorForce        = forwardAxis * engineForce * slopeModifier;
+
+    Rigidbody.AddForceAtPosition(forwardMotorForce, hitInfo.point, ForceMode.Acceleration);
+
+    if (totalSpeed > 0.01f)
+      Rigidbody.AddForceAtPosition(lateralFrictionForce, hitInfo.point, ForceMode.Acceleration);
+
+    // update Speed on wheel for spin animation
+    wheel.Speed                  = forwardSpeed + (!wheel.IsFront ? engineForce * 100 : 0);
   }
 
   /// <summary>
   /// Simulates a force using the forward vector of the vehicle transform.
   /// </summary>
-  private void SimulateRocket(bool boostInput)
+  private void SimulateRocket(bool rocket)
   {
-    var boostForce             = boostInput ? (FuelTickTime > 0 ? (RocketForce) : 0f) : 0;
+    var rocketForce              = rocket ? (FuelTickTime > 0 ? (RocketForce) : 0f) : 0;
 
-    if (boostForce > 0)
-    {
-      boostForce               = IsGrounded ? boostForce * 0.3f : boostForce;
-      var rocketDir            = transform.forward;
-
+    if (rocketForce > 0)
+    { 
+      rocketForce                = IsGrounded ? rocketForce * 0.3f : rocketForce;
       // adding rocket force
-      Rigidbody.AddForceAtPosition(rocketDir * boostForce, RocketForceTransform.position, ForceMode.Acceleration);
-      FuelTickTime             = Mathf.Max(0, FuelTickTime - 1);
+      Rigidbody.AddForceAtPosition(transform.forward * rocketForce, RocketForceTransform.position, ForceMode.Acceleration);
+      FuelTickTime               = Mathf.Max(0, FuelTickTime - 1);
     }
   }
 
@@ -389,18 +411,10 @@ public class CarController : GoalReplayable
     Rigidbody.velocity       = Vector3.Lerp(Rigidbody.velocity, targetVel, t);
   }
 
-  private bool PerformGroundRaycast()
-  {
-    bool didHit              = Sandbox.Physics.Raycast(transform.position, -transform.up, out var hitInfo, _collider.bounds.size.y / 1.5f, _envLayerMask);
-    if (!didHit)
-      didHit                 = Sandbox.Physics.Raycast(transform.position, transform.up,  out hitInfo,     _collider.bounds.size.y / 1.5f, _envLayerMask);
-    return didHit;
-  }
-
   private void ReduceForces()
   {
     if (IsResimulating && Sandbox.ResimulationStep == 0)
-      _authVel = Rigidbody.velocity;
+      _authVel                = Rigidbody.velocity;
 
     // this logic, exclusive to remote/proxy cars, serves to mitigate visually jarring snaps caused by mispredictions, specifically targeting forces that oppose the car's current movement direction in the forward/backward axis. 
     var totalPendingForce     = Rigidbody.GetAccumulatedForce();
@@ -413,23 +427,31 @@ public class CarController : GoalReplayable
   private void DecayVelocity()
   {
     var latencyMultiplier = Mathf.InverseLerp(1000f, VelocityDecayMinLatency, Sandbox.TickToTime(Sandbox.Tick - Sandbox.AuthoritativeTick) * 1000);
-    Rigidbody.velocity = Rigidbody.velocity * latencyMultiplier;
+    Rigidbody.velocity    = Rigidbody.velocity * latencyMultiplier;
   }
 
   private void DecayInput(ref GameInput input)
   {
     var latencyMultiplier = Mathf.Max(InputDecayMinFactor, Mathf.InverseLerp(InputDecayMaxLatency, 0f, Sandbox.TickToTime(Sandbox.Tick - Sandbox.AuthoritativeTick) * 1000));
-    input.Movement = input.Movement * latencyMultiplier;
+    input.Movement        = input.Movement * latencyMultiplier;
   }
 
   private void ClampInput(ref GameInput input)
   {
-    input.Movement = new Vector3(Mathf.Clamp(input.Movement.x, -1f, 1f), Mathf.Clamp(input.Movement.y, -1f, 1f), Mathf.Clamp(input.Movement.z, -1f, 1f));
+    input.Movement        = new Vector3(Mathf.Clamp(input.Movement.x, -1f, 1f), Mathf.Clamp(input.Movement.y, -1f, 1f), Mathf.Clamp(input.Movement.z, -1f, 1f));
   }
 
   public void ReceiveFuel()
   {
-    FuelTickTime = Sandbox.TimeToTick(Mathf.Min(MaxFuel, Sandbox.TickToTime(FuelTickTime) + TimeAddedPerFuel));
+    FuelTickTime          = Sandbox.TimeToTick(Mathf.Min(MaxFuel, Sandbox.TickToTime(FuelTickTime) + TimeAddedPerFuel));
+  }
+
+  private bool PerformGroundRaycast()
+  {
+    bool didHit = Sandbox.Physics.Raycast(transform.position, -transform.up, out var hitInfo, _collider.bounds.size.y / 1.5f, _envLayerMask);
+    if (!didHit)
+      didHit = Sandbox.Physics.Raycast(transform.position, transform.up, out hitInfo, _collider.bounds.size.y / 1.5f, _envLayerMask);
+    return didHit;
   }
 
   public void OnCollisionEnter(Collision collision)
@@ -450,6 +472,18 @@ public class CarController : GoalReplayable
       var emission                         = AfterburnerParticleSystems[i].emission;
       var rocketForce                      = EnableRocket && LastInput.Rocket ? (FuelTickTime > 0 ? (RocketForce) : 0f) : 0;
       emission.enabled                     = rocketForce > 0;
+    }
+
+    var isGrounded                         = GroundedWheelsNum >= 3;
+    var forwardSpeed                       = Vector3.Dot(NetworkRigidbody.Velocity, transform.forward);
+    var sideSpeed                          = Vector3.Dot(NetworkRigidbody.Velocity, transform.right);
+    SideSpeed = sideSpeed;
+    IsSlipping                             = isGrounded && Mathf.Abs(sideSpeed) > Mathf.Max(0.1f, 0.35f * Mathf.Abs(forwardSpeed)) && NetworkRigidbody.Velocity.magnitude >= DriftMinVelocity;
+
+    for (int i = 0; i < DriftParticleSystems.Length; i++)
+    {
+      var emission                         = DriftParticleSystems[i].emission;
+      emission.enabled                     = IsSlipping;
     }
   }
 
@@ -520,14 +554,11 @@ public class CarController : GoalReplayable
 
   private void OnDrawGizmos()
   {
-    if (Sandbox != null && !Sandbox.IsVisible)
+    if (Sandbox != null && !Sandbox.IsVisible || _collider == null)
       return;
 
-    if (_collider != null)
-    {
-      Gizmos.matrix = _collider.transform.localToWorldMatrix;
-      Gizmos.color  = Color.red;
-      Gizmos.DrawWireCube(_collider.center, _collider.size);
-    }
+    Gizmos.matrix = _collider.transform.localToWorldMatrix;
+    Gizmos.color  = Color.red;
+    Gizmos.DrawWireCube(_collider.center, _collider.size);
   }
 }

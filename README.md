@@ -61,7 +61,7 @@ If the selected player is no longer valid (e.g. disconnected or not spawned), th
 - `CarController`: Contains the vehicle simulation logic, using a custom lightweight physics model
 - `Ball`, `GoalBox`, `Booster`: Core interactive game elements
 - `ReplaySystem` & `Replayable`: Handles server-side goal replay system (recording and playback), using Netick state storing/reseting API
-- `UI Folder`: Contains all user interface logic, designed to be independent from the gameplay layer for flexibility
+- `UI Folder`: Contains all user interface logic, designed to be independent from the gameplay layer
 
 ## Networking 
 In most games, only the local player character and some environmental objects are predicted. However, in Rocket Cars, we predict everything: the local player car + other players and the ball (remote/proxy objects).
@@ -95,11 +95,12 @@ However, this project includes several **third-party assets** (art, audio, and p
 
 | Asset | Source | License / Terms |
 | :--- | :--- | :--- |
-| **Vehicle - Essentials** | [Nox_Sound](https://assetstore.unity.com/packages/audio/sound-fx/transportation/vehicle-essentials-194951) | Permission granted for this project; Redistribution restricted. |
-| **ParticlePack** | [Unity Technologies](https://assetstore.unity.com/packages/vfx/particles/particle-pack-127325) | [Unity Asset Store EULA](https://unity.com/legal/as-terms) |
 | **DOTween** | [Demigiant](https://assetstore.unity.com/packages/tools/animation/dotween-hotween-v2-27676) | [Standard EULA](http://dotween.demigiant.com/license.php) |
-| **Low Poly Car Pack 1** | [Designer Soup](https://designersoup.itch.io/low-poly-car-pack-1) | itch.io Terms |
+| **Low Poly Car Pack 1** | [Designer Soup](https://designersoup.itch.io/low-poly-car-pack-1) | [Custom](https://designersoup.itch.io/low-poly-car-pack-1) |
 | **Toon Shader** | [Erik Roystan](https://github.com/IronWarrior/UnityToonShader) | MIT |
 | **Textures** | [FreePBR](https://freepbr.com/) & [Free3DTextures](https://free-3dtextureshd.com) | Free for use |
-| **Game Countdown 62** | [Pixabay](https://pixabay.com/) | Pixabay License |
+| **ParticlePack** | [Unity Technologies](https://assetstore.unity.com/packages/vfx/particles/particle-pack-127325) | [Unity Asset Store EULA](https://unity.com/legal/as-terms) |
+| **Game Countdown 62** | [Pixabay](https://pixabay.com/) | [Pixabay License](https://pixabay.com/service/license-summary/) |
+| **car-tire-squeal-skid-loop** | [opengameart.org](https://opengameart.org/content/car-tire-squeal-skid-loop) | CC BY 3.0 |
+| **Vehicle - Essentials** | [Nox_Sound](https://assetstore.unity.com/packages/audio/sound-fx/transportation/vehicle-essentials-194951) | [Unity Asset Store EULA](https://unity.com/legal/as-terms) (permission granted for this project) |
 | **Font Electrolize** | [Google Fonts](https://fonts.google.com/specimen/Electrolize) | Open Font License (OFL) |

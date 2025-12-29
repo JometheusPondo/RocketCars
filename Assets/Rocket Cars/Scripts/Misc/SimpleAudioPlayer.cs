@@ -4,7 +4,7 @@ public class SimpleAudioPlayer : MonoBehaviour
 {
   [SerializeField] private AudioSource  _audioSource;
   public AudioSource                    AudioSource => _audioSource;
-  public static SimpleAudioPlayer       Instance { get; private set; }
+  public static SimpleAudioPlayer       Instance    { get; private set; }
 
   [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
   private static void Main()

@@ -22,7 +22,7 @@ public class Soccer : GameMode
   }
 
   // Networked State ********************
-  [Networked] public State                        GameState              { get; set; } // the current state of the game.
+  [Networked, Smooth] public State                GameState              { get; set; } // the current state of the game.
   [Networked] public Tick                         TransitionTick         { get; set; } // used for state transitions.
   [Networked] public Tick                         RoundStartTick         { get; set; } // the tick at which the round started.
   [Networked] public int                          ActivePlayersCount     { get; set; } // the number of active players.
@@ -34,6 +34,7 @@ public class Soccer : GameMode
   [Networked] public Tick                         LastGoalTick           { get; set; } // the tick at which the last goal was scored at.
   [Networked] public NetworkBool                  GoalReplayLookAtScorer { get; set; } // indicate if we should look at the scorer (instead of the ball) during replay.
   [Networked] public int                          GoalReplaySkipersCount { get; set; } // number of players who want to skip goal replay.
+
 
   // Public Events
   public event UnityAction<Player, bool>          OnGoalsChangedEvent;
@@ -55,13 +56,6 @@ public class Soccer : GameMode
   public float                                    DelayUntilRoundStart   = 3f; // how long until the round starts after replay finishes.
   public float                                    DelayUntilRestart      = 5f; // how long until the game is restarted after it game over.
  
-  [Header("Goal Replay")]
-  public Transform                                ReplayCameraBluePosition;
-  public Transform                                ReplayCameraRedPosition;
-  public int                                      ReplayCameraFOV        = 10;
-  public float                                    ReplayCameraLerpFactor = 5f;
-  public Vector3                                  ReplayCameraPosition   => LastGoalTarget == Team.Blue ? ReplayCameraRedPosition.position : ReplayCameraBluePosition.position;
-
   [Header("Goal Explosion Effect")]
   public float                                    GoalExplosionForce     = -50f;
   public float                                    GoalExplosionTorque    = 50f;
@@ -85,17 +79,17 @@ public class Soccer : GameMode
   private Stack<Transform>                        _freeRedTeamSpawns;
   private Stack<Transform>                        _freeBlueTeamSpawns;
   private Stack<CarController>                    _freeCars;
+  private List<CarController>                     _allCars;
   private GoalReplay                              _goalReplay;
-  private Camera                                  _camera;
-  private float                                   _originalFOV;
+  private GoalReplayCameraController              _goalReplayCameraController;
   private Vector4                                 _originalArenaRoofEmissionColor;
 
   public override void NetworkStart()
   {
+    base.NetworkStart();
     _goalReplay                     = GetComponent<GoalReplay>();
      AudioSource                    = GetComponent<AudioSource>();
-    _camera                         = Sandbox.FindObjectOfType<Camera>();
-    _originalFOV                    = _camera.fieldOfView;
+    _goalReplayCameraController     = GetComponent<GoalReplayCameraController>();
     _originalArenaRoofEmissionColor = ArenaRoofMaterial.GetVector("_EmissionColor");
     Sandbox.Events.OnPlayerJoined  += OnPlayerJoined;
     Sandbox.Events.OnPlayerLeft    += OnPlayerLeft;
@@ -143,6 +137,7 @@ public class Soccer : GameMode
     AccuireCar(ctx.Source, team, name);
   }
 
+
   void AccuireCar(NetworkPlayerId playerId, Team team, NetworkString16 name)
   {
     if (Sandbox.GetPlayerObject(playerId) != null) // return if player already has a car.
@@ -182,22 +177,24 @@ public class Soccer : GameMode
   /// </summary>
   void PreAllocateCars()
   {
-    int playersPerTeam        = Sandbox.Config.MaxPlayers / 2;
-    _freeCars                 = new(Sandbox.Config.MaxPlayers);
-    _freeBlueTeamSpawns       = new(playersPerTeam);
-    _freeRedTeamSpawns        = new(playersPerTeam);
+    int playersPerTeam   = Sandbox.Config.MaxPlayers / 2;
+    _allCars             = new (Sandbox.Config.MaxPlayers);
+    _freeCars            = new(Sandbox.Config.MaxPlayers);
+    _freeBlueTeamSpawns  = new(playersPerTeam);
+    _freeRedTeamSpawns   = new(playersPerTeam);
 
     for (int i = 0; i < Sandbox.Config.MaxPlayers; i++)
     {
-      var car = Sandbox.NetworkInstantiate(PlayerPrefab, Vector3.up * -1000f);
+      var car            = Sandbox.NetworkInstantiate(PlayerPrefab, Vector3.up * -1000f);
       car.SetCarActive(false);
       _freeCars.Push(car);
+      _allCars.Add(car);
     }
 
     for (int i = 0; i < playersPerTeam; i++)
-      _freeBlueTeamSpawns.    Push(BlueTeamSpawns[i]);
+      _freeBlueTeamSpawns.Push(BlueTeamSpawns[i]);
     for (int i = 0; i < playersPerTeam; i++)
-      _freeRedTeamSpawns.     Push(RedTeamSpawns[i]);
+      _freeRedTeamSpawns.Push(RedTeamSpawns[i]);
   }
 
   public int GetTeamSize(Team team)
@@ -211,7 +208,7 @@ public class Soccer : GameMode
   }
 
   /// <summary>
-  /// In NetworkFixedUpdate, we check if a state transition should happen and we execute it.
+  /// In NetworkFixedUpdate, we execute per-state logic and check if a state transition should happen and we execute it.
   /// </summary>
   public override void NetworkFixedUpdate()
   {
@@ -248,7 +245,7 @@ public class Soccer : GameMode
           // see who wants to skip goal replay
           foreach (var playerId in Sandbox.Players)
           {
-            if (Sandbox.TryGetPlayerObject(playerId, out Player player) && _goalReplay.TimeUntilReplayFinish <= (_goalReplay.MaxReplayTime - 0.5f))
+            if (Sandbox.TryGetPlayerObject(playerId, out Player player) && _goalReplay.TimeUntilReplayFinish <= (_goalReplay.MaxReplayTime - 0.15f))
             {
               if (player.FetchInput(out GameInput input) && input.Jump == true) // jump is used as the skip input
                 player.SkipGoalReplay = true;
@@ -276,13 +273,6 @@ public class Soccer : GameMode
               ChangeState(State.WaitingForRoundStart);
             }
 
-            if (!Sandbox.IsReplay || Sandbox.ContainsPlayer(ReplaySelectedPlayer))
-            {
-              _camera.fieldOfView        = ReplayCameraFOV;  // change the camera fov in goal replay.    
-              var scorer                 = LastGoalScorer.GetBehaviour<Player>(Sandbox).Car;  // snap the camera rotation to look at the scorer.
-              _camera.transform.rotation = Quaternion.LookRotation((scorer.transform.position - ReplayCameraPosition).normalized, Vector3.up);
-            }
-
             // make sure the players who left during relay are reset properly.
             foreach (var car in _freeCars)
               car.SetCarActive(false);
@@ -298,8 +288,8 @@ public class Soccer : GameMode
               _goalReplay.StartRecording(); // start recording.
 
             ChangeState(State.Started);
-            RoundStartTick          = Sandbox.Tick;
-            DisableInputForEveryone = false; // enable input.
+            RoundStartTick     = Sandbox.Tick;
+            DisableInputForAll = false; // enable input.
           }
 
           break;
@@ -328,7 +318,6 @@ public class Soccer : GameMode
       default:
         break;
     }
-
   }
 
   private void ChangeState(State state)
@@ -372,7 +361,6 @@ public class Soccer : GameMode
             _goalReplay.StartReplaying();
           }
 
-          // reset the cars to their spawn positions.
           foreach (var playerId in Sandbox.Players)
             if (Sandbox.TryGetPlayerObject(playerId, out Player player))
               player.GetComponent<CarCameraController>().LookAtBall = true;
@@ -384,7 +372,7 @@ public class Soccer : GameMode
           if (IsServer)
           {
             // disable input, enable car camera, and enable car simulation when entering this state.
-            DisableInputForEveryone                     = true;
+            DisableInputForAll                          = true;
             DisableCarCamera                            = false;
             DisableCarSimulation                        = false;
 
@@ -410,7 +398,7 @@ public class Soccer : GameMode
       case State.GameOver:
         {
           // disable input, disable car camera, and enable car simulation when entering this state.
-          DisableInputForEveryone                       = true;
+          DisableInputForAll                            = true;
           DisableCarCamera                              = true;
           DisableCarSimulation                          = false;
 
@@ -445,7 +433,8 @@ public class Soccer : GameMode
       // explode effect on players near the goal area.
       foreach (var playerId in Sandbox.Players)
         if (Sandbox.TryGetPlayerObject(playerId, out Player player))
-          ExplodePlayer(player, box, Ball); 
+          ExplodeRigidbody(player.Car.Rigidbody, box, Ball);
+      ExplodeRigidbody(Ball.Rigidbody, box, Ball);
     }
 
     ChangeState(State.GoalScored);
@@ -471,11 +460,11 @@ public class Soccer : GameMode
   }
 
   /// <summary>
-  /// This is an effect to push cars away from the goal box after a goal was scored.
+  /// This is an effect to push cars and ball away from the goal box after a goal was scored.
   /// </summary>
-  private void ExplodePlayer(Player scorer, GoalBox box, Ball ball)
+  private void ExplodeRigidbody(Rigidbody rigidbody, GoalBox box, Ball ball)
   {
-    var   rigid               = scorer.GetComponent<Rigidbody>();
+    var   rigid               = rigidbody;
     float distanceMultiplier  = Mathf.InverseLerp(0f, MaxDistanceToCar, Mathf.Min(MaxDistanceToCar, Vector3.Distance(box.transform.position, rigid.transform.position)));
     float ballSpeedMultiplier = Mathf.InverseLerp(0f, MaxBallSpeed,     Mathf.Min(MaxBallSpeed, ball.Rigidbody.velocity.magnitude));
     float multiplier          = distanceMultiplier * ballSpeedMultiplier;
@@ -483,33 +472,12 @@ public class Soccer : GameMode
     rigid.AddForce(Vector3.up             * GoalExplosionUpForce * multiplier, ForceMode.VelocityChange);
     rigid.AddTorque(rigid.angularVelocity * GoalExplosionTorque  * multiplier, ForceMode.VelocityChange);
   }
-
+ 
   public override void NetworkRender()
   {
-    if ((Sandbox.ContainsPlayer(ReplaySelectedPlayer) || !Sandbox.IsReplay) && GameState == State.GoalReplay)
-    {
-      _camera.fieldOfView = ReplayCameraFOV;
-      ControlGoalReplayCamera();
-    }
-    else
-    {
-      _camera.fieldOfView = _originalFOV;
-    }
-
+    _goalReplayCameraController.Render();
     // roof emission effect when scoring goal.
     var goalRoofColor = Color.Lerp(Color.white, LastGoalTarget == Team.Blue ? RedTeamColor : BlueTeamColor, Mathf.InverseLerp(-1f, 1f, Mathf.Sin(FlashingSpeed * Time.time))) * 2f;
     ArenaRoofMaterial.SetVector("_EmissionColor", GameState == State.GoalScored ? goalRoofColor : _originalArenaRoofEmissionColor);
-  }
-
-  /// <summary>
-  /// Rotates the camera to look at the ball and the player who scored the last goal.
-  /// </summary>
-  public void ControlGoalReplayCamera()
-  {
-    var scorer                 = LastGoalScorer.GetBehaviour(Sandbox).Car.transform;
-    var target                 = GoalReplayLookAtScorer ? scorer : Ball.transform;
-    var rot                    = Quaternion.LookRotation((target.position - ReplayCameraPosition).normalized, Vector3.up);
-    _camera.transform.position = ReplayCameraPosition;
-    _camera.transform.rotation = Quaternion.Slerp(_camera.transform.rotation, rot, ReplayCameraLerpFactor * Time.unscaledDeltaTime);
   }
 }

@@ -16,17 +16,15 @@ public class UIPauseMenu : NetworkBehaviour
   private Button     _buttonQuit;
 
   private Graphic[]  _graphics;
-  private GameMode   _GM;
-  private bool       _shown = false;
+  private GameMode   _gm;
+  private bool       _shown;
 
   void Awake()
   {
     if (Application.isBatchMode)
-    {
       return;
-    }
 
-    _GM       = GetComponent<GameMode>();
+    _gm       = GetComponent<GameMode>();
     _graphics = _pauseMenu.GetComponentsInChildren<Graphic>();
   }
 
@@ -39,19 +37,19 @@ public class UIPauseMenu : NetworkBehaviour
 
   public void Update()
   {
-    if (Sandbox == null || !Sandbox.IsRunning)
+    if (Application.isBatchMode || Sandbox == null || !Sandbox.IsRunning || _gm.GlobalInfo == null || _gm.GlobalInfo.HideUI)
       return;
 
-    if (_GM != null && Input.GetKeyDown(KeyCode.Escape))
+    if (_gm != null && Input.GetKeyDown(KeyCode.Escape))
       TogglePause();
   }
 
   void TogglePause()
   {
-    _shown               = !_shown;
-    _GM.Paused           = _shown;
+    _shown      = !_shown;
+    _gm.Paused  = _shown;
 
-    if (_GM.Paused)
+    if (_gm.Paused)
       Sandbox.SetInput<GameInput>(default);
 
     _pauseMenu.SetActive(_shown);
@@ -61,7 +59,7 @@ public class UIPauseMenu : NetworkBehaviour
   void SetVisibility(bool visibility)
   {
     foreach (var graphic in _graphics)
-      graphic.SetEnabled(_GM.Sandbox, visibility);
+      graphic.SetEnabled(_gm.Sandbox, visibility);
   }
 
   private void Resume()

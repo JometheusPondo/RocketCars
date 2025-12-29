@@ -36,14 +36,6 @@ public class UISoccer : NetworkBehaviour
   [SerializeField]
   private TextMeshProUGUI    _teamBlueGoalsText;
 
-  [Header("Game Over Screen")]
-  [SerializeField]
-  private GameObject[]       _UIsToDisableAtGameOver;
-  [SerializeField]
-  private TextMeshProUGUI    _gameOverTimerText;
-  [SerializeField]
-  private TextMeshProUGUI    _winnerText;
-
   [Header("Audio")]
   [SerializeField]
   private AudioClip          _timerTickAudioClip;
@@ -52,7 +44,6 @@ public class UISoccer : NetworkBehaviour
   private int                _previousTimerValue;
   private Soccer             _soccer;
   private Camera             _camera;
-  private UISoccerScoreboard _UIScoreboard;
   private char[]             _textTimerBuffer = new char[16];
 
   public override void NetworkStart()
@@ -61,30 +52,11 @@ public class UISoccer : NetworkBehaviour
       return;
 
     _camera                              = Sandbox.FindObjectOfType<Camera>();
-    _UIScoreboard                        = GetComponent<UISoccerScoreboard>();
     _soccer                              = GetComponent<Soccer>();
     _soccer.OnGoalsChangedEvent         += OnGoalsChanged;
-    _soccer.OnRoundStartedEvent         += HideRoundStartTimer;
-    _soccer.OnWaitingForRoundStartEvent += ShowRoundStartTimer;
-    _soccer.OnWaitingForRoundStartEvent += OnGameStarted;
 
-    _soccer.OnRoundStartedEvent         += OnGameStarted;
-    _soccer.OnGameOverEvent             += OnGameEnded;
-
-    _joinRedButton.onClick. AddListener(OnJoinRedPressed);
-    _joinBlueButton.onClick.AddListener(OnJoinBluePressed);
-  }
-
-  private void OnGoalsChanged(Player lastGoalScorer, bool didScoreGoal)
-  {
-    _teamRedGoalsText.text      = _soccer.TeamRedGoals.ToString();
-    _teamBlueGoalsText.text     = _soccer.TeamBlueGoals.ToString();
-
-    if (_soccer.GameState == Soccer.State.GoalScored)
-    {
-      _goalScoredTextShownTimer = 5f;
-      _goalScoredText.text      = lastGoalScorer.Name + "\nSCORED!";
-    }
+    _joinRedButton.onClick. AddListener(() => _soccer.RPC_Join(Team.Red,  _soccer.GlobalInfo.LocalPlayerName));
+    _joinBlueButton.onClick.AddListener(() => _soccer.RPC_Join(Team.Blue, _soccer.GlobalInfo.LocalPlayerName));
   }
 
   public override void NetworkRender()
@@ -92,25 +64,30 @@ public class UISoccer : NetworkBehaviour
     if (Application.isBatchMode)
       return;
 
-    Sandbox.TryGetLocalPlayerObject(out Player localPlayer);
+    Sandbox.TryGetPlayerObject(_soccer.GlobalInfo.IsReplay ? _soccer.SpectatedPlayer : Sandbox.LocalPlayer.PlayerId, out Player player);
+  
+    if (_soccer.GameState != Soccer.State.GoalReplay && player == null && _joinCanvasGroup.gameObject.activeInHierarchy == false)
+      _joinCanvasGroup.gameObject.SetActive(true);
+    if (_soccer.GameState == Soccer.State.GoalReplay || player != null && player.IsReady || _soccer.GlobalInfo.IsReplay)
+      _joinCanvasGroup.gameObject.SetActive(false);
 
-    if (_soccer.GameState == Soccer.State.GoalReplay || localPlayer != null && localPlayer.IsReady || Sandbox.IsReplay)
-    {
-      _joinCanvasGroup.interactable           = false;
-      _joinCanvasGroup.alpha                  = 0f;
-      _joinCanvasGroup.blocksRaycasts         = false;
-    }
+    if (_soccer.GameState == Soccer.State.WaitingForRoundStart && _roundStartTimer.enabled == false)
+      _roundStartTimer.SetEnabled(Sandbox, true);
+    if (_soccer.GameState != Soccer.State.WaitingForRoundStart && _roundStartTimer.enabled == true)
+      _roundStartTimer.SetEnabled(Sandbox, false);
+    if (_soccer.GlobalInfo.IsReplay && player == null && _roundStartTimer.enabled)
+      _roundStartTimer.SetEnabled(Sandbox, false);
 
-    if (localPlayer == null)
+    if (player == null)
     {
       var playersPerTeam                      = Sandbox.Config.MaxPlayers / 2;
       var redTeamPlayersCount                 = _soccer.GetTeamSize(Team.Red);
       var blueTeamPlayersCount                = _soccer.GetTeamSize(Team.Blue);
-      _redTeamCountText.text                  = $"{redTeamPlayersCount. ToString()}/{playersPerTeam} {(redTeamPlayersCount  == playersPerTeam ? "(FULL)" : "" )}";
+      _redTeamCountText.text                  = $"{redTeamPlayersCount. ToString()}/{playersPerTeam} {(redTeamPlayersCount  == playersPerTeam ? "(FULL)" : "")}";
       _blueTeamCountText.text                 = $"{blueTeamPlayersCount.ToString()}/{playersPerTeam} {(blueTeamPlayersCount == playersPerTeam ? "(FULL)" : "")}";
     }
 
-    float time                                = Sandbox.TickToTime(Sandbox.Tick - _soccer.RoundStartTick);
+    float time                                = _soccer.GameState == Soccer.State.Started ? Sandbox.TickToTime(Sandbox.Tick - _soccer.RoundStartTick) : 0f;
     TimeSpan timeSpan                         = TimeSpan.FromSeconds(time);
 
     if (timeSpan.TryFormat(_textTimerBuffer.AsSpan(), out int charsWritten, @"mm\:ss"))
@@ -121,7 +98,6 @@ public class UISoccer : NetworkBehaviour
     _goalScoredText.color                     = Color.Lerp(new Color(1f, 1f, 1f, 0f), Color.white, alpha);
     _goalScoredTextShownTimer                 = Mathf.Max(0f, _goalScoredTextShownTimer - Time.deltaTime);
 
-
     if (_soccer.GameState == Soccer.State.WaitingForRoundStart)
     {
       var timeToStart                         = (int)(Mathf.Max(0f, _soccer.DelayUntilRoundStart - Sandbox.TickToTime(Sandbox.Tick - _soccer.TransitionTick)) + 1f);
@@ -131,13 +107,6 @@ public class UISoccer : NetworkBehaviour
         _soccer.AudioSource.NetworkPlayOneShot(Sandbox, _timerTickAudioClip);
 
       _previousTimerValue                     = (int)timeToStart;
-    }
-
-    if (_soccer.GameState == Soccer.State.GameOver)
-    {
-      var timeToStart                         = Mathf.Max(0f, _soccer.DelayUntilRestart - Sandbox.TickToTime(Sandbox.Tick - _soccer.TransitionTick));
-      _gameOverTimerText.text                 = $"Next game starts in {(int)timeToStart} seconds".ToUpper();
-      _winnerText.text                        = $"{_soccer.WinnerTeam} Team Won".ToUpper();
     }
 
     UpdateBallIndicator();
@@ -153,34 +122,15 @@ public class UISoccer : NetworkBehaviour
     _ballIndicator.transform.localEulerAngles = Vector3.forward * ((Mathf.Atan2(normalizedPos.y, normalizedPos.x) * Mathf.Rad2Deg) + -90);
   }
 
-  void OnGameEnded()
+  private void OnGoalsChanged(Player lastGoalScorer, bool didScoreGoal)
   {
-    _winnerText.       SetEnabled(Sandbox, true);
-    _gameOverTimerText.SetEnabled(Sandbox, true);
+    _teamRedGoalsText.text                    = _soccer.TeamRedGoals.ToString();
+    _teamBlueGoalsText.text                   = _soccer.TeamBlueGoals.ToString();
 
-    if (Sandbox.IsReplay)
-      return;
-
-    foreach (var ui in _UIsToDisableAtGameOver)
-      ui.SetActive(false);
-
-    _UIScoreboard?.    ShowScoreboard();
+    if (_soccer.GameState == Soccer.State.GoalScored)
+    {
+      _goalScoredTextShownTimer               = 5f;
+      _goalScoredText.text                    = lastGoalScorer.Name + "\nSCORED!";
+    }
   }
-
-  void OnGameStarted()
-  {
-    _winnerText.SetEnabled(Sandbox, false);
-    _gameOverTimerText.SetEnabled(Sandbox, false);
-
-    if (Sandbox.IsReplay)
-      return;
-
-    foreach (var ui in _UIsToDisableAtGameOver)
-      ui.SetActive(true);
-  }
-
-  private void ShowRoundStartTimer()          => _roundStartTimer.SetEnabled(Sandbox, true);
-  private void HideRoundStartTimer()          => _roundStartTimer.SetEnabled(Sandbox, false);
-  private void OnJoinRedPressed()             => _soccer.RPC_Join(Team.Red,  _soccer.GlobalInfo.PlayerName);
-  private void OnJoinBluePressed()            => _soccer.RPC_Join(Team.Blue, _soccer.GlobalInfo.PlayerName);
 }

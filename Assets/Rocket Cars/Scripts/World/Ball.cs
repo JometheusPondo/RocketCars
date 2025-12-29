@@ -5,21 +5,25 @@ using Netick.Unity;
 
 public class Ball : NetworkBehaviour
 {
-  public float           GravityForce = 10f;
-  public Player          LastTouchedPlayer;
+  public float            GravityForce = 10f;
+  public Player           LastTouchedPlayer;
+
   [HideInInspector]
-  public Vector3         InitialPosition;
+  public Vector3          InitialPosition;
   
   [HideInInspector]
-  public Rigidbody       Rigidbody { get; private set; }
+  public Rigidbody        Rigidbody        { get; private set; }
+  [HideInInspector]
+  public NetworkRigidbody NetworkRigidbody { get; private set; }
 
-  private AudioSource    _audioSource;
+  private AudioSource     _audioSource;
 
   void Awake()
   {
-    _audioSource    = GetComponent<AudioSource>();
-    Rigidbody       = gameObject.GetComponent<Rigidbody>();
-    InitialPosition = transform.position;
+    _audioSource     = GetComponent<AudioSource>();
+    Rigidbody        = gameObject.GetComponent<Rigidbody>();
+    NetworkRigidbody = gameObject.GetComponent<NetworkRigidbody>();
+    InitialPosition  = transform.position;
   }
 
   public override void NetworkFixedUpdate()
@@ -29,7 +33,7 @@ public class Ball : NetworkBehaviour
 
   public void OnCollisionEnter(Collision collision)
   {
-    var player          = collision.gameObject.GetComponentInParent<Player>();
+    var player = collision.gameObject.GetComponentInParent<Player>();
 
     if (player != null)
       LastTouchedPlayer = player;

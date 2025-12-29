@@ -8,8 +8,11 @@ using Netick.Unity;
 
 public class GlobalInfo : NetworkBehaviour
 {
-  public string    PlayerName;
-  public GameMode  GameMode ;
   public bool      StartedThroughMainMenu;
+  public string    LocalPlayerName;
+  public bool      HideUI;
+  public GameMode  GameMode;
   public Camera    Camera;
+
+  public new bool  IsReplay => Sandbox.IsReplay;
 }

@@ -1,11 +1,14 @@
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-using TMPro;
 using Netick;
 using Netick.Unity;
-using Network = Netick.Unity.Network;
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Runtime.InteropServices;
+using TMPro;
+using UnityEngine;
+using UnityEngine.Analytics;
 using UnityEngine.UI;
+using Network = Netick.Unity.Network;
 
 public class UIMainMenu : NetworkEventsListener
 {
@@ -13,7 +16,7 @@ public class UIMainMenu : NetworkEventsListener
   public GameObject               SandboxPrefab;
   public int                      Port;
   public int                      FirstLevelIndex    = 1;
-  public int                      DedicatedServerFPS = 450;
+  public int                      DedicatedServerFPS = 60;
 
   [Header("UI")]
   public TextMeshProUGUI          ConnectionErrorText;
@@ -44,7 +47,7 @@ public class UIMainMenu : NetworkEventsListener
 
     // if Unity is started in batch mode, we just start Netick as a server. 
     if (Application.isBatchMode)
-      StartServer();
+      StartServer(false);
   }
 
   private void Start()
@@ -54,23 +57,24 @@ public class UIMainMenu : NetworkEventsListener
 
   public void StartHost()
   {
-    // if Netick is already running, we shut it down first.
-    if (Network.IsRunning)
-      Network.ShutdownImmediately();
-
-    var sandbox = Network.StartAsHost(Transport, Port, SandboxPrefab);
-    sandbox.GetComponent<GlobalInfo>().PlayerName = (PlayerNameText.text != "" ? PlayerNameText.text : "Unnamed");
-    sandbox.SwitchScene(FirstLevelIndex);
+    StartServer(true);
   }
 
-  public void StartServer()
+  public void StartServer(bool isHost)
   {
-    Application.targetFrameRate = DedicatedServerFPS;
+    if (isHost == false)
+      Application.targetFrameRate = DedicatedServerFPS;
+
     // if Netick is already running, we shut it down first.
     if (Network.IsRunning)
       Network.ShutdownImmediately();
 
-    var sandbox                                                      = Network.StartAsServer(Transport, Port, SandboxPrefab);
+    var sandbox                                                      = isHost ? Network.StartAsHost(Transport, Port, SandboxPrefab) : Network.StartAsServer(Transport, Port, SandboxPrefab);
+
+    if (isHost)
+      sandbox.GetComponent<GlobalInfo>().LocalPlayerName             = (PlayerNameText.text != "" ? PlayerNameText.text : "Unnamed");
+
+    sandbox.GetComponent<GlobalInfo>().StartedThroughMainMenu        = true;
     sandbox.SwitchScene(FirstLevelIndex);
   }
 
@@ -81,16 +85,22 @@ public class UIMainMenu : NetworkEventsListener
     if (_clientSandbox == null)
       _clientSandbox                                                 = Network.StartAsClient(Transport, SandboxPrefab);
 
-    _clientSandbox.GetComponent<GlobalInfo>().PlayerName             = (PlayerNameText.text != "" ? PlayerNameText.text : "Unnamed");
+    _clientSandbox.GetComponent<GlobalInfo>().LocalPlayerName        = (PlayerNameText.text != "" ? PlayerNameText.text : "Unnamed");
     _clientSandbox.GetComponent<GlobalInfo>().StartedThroughMainMenu = true;
-    _clientSandbox.Connect(Port, ServerIPAddressText.text == "" ? "localhost" : ServerIPAddressText.text);
+
+    RocketCarsRequestData req                                        = new RocketCarsRequestData
+    {
+      GameVersionHash                                                = Netick.Unity.Network.GameVersion,
+    };
+
+    ArraySegment<byte> reqAsBytes                                    = MemoryMarshal.AsBytes(MemoryMarshal.CreateReadOnlySpan(ref req, Marshal.SizeOf<RocketCarsRequestData>())).ToArray();
+    _clientSandbox.Connect(Port, ServerIPAddressText.text == "" ? "localhost" : ServerIPAddressText.text, reqAsBytes);
   }
 
   public async void StartReplayClient()
   {
-    ReplayErrorText.text = "Loading...";
-
-    var latestReplay = await FileReplayTransport.GetLatestReplayFilePathAsync();
+    ReplayErrorText.text   = "Loading...";
+    var latestReplay       = await FileReplayTransport.GetLatestReplayFilePathAsync();
 
     if (latestReplay == null)
     {
@@ -103,15 +113,24 @@ public class UIMainMenu : NetworkEventsListener
 
     _clientSandbox = Network.StartAsReplayClient(SandboxPrefab);
     _clientSandbox.StartReplayPlayback(); // default path
-    _clientSandbox.GetComponent<GlobalInfo>().PlayerName = (PlayerNameText.text != "" ? PlayerNameText.text : "Unnamed");
+    _clientSandbox.GetComponent<GlobalInfo>().LocalPlayerName = (PlayerNameText.text != "" ? PlayerNameText.text : "Unnamed");
     _clientSandbox.GetComponent<GlobalInfo>().StartedThroughMainMenu = true;
     _clientSandbox.Connect(Port, ServerIPAddressText.text);
   }
 
   public override void OnConnectFailed(NetworkSandbox sandbox, ConnectionFailedReason reason)
   {
-    Cursor.lockState         = CursorLockMode.None;
-    ConnectionErrorText.text = $"Connecting failed: {reason}";
+    Cursor.lockState             = CursorLockMode.None;
+
+    if (reason != ConnectionFailedReason.Refused)
+      ConnectionErrorText.text   = $"Connecting failed: {reason}";
+    else
+    {
+      if (sandbox.TryGetConnectionRefusalData(out ArraySegment<byte> data))
+        ConnectionErrorText.text = $"Connecting failed: {System.Text.Encoding.ASCII.GetString(data)}";
+      else
+        ConnectionErrorText.text = "Connecting failed: Refused by server.";
+    }
   }
 
   public void Quit()
@@ -192,5 +211,6 @@ public class UIMainMenu : NetworkEventsListener
       canvasGroup.alpha      = alpha;
 
     canvasGroup.interactable = interactable;
+    canvasGroup.gameObject.SetActive(interactable || alpha >= 0.5f);
   }
 }

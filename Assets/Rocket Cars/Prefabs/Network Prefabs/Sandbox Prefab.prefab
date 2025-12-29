@@ -44,13 +44,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3bbcbe5d6e09cec4590238982a38fe03, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  PlayerPrefab: {fileID: 7038217651007599350, guid: 5d920888f9a12eb4ab8e58d0f7988997, type: 3}
-  PlayerName: Unnamed
-  Players: []
-  SpawnPlayerImmediately: 0
-  <DisableInputForEveryone>k__BackingField:
-    RawValue: 0
-  <DisableCarCamera>k__BackingField:
-    RawValue: 0
-  <DisableCarSimulation>k__BackingField:
-    RawValue: 0
+  StartedThroughMainMenu: 0
+  LocalPlayerName: Unnamed
+  GameMode: {fileID: 0}
+  Camera: {fileID: 0}

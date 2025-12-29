@@ -9,7 +9,7 @@ public class UINametags : NetworkBehaviour
   public float        NametagHeight = 5f;
   public float        FovLimit      = 70f;
 
-  private GameMode    _gameMode;
+  private GameMode    _gm;
   private Camera      _camera;
   private GUIStyle    _redPlayerNametagStyle;
   private GUIStyle    _bluePlayerNametagStyle;
@@ -22,7 +22,7 @@ public class UINametags : NetworkBehaviour
     if (Application.isBatchMode)
       return;
 
-    _gameMode               = GetComponent<GameMode>();
+    _gm                     = GetComponent<GameMode>();
     _camera                 = Sandbox.FindObjectOfType<Camera>();
     _redPlayerNametagStyle  = null;
     _bluePlayerNametagStyle = null;
@@ -30,10 +30,10 @@ public class UINametags : NetworkBehaviour
 
   private void OnGUI()
   {
-    if (Application.isBatchMode || _gameMode == null || _camera == null)
+    if (Application.isBatchMode || _gm == null || _camera == null)
       return;
 
-    if (!Sandbox.IsVisible || Sandbox.IsRunning == false)
+    if (!Sandbox.IsVisible || Sandbox.IsRunning == false || _gm.GlobalInfo.HideUI)
       return;
 
     if (_redPlayerNametagStyle == null)

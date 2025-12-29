@@ -861,7 +861,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4708785590041597257}
-  - component: {fileID: 8810660373938265909}
   m_Layer: 5
   m_Name: FuelBar
   m_TagString: Untagged
@@ -892,20 +891,6 @@ RectTransform:
   m_AnchoredPosition: {x: -155.2, y: 53.4}
   m_SizeDelta: {x: 240.02356, y: 43.561005}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &8810660373938265909
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 745370327526341537}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9953f900974168e4896e5e70bed4c4ec, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _fillBar: {fileID: 4447772728458191920}
-  _text: {fileID: 8216059546939679048}
 --- !u!1 &918871411929314073
 GameObject:
   m_ObjectHideFlags: 0

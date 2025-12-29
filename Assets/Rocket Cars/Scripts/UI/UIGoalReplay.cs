@@ -6,12 +6,13 @@ using UnityEngine.Rendering.PostProcessing;
 using UnityEngine.UI;
 using Netick;
 using Netick.Unity;
+using UnityEngine.Serialization;
 
 [ExecutionOrder(-10)]
 public class UIGoalReplay : NetworkBehaviour
 {
   [SerializeField]
-  private GameObject        _replayUI;
+  private GameObject        _container;
   [SerializeField]
   private Image             _circleIcon;
   [SerializeField]
@@ -22,61 +23,24 @@ public class UIGoalReplay : NetworkBehaviour
   private Vignette          _vignetteEffect;
   private Grain             _grainEffect;
   private Soccer            _soccer;
-  private UICarHUD          _UICarHUD;
-  private Graphic[]         _UIElements;
 
   public override void NetworkStart()
   {
     if (Application.isBatchMode)
       return;
 
-    _UIElements                      = _replayUI.GetComponentsInChildren<Graphic>(true);
-    _UICarHUD                        = Sandbox.FindObjectOfType<UICarHUD>();
     _soccer                          = GetComponent<Soccer>();
-    _soccer.OnGameStateChangedEvent += OnGameStateChanged;
     var volume                       = Sandbox.FindObjectOfType<PostProcessVolume>();
     volume.profile.TryGetSettings(out _vignetteEffect);
     volume.profile.TryGetSettings(out _grainEffect);
-  }
-
-  private void OnGameStateChanged(OnChangedData dat)
-  {
-    // entering replay
-    if (_soccer.GameState == Soccer.State.GoalReplay)
-    {
-      _vignetteEffect.active = true;
-      _grainEffect.active    = true;
-
-      if (!Sandbox.IsReplay)
-      {
-        _UICarHUD.SetVisibility(false); // hide car HUD when entering replay.
-
-        // show replay UI.
-        foreach (var element in _UIElements)
-          element.SetEnabled(Sandbox, true);
-      }        
-    }
-
-    // exiting replay (we can know if we are exiting replay by checking the previous value of _soccer.GameState and see if it was equal to Replay).
-    else if (dat.GetPreviousValue<Soccer.State>() == Soccer.State.GoalReplay)
-    {
-      _vignetteEffect.active = false;
-      _grainEffect.active    = false;
-      if (!Sandbox.IsReplay)
-      {
-        _UICarHUD.SetVisibility(true); // show car HUD when exiting goal replay.
-
-        // hide replay UI.
-        foreach (var element in _UIElements)
-          element.SetEnabled(Sandbox, false);
-      }
-    }
   }
 
   public override void NetworkRender()
   {
     if (Application.isBatchMode)
       return;
+
+    SetState(_soccer.GameState == Soccer.State.GoalReplay && !_soccer.GlobalInfo.HideUI);
 
     if (_soccer.GameState == Soccer.State.GoalReplay)
     {
@@ -85,4 +49,16 @@ public class UIGoalReplay : NetworkBehaviour
       _scorerText.text  = _soccer.LastGoalScorer.GetBehaviour(Sandbox).Name;
     }
   }
+
+  void SetState(bool shown)
+  {
+    _container.SetActive(shown);
+
+    if (Sandbox.IsVisible)
+    {
+      _vignetteEffect.active = shown;
+      _grainEffect.active = shown;
+    }   
+  }
+
 }

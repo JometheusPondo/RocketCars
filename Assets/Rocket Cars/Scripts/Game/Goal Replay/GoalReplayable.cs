@@ -41,7 +41,7 @@ public unsafe class GoalReplayable : NetworkBehaviour
 
   ~GoalReplayable()
   {
-    if (Sandbox != null && IsClient)
+    if (Sandbox == null || IsClient)
       return;
 
     // free buffer elements memory
@@ -51,7 +51,7 @@ public unsafe class GoalReplayable : NetworkBehaviour
 
   public virtual void OnReplayStarted()
   {
-    foreach (var ps in _particleSystems) ps.Clear();   // clear all particles.
+    foreach (var ps in _particleSystems) ps.Clear();   // clear all particles. 
   }
 
   public virtual void OnReplayStopped()

@@ -13,6 +13,9 @@ public class UILatency : NetworkBehaviour
 
   public override void NetworkRender()
   {
+    if (Application.isBatchMode)
+      return;
+
     int rttInMilliseconds  = (int)(Sandbox.RTT * 1000);
 
     if (IsServer)

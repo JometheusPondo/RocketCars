@@ -448,11 +448,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e14cb78b5e7c14b47bba02fe167efb30, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Transport: {fileID: 11400000, guid: 84f8d6f79a266e141a9b102ecd56b151, type: 2}
+  Transport: {fileID: 11400000, guid: 93c6093f05fc9aa429140aee9704fad1, type: 2}
   SandboxPrefab: {fileID: 3671774035895770840, guid: 323880b4dda100840a3c49c6ad164c1f, type: 3}
   Port: 7777
   FirstLevelIndex: 1
-  DedicatedServerFPS: 400
+  DedicatedServerFPS: 100
   ConnectionErrorText: {fileID: 2926783278129339691}
   ReplayErrorText: {fileID: 1223687727}
   ServerIPAddressText: {fileID: 8029999236843383686}

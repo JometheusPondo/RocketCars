@@ -2,6 +2,7 @@ using Netick;
 using Netick.Unity;
 using UnityEngine;
 
+[ExecutionOrder(20)]
 public class PointCameraSpectate : MonoBehaviour
 {
   [SerializeField] 
@@ -16,11 +17,25 @@ public class PointCameraSpectate : MonoBehaviour
     var sandbox = NetworkSandbox.FindSandboxOf(gameObject);
     if (sandbox != null)
     {
-      if (_cam == null )
-        _cam = sandbox.GetComponent<GlobalInfo>().Camera;
+      var globalInfo  = sandbox.GetComponent<GlobalInfo>();
+      if (_cam == null)
+        _cam          = globalInfo.Camera;
 
-      if (sandbox.IsReplay || sandbox.TryGetLocalPlayerObject<Player>(out var player) && player.IsReady)
+      NetworkPlayerId plrId = default;
+
+      if (globalInfo.GameMode != null)
+        plrId         = globalInfo.IsReplay ? globalInfo.GameMode.SpectatedPlayer : sandbox.LocalPlayer.PlayerId;
+      var soccer      = globalInfo.GameMode as Soccer;
+     
+      sandbox.TryGetPlayerObject(plrId, out Player player);
+
+      if (soccer != null)
+        if ((player && player.IsReady && soccer.GameState != Soccer.State.GameOver) || (soccer.GameState == Soccer.State.GoalReplay))
+          return;
+
+      if (player == null && globalInfo.IsReplay)
         return;
+
       if (_cam != null && _pivot != null)
         MoveCamera(_cam);
     }
@@ -33,7 +48,7 @@ public class PointCameraSpectate : MonoBehaviour
 
   private void MoveCamera(Camera cam)
   {
-    transform.Rotate(0f, _rotateSpeed * Time.deltaTime, 0f);
+    transform.Rotate(0f, _rotateSpeed * Time.unscaledDeltaTime, 0f);
     cam.transform.SetPositionAndRotation(_pivot.transform.position, _pivot.transform.rotation);
   }
 }
