@@ -452,7 +452,7 @@ MonoBehaviour:
   SandboxPrefab: {fileID: 3671774035895770840, guid: 323880b4dda100840a3c49c6ad164c1f, type: 3}
   Port: 7777
   FirstLevelIndex: 1
-  DedicatedServerFPS: 100
+  DedicatedServerFPS: 45
   ConnectionErrorText: {fileID: 2926783278129339691}
   ReplayErrorText: {fileID: 1223687727}
   ServerIPAddressText: {fileID: 8029999236843383686}

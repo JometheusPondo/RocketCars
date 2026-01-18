@@ -18,7 +18,7 @@ public class GoalReplay : NetworkBehaviour
   public float                      MaxReplayTime            = 10f;
   public int                        MaxRecordedTicks         { get; private set; }
   public float                      TimeUntilReplayFinish    => Sandbox.TickToTime(_recordedTicks - (_replayCurrentTick - _replayStartTick));
-  public GlobalInfo                 GlobalInfo               { get; private set; }
+  public GlobalData                 GlobalData               { get; private set; }
   
   private List<GoalReplayable>      _trackedObjects          = new (128);
   private int                       _recordedTicks;
@@ -27,7 +27,7 @@ public class GoalReplay : NetworkBehaviour
  
   public override void NetworkAwake()
   {
-    GlobalInfo                      = Sandbox.GetComponent<GlobalInfo>();
+    GlobalData                      = Sandbox.GetComponent<GlobalData>();
     // since the tickrate is the number of ticks in a second, we multiply it by the replay time to find the number of ticks to record.
     MaxRecordedTicks                = (int)(MaxReplayTime * Sandbox.Config.TickRate);
   }

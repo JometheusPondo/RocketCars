@@ -126,7 +126,7 @@ Material:
     - _FieldCutColor: {r: 0.2631996, g: 0.7830189, b: 0, a: 1}
     - _Field_Cut_Color: {r: 0.2627451, g: 0.78431374, b: 0, a: 1}
     - _Field_Line_Color: {r: 1, g: 1, b: 1, a: 1}
-    - _Field_Lines_Tiling: {r: 1.25, g: 0.625, b: 0, a: 0}
+    - _Field_Lines_Tiling: {r: 1.16, g: 0.625, b: 0, a: 0}
     - _Grass_Tiling: {r: 1, g: 1, b: 0, a: 0}
     - _Scale: {r: 150, g: 150, b: 0, a: 0}
     - _SubCutColor: {r: 0.23740657, g: 0.9150943, b: 0.34303272, a: 1}

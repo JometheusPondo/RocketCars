@@ -10,6 +10,9 @@ GameObject:
   m_Component:
   - component: {fileID: 1313944086404556678}
   - component: {fileID: 4879592444549823800}
+  - component: {fileID: 6843549928288338242}
+  - component: {fileID: 6401371164345906859}
+  - component: {fileID: 1518357454221244885}
   m_Layer: 0
   m_Name: Sandbox Prefab
   m_TagString: Untagged
@@ -41,10 +44,62 @@ MonoBehaviour:
   m_GameObject: {fileID: 3671774035895770840}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3bbcbe5d6e09cec4590238982a38fe03, type: 3}
+  m_Script: {fileID: 11500000, guid: 1d5be8eb4d63df642a9a608b214c53c6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   StartedThroughMainMenu: 0
   LocalPlayerName: Unnamed
+  HideUI: 0
   GameMode: {fileID: 0}
+  Chat: {fileID: 0}
   Camera: {fileID: 0}
+--- !u!114 &6843549928288338242
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3671774035895770840}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 18ed30c3c21f2844198c0b00c5463522, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &6401371164345906859
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3671774035895770840}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 38dd5472b7f1f66448481b82c515cf8f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &1518357454221244885
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3671774035895770840}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5539e71bef32476448e663981fd33e88, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  MaxInputLength: 32
+  MaxMessages: 5
+  VisibleSeconds: 7
+  BackspaceDelay: 0.5
+  BackspaceInterval: 0.05
+  FeedAnchor: 0
+  FeedOffset: {x: 20, y: 20}
+  LineHeight: 25
+  InputWidth: 450
+  FontSize: 14
+  RedTeamColor: {r: 1, g: 0.35, b: 0.35, a: 1}
+  BlueTeamColor: {r: 0.4, g: 0.65, b: 1, a: 1}
+  NotificationColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
+  BackgroundColor: {r: 0, g: 0, b: 0, a: 0.39607844}

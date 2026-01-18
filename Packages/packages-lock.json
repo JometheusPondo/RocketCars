@@ -1,14 +1,13 @@
 {
   "dependencies": {
     "com.karrar.netick": {
-      "version": "https://github.com/NetickNetworking/NetickForUnity.git",
+      "version": "https://github.com/karrarrahim/NetickForUnity.git",
       "depth": 0,
       "source": "git",
       "dependencies": {
-        "com.unity.nuget.mono-cecil": "1.11.4",
-        "com.unity.addressables": "1.22.3"
+        "com.unity.nuget.mono-cecil": "1.11.4"
       },
-      "hash": "18e4e9a6058bc68ab3ce53d570d4448e7f0f4281"
+      "hash": "549aa7f5c71eb14b1a09b6ab9d3fb3a820365760"
     },
     "com.madstrawberry.dotween": {
       "version": "https://github.com/StinkySteak/DoTween-UPM.git",
@@ -16,20 +15,6 @@
       "source": "git",
       "dependencies": {},
       "hash": "3fc8db54d61d247a83018902fa5dedb3d2454d0f"
-    },
-    "com.unity.addressables": {
-      "version": "1.22.3",
-      "depth": 1,
-      "source": "registry",
-      "dependencies": {
-        "com.unity.modules.assetbundle": "1.0.0",
-        "com.unity.modules.jsonserialize": "1.0.0",
-        "com.unity.modules.imageconversion": "1.0.0",
-        "com.unity.modules.unitywebrequest": "1.0.0",
-        "com.unity.scriptablebuildpipeline": "1.21.25",
-        "com.unity.modules.unitywebrequestassetbundle": "1.0.0"
-      },
-      "url": "https://packages.unity.com"
     },
     "com.unity.editorcoroutines": {
       "version": "1.0.0",
@@ -124,13 +109,6 @@
         "com.unity.modules.terrain": "1.0.0",
         "com.unity.modules.jsonserialize": "1.0.0"
       }
-    },
-    "com.unity.scriptablebuildpipeline": {
-      "version": "1.21.25",
-      "depth": 2,
-      "source": "registry",
-      "dependencies": {},
-      "url": "https://packages.unity.com"
     },
     "com.unity.searcher": {
       "version": "4.9.2",

@@ -40,7 +40,7 @@ public class UIGoalReplay : NetworkBehaviour
     if (Application.isBatchMode)
       return;
 
-    SetState(_soccer.GameState == Soccer.State.GoalReplay && !_soccer.GlobalInfo.HideUI);
+    SetState(_soccer.GameState == Soccer.State.GoalReplay && !_soccer.GlobalData.HideUI);
 
     if (_soccer.GameState == Soccer.State.GoalReplay)
     {

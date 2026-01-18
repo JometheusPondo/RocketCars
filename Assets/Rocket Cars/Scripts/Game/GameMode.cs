@@ -1,16 +1,7 @@
 using Netick;
 using Netick.Samples;
 using Netick.Unity;
-using System;
-using System.Runtime.InteropServices;
 using UnityEngine;
-using UnityEngine.SceneManagement;
-using Network = Netick.Unity.Network;
-
-public struct RocketCarsRequestData
-{
-  public int GameVersionHash;
-}
 
 /// <summary>
 /// This is the Game Mode script, the parent script of all game modes. 
@@ -22,73 +13,50 @@ public abstract class GameMode : NetworkBehaviour
   [Networked] public NetworkBool             DisableInputForAll      { get; set; }  // when true, the car will no longer accept user inputs, but can still be simulated.
   [Networked] public NetworkBool             DisableCarCamera        { get; set; }  // when true, the camera will no longer follow the car.
   [Networked] public NetworkBool             DisableCarSimulation    { get; set; }  // when true the cars will no longer be physically simulated.
-  [HideInInspector] public GlobalInfo        GlobalInfo              { get; private set; }
-
+  [HideInInspector] public GlobalData        GlobalData              { get; private set; }
   [HideInInspector] public bool              Paused                  = false;
-
   public GameObject                          UIParent;
-
   public NetworkPlayerId                     SpectatedPlayer         = NetworkPlayerId.Invalid;
-
-  // const
-  public static readonly byte[]              BadRequestError = System.Text.Encoding.ASCII.GetBytes("You sent a bad request!");
-  public static readonly byte[]              BadVersionError = System.Text.Encoding.ASCII.GetBytes("Your game is running a differnt build version than the server!");
 
   public override void NetworkAwake()
   {
-    GlobalInfo                               = Sandbox.GetComponent<GlobalInfo>();
-    GlobalInfo.Camera                        = Sandbox.FindObjectOfType<Camera>();
-    GlobalInfo.GameMode                      = this;
-    Sandbox.Events.OnDisconnectedFromServer += OnDisconnectedFromServer;
-    Sandbox.Events.OnConnectRequest         += OnConnectRequest;
+    GlobalData                               = Sandbox.GetComponent<GlobalData>();
+    GlobalData.Camera                        = Sandbox.FindObjectOfType<Camera>();
+    GlobalData.GameMode                      = this;
   }
 
-  public void OnConnectRequest(NetworkSandbox sandbox, NetworkConnectionRequest request)
+  public override void NetworkStart()
   {
-    if (!GlobalInfo.StartedThroughMainMenu) // accept all connections if not started through menu scene, this means the game was started in a map directly for testing reasons.
-      return;
-
-    if (request.DataLength < Marshal.SizeOf<RocketCarsRequestData>())
-      request.Refuse(BadRequestError);
-
-    RocketCarsRequestData dataStruct = MemoryMarshal.Read<RocketCarsRequestData>(request.Data);
-
-    if (dataStruct.GameVersionHash != Netick.Unity.Network.GameVersion)
-      request.Refuse(BadVersionError);
+    if (GlobalData.IsReplay)
+      GlobalData.Chat.PushNotificationLocal("Press ` (backquote) to toggle UI during replays.");
+    else if (Sandbox.IsPlayer)
+      GlobalData.Chat.PushNotificationLocal("Press T for team-only chat, and Y for global chat.");
   }
 
-  public void OnDisconnectedFromServer(NetworkSandbox sandbox, NetworkConnection server, TransportDisconnectReason transportDisconnectReason)
+  private void Update()
   {
-    // if started in client mode (single-peer mode), when we are disconnected from the server we shut down Netick and switch to the menu scene.
-    if (Network.Instance != null && Network.StartMode == StartMode.Client)
+    if (GlobalData != null && GlobalData.Sandbox.IsRunning && GlobalData.IsReplay && Input.GetKeyDown(KeyCode.BackQuote))
     {
-      // shutting down Netick.
-      Netick.Unity.Network.Shutdown();
-      // we use the regular Unity API for scene management instead of Netick scene management API, because we just shut down Netick and it's no longer in control of the game.
-      SceneManager.LoadScene(0);
+      Cursor.lockState = GlobalData.HideUI ? CursorLockMode.None : CursorLockMode.Locked;
+      GlobalData.HideUI = !GlobalData.HideUI;
+      UpdateUIState();
     }
   }
 
   public override void NetworkUpdate()
   {
-    if (GlobalInfo.IsReplay && Input.GetKeyDown(KeyCode.BackQuote))
-    {
-      Cursor.lockState  = GlobalInfo.HideUI  ? CursorLockMode.None : CursorLockMode.Locked;
-      GlobalInfo.HideUI = !GlobalInfo.HideUI;
-      UpdateUIState();
-    }
-
-    if (GlobalInfo.IsReplay)
+    if (GlobalData.IsReplay)
       ReactToSpectateControls();
 
-    if (Paused || !Sandbox.InputEnabled)
+    if (Paused || !GlobalData.CanUseInput)
       return;
-    // collecting network user input.
-    var input       = Sandbox.GetInput<GameInput>();
-    input.Movement += new Vector3(Input.GetAxis("Horizontal"), Input.GetAxis("Vertical"), Input.GetAxis("Roll"));
-    input.Rocket   |= Input.GetButton("Rocket");
-    input.Jump     |= Input.GetButtonDown("Jump");
-    input.Drift    |= Input.GetButton("Drift");
+    // collecting networked user input.
+    var input         = Sandbox.GetInput<GameInput>();
+    var movementInput = input.Movement + new Vector3(Input.GetAxis("Horizontal"), Input.GetAxis("Vertical"), Input.GetAxis("Roll"));
+    input.Movement    = new Vector3(Mathf.Clamp(movementInput.x, -1f, 1f), Mathf.Clamp(movementInput.y, -1f, 1f), Mathf.Clamp(movementInput.z, -1f, 1f));
+    input.Rocket     |= Input.GetButton("Rocket");
+    input.Jump       |= Input.GetButtonDown("Jump");
+    input.Drift      |= Input.GetButton("Drift");
     Sandbox.SetInput(input);
   }
 
@@ -124,9 +92,9 @@ public abstract class GameMode : NetworkBehaviour
 
   public void UpdateUIState()
   {
-    UIParent.SetActive(!GlobalInfo.HideUI);
-    GetComponent<NetworkInfo>().enabled    = !GlobalInfo.HideUI;
-    GetComponent<GameStarter>().enabled    = !GlobalInfo.HideUI;
-    GetComponent<ReplayTimeline>().enabled = !GlobalInfo.HideUI;
+    UIParent.SetActive(!GlobalData.HideUI);
+    GetComponent<NetworkInfo>().enabled    = !GlobalData.HideUI;
+    GetComponent<GameStarter>().enabled    = !GlobalData.HideUI;
+    GetComponent<ReplayTimeline>().enabled = !GlobalData.HideUI;
   }
 }

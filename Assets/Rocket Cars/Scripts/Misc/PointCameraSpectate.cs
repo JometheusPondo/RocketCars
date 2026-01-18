@@ -17,7 +17,7 @@ public class PointCameraSpectate : MonoBehaviour
     var sandbox = NetworkSandbox.FindSandboxOf(gameObject);
     if (sandbox != null)
     {
-      var globalInfo  = sandbox.GetComponent<GlobalInfo>();
+      var globalInfo  = sandbox.GetComponent<GlobalData>();
       if (_cam == null)
         _cam          = globalInfo.Camera;
 

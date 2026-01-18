@@ -15,8 +15,10 @@ public class UIMainMenu : NetworkEventsListener
   public NetworkTransportProvider Transport;
   public GameObject               SandboxPrefab;
   public int                      Port;
-  public int                      FirstLevelIndex    = 1;
-  public int                      DedicatedServerFPS = 60;
+  public string                   FirstLevelName     = "SoccerLevel1";
+
+  [Header("Dedicated Server")]
+  public int                      DedicatedServerFPS = 45;
 
   [Header("UI")]
   public TextMeshProUGUI          ConnectionErrorText;
@@ -43,11 +45,30 @@ public class UIMainMenu : NetworkEventsListener
 
   private void Awake()
   {
+    Time.timeScale   = 1f;
     Cursor.lockState = CursorLockMode.None;
 
-    // if Unity is started in batch mode, we just start Netick as a server. 
-    if (Application.isBatchMode)
-      StartServer(false);
+    var multiserverArg = GetValueForArg("-multiserver");
+    var multiclientArg = GetValueForArg("-multiclient");
+    var portoffsetArg  = GetValueForArg("-portoffset");
+
+    if (Application.isBatchMode && Network.IsRunning == false)
+    {
+      if (multiserverArg != null)
+      {
+        int.TryParse(multiserverArg, out int num);
+        int.TryParse(portoffsetArg, out int portoffset);
+        StartMultiServer(num, portoffset);
+      }
+      else if (multiclientArg != null)
+      {
+        int.TryParse(multiclientArg, out int num);
+        int.TryParse(portoffsetArg, out int portoffset);
+        StartMultiClient(num, portoffset);
+      }
+      else
+        StartServer(false);
+    }
   }
 
   private void Start()
@@ -69,13 +90,68 @@ public class UIMainMenu : NetworkEventsListener
     if (Network.IsRunning)
       Network.ShutdownImmediately();
 
-    var sandbox                                                      = isHost ? Network.StartAsHost(Transport, Port, SandboxPrefab) : Network.StartAsServer(Transport, Port, SandboxPrefab);
+    var sandbox = isHost ? Network.StartAsHost(Transport, Port, SandboxPrefab) : Network.StartAsServer(Transport, Port, SandboxPrefab);
 
     if (isHost)
-      sandbox.GetComponent<GlobalInfo>().LocalPlayerName             = (PlayerNameText.text != "" ? PlayerNameText.text : "Unnamed");
+      sandbox.GetComponent<GlobalData>().LocalPlayerName = (PlayerNameText.text != "" ? PlayerNameText.text : "Unnamed");
 
-    sandbox.GetComponent<GlobalInfo>().StartedThroughMainMenu        = true;
-    sandbox.SwitchScene(FirstLevelIndex);
+    sandbox.GetComponent<GlobalData>().StartedThroughMainMenu = true;
+    sandbox.SwitchScene(FirstLevelName);
+  }
+
+  public void StartMultiServer(int count, int portOffset)
+  {
+    Application.targetFrameRate = DedicatedServerFPS;
+    var commands   = new List<SandboxLaunchData>(count);
+    int basePort   = Port + portOffset;
+
+    for (int i = 0; i < count; i++)
+    {
+      commands.Add(new SandboxLaunchData()
+      {
+        Port              = (basePort + i),
+        StartMode         = NetickStartMode.Server,
+        SandboxPrefab     = SandboxPrefab,
+        TransportProvider = Transport
+      });
+    }
+
+    var srvs = Netick.Unity.Network.Launch(commands);
+
+    for (int i = 0; i < srvs.Count; i++)
+    {
+      srvs[i].GetComponent<GlobalData>().StartedThroughMainMenu = true;
+      srvs[i].SwitchScene(FirstLevelName);
+    }
+  }
+
+  public void StartMultiClient(int count, int portOffset)
+  {
+    Application.targetFrameRate = DedicatedServerFPS;
+    var commands    = new List<SandboxLaunchData>(count);
+    int basePort    = Port + portOffset;
+    int numPlayers  = Resources.Load<NetickConfig>("netickConfig").MaxPlayers;
+
+    for (int i = 0; i < count; i++)
+    {
+      commands.Add(new SandboxLaunchData()
+      {
+        StartMode         = NetickStartMode.Client,
+        SandboxPrefab     = SandboxPrefab,
+        TransportProvider = Transport
+      });
+    }
+
+    var clis                      = Netick.Unity.Network.Launch(commands);
+    RocketCarsRequestData req     = new RocketCarsRequestData { GameVersionHash = Netick.Unity.Network.GameVersion, };
+    ArraySegment<byte> reqAsBytes = MemoryMarshal.AsBytes(MemoryMarshal.CreateReadOnlySpan(ref req, Marshal.SizeOf<RocketCarsRequestData>())).ToArray();
+
+    for (int i = 0; i < clis.Count; i++)
+    {
+      int targetPort              = basePort + (i / numPlayers);
+      clis[i].GetComponent<GlobalData>().StartedThroughMainMenu = true;
+      clis[i].Connect(targetPort, "108.61.170.135", reqAsBytes);
+    }
   }
 
   public void StartClientAndConnect()
@@ -85,8 +161,8 @@ public class UIMainMenu : NetworkEventsListener
     if (_clientSandbox == null)
       _clientSandbox                                                 = Network.StartAsClient(Transport, SandboxPrefab);
 
-    _clientSandbox.GetComponent<GlobalInfo>().LocalPlayerName        = (PlayerNameText.text != "" ? PlayerNameText.text : "Unnamed");
-    _clientSandbox.GetComponent<GlobalInfo>().StartedThroughMainMenu = true;
+    _clientSandbox.GetComponent<GlobalData>().LocalPlayerName        = (PlayerNameText.text != "" ? PlayerNameText.text : "Unnamed");
+    _clientSandbox.GetComponent<GlobalData>().StartedThroughMainMenu = true;
 
     RocketCarsRequestData req                                        = new RocketCarsRequestData
     {
@@ -113,8 +189,8 @@ public class UIMainMenu : NetworkEventsListener
 
     _clientSandbox = Network.StartAsReplayClient(SandboxPrefab);
     _clientSandbox.StartReplayPlayback(); // default path
-    _clientSandbox.GetComponent<GlobalInfo>().LocalPlayerName = (PlayerNameText.text != "" ? PlayerNameText.text : "Unnamed");
-    _clientSandbox.GetComponent<GlobalInfo>().StartedThroughMainMenu = true;
+    _clientSandbox.GetComponent<GlobalData>().LocalPlayerName = (PlayerNameText.text != "" ? PlayerNameText.text : "Unnamed");
+    _clientSandbox.GetComponent<GlobalData>().StartedThroughMainMenu = true;
     _clientSandbox.Connect(Port, ServerIPAddressText.text);
   }
 
@@ -132,6 +208,21 @@ public class UIMainMenu : NetworkEventsListener
         ConnectionErrorText.text = "Connecting failed: Refused by server.";
     }
   }
+
+  public string GetValueForArg(string argName)
+  {
+    string[] args = System.Environment.GetCommandLineArgs();
+    for (int i = 0; i < args.Length; i++)
+    {
+      // Check if this arg matches the key and has a value following it
+      if (args[i] == argName && args.Length > i + 1)
+      {
+        return args[i + 1];
+      }
+    }
+    return null;
+  }
+
 
   public void Quit()
   {

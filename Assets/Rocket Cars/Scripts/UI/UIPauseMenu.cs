@@ -37,10 +37,10 @@ public class UIPauseMenu : NetworkBehaviour
 
   public void Update()
   {
-    if (Application.isBatchMode || Sandbox == null || !Sandbox.IsRunning || _gm.GlobalInfo == null || _gm.GlobalInfo.HideUI)
+    if (Application.isBatchMode || Sandbox == null || !Sandbox.IsRunning || _gm.GlobalData == null)
       return;
 
-    if (_gm != null && Input.GetKeyDown(KeyCode.Escape))
+    if (_gm != null && (_gm.GlobalData.CanUseInput || _gm.GlobalData.IsReplay) && Input.GetKeyDown(KeyCode.Escape))
       TogglePause();
   }
 

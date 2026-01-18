@@ -5,6 +5,7 @@ using UnityEngine;
 
 public enum Team
 {
+  None,
   Blue,
   Red
 }

@@ -33,7 +33,7 @@ public class FlyCameraController : NetworkBehaviour
   public override void NetworkStart()
   {
     _gm  = GetComponent<GameMode>();
-    _cam = Sandbox.GetComponent<GlobalInfo>().Camera;
+    _cam = Sandbox.GetComponent<GlobalData>().Camera;
     SyncToCurrentCamera();
   }
 
@@ -58,7 +58,7 @@ public class FlyCameraController : NetworkBehaviour
 
   private bool CheckIfActive()
   {
-    if (Sandbox == null || !Sandbox.IsRunning || _cam == null || !_gm.GlobalInfo.IsReplay)
+    if (Sandbox == null || !Sandbox.IsRunning || _cam == null || !_gm.GlobalData.IsReplay)
       return false;
 
     return !Sandbox.ContainsPlayer(_gm.SpectatedPlayer);
@@ -87,7 +87,7 @@ public class FlyCameraController : NetworkBehaviour
 
   void HandleMovement()
   {
-    float speed     = MoveSpeed;
+    float speed      = MoveSpeed;
     if (Input.GetKey(KeyCode.LeftShift)) 
       speed         *= FastMultiplier;
     else if (Input.GetKey(KeyCode.LeftControl)) 

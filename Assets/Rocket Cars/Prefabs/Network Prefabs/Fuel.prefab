@@ -14496,7 +14496,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: -8.4192705, y: -0.5999979, z: 16.460745}
-  m_LocalScale: {x: 1.02772, y: 1.02772, z: 1.02772}
+  m_LocalScale: {x: 0.41, y: 0.41, z: 0.41}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 7110195110631883880}
@@ -14517,10 +14517,10 @@ MonoBehaviour:
   _AoILayer: 0
   _BroadPhaseFilter: 0
   _NarrowPhaseFilter: 0
-  _SpatialPrioritization: 0
   _PredictionMode: 0
   _AddToNetworkLoop: 1
   _IsPersistent: 0
+  _ResetInterpOnInterest: 0
   PrefabRoot: {fileID: 0}
   Children: []
   PrefabIndex: -1

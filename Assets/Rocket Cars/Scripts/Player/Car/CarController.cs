@@ -121,6 +121,7 @@ public class CarController : GoalReplayable
   private int                    _numOfGroundedWheels;
   private int                    _envLayerMask;
   private int                    _ballLayerMask;
+  private Collider[]             _colliderCache = new Collider[1]; 
   private BoxCollider            _collider;
   private GameMode               _gm;
   
@@ -136,7 +137,7 @@ public class CarController : GoalReplayable
   public override void NetworkStart()
   {
     base.NetworkStart();
-    _gm                          = Sandbox.GetComponent<GlobalInfo>().GameMode;
+    _gm                          = Sandbox.GetComponent<GlobalData>().GameMode;
 
     if (IsReplay)
       Sandbox.Replay.Playback.OnSeeked += OnReplaySeeked;
@@ -187,7 +188,7 @@ public class CarController : GoalReplayable
   private void SimulateVehicle(GameInput input)
   {
     Rigidbody.centerOfMass  = CenterOfMass.localPosition;
-    IsGrounded              = PerformGroundRaycast();
+    IsGrounded              = PerformEnvironmentCheck();
 
     // * linear motion and ground steering
     SimulateWheels(input.Movement.x, input.Movement.y * EngineForce, input.Drift, out var groundedWheels);
@@ -206,7 +207,7 @@ public class CarController : GoalReplayable
 
     // * air control
     if (EnableAirControl)
-      SimulateAirControl(input.Movement, IsGrounded);
+      SimulateAirControl(input.Movement, groundedWheels >= 3);
 
     // * gravity
     if (AirBoostTickTimer <= 0)
@@ -382,14 +383,21 @@ public class CarController : GoalReplayable
   /// </summary>
   private void SimulateAutoStabilization(Vector3 movement, bool isGrounded, int numberOfGroundedWheels)
   {
-    var surfaceVsVehicleDown = Mathf.Max(0f, Vector3.Dot(Vector3.up, -transform.up));
-    if (numberOfGroundedWheels < 3 && isGrounded)
+    if (transform.position.y > 10f)
+      return;
+
+    bool isTippedOver = Vector3.Dot(Vector3.up, transform.up) < 0.5f;
+
+    if (numberOfGroundedWheels < 3 && isGrounded && movement.magnitude > 0.1f)
     {
-      if (surfaceVsVehicleDown > 0.5f)
+      if (isTippedOver)
       {
-        float throttleFactor = MathF.Abs(movement.y) > 0.1f ? 1f : 0f;
-        float sign           = Vector3.Dot(Vector3.up, transform.right) > 0 ? -1 : 1;
-        Rigidbody.AddRelativeTorque(throttleFactor * sign * Vector3.forward * StabilizationForce, ForceMode.VelocityChange);
+        float tilt          = Vector3.Dot(Vector3.up, transform.right);
+
+        if (Mathf.Abs(tilt) < 0.02f && Vector3.Dot(Vector3.up, transform.up) < -0.9f)
+          tilt = 0.1f;
+
+        Rigidbody.AddRelativeTorque(-tilt * Vector3.forward * StabilizationForce, ForceMode.VelocityChange);
       }
     }
   }
@@ -446,12 +454,9 @@ public class CarController : GoalReplayable
     FuelTickTime          = Sandbox.TimeToTick(Mathf.Min(MaxFuel, Sandbox.TickToTime(FuelTickTime) + TimeAddedPerFuel));
   }
 
-  private bool PerformGroundRaycast()
+  private bool PerformEnvironmentCheck()
   {
-    bool didHit = Sandbox.Physics.Raycast(transform.position, -transform.up, out var hitInfo, _collider.bounds.size.y / 1.5f, _envLayerMask);
-    if (!didHit)
-      didHit = Sandbox.Physics.Raycast(transform.position, transform.up, out hitInfo, _collider.bounds.size.y / 1.5f, _envLayerMask);
-    return didHit;
+    return  Sandbox.Physics.OverlapBox(transform.position, _collider.size * 0.65f, _colliderCache, transform.rotation, _envLayerMask) > 0;
   }
 
   public void OnCollisionEnter(Collision collision)
@@ -477,7 +482,7 @@ public class CarController : GoalReplayable
     var isGrounded                         = GroundedWheelsNum >= 3;
     var forwardSpeed                       = Vector3.Dot(NetworkRigidbody.Velocity, transform.forward);
     var sideSpeed                          = Vector3.Dot(NetworkRigidbody.Velocity, transform.right);
-    SideSpeed = sideSpeed;
+    SideSpeed                              = sideSpeed;
     IsSlipping                             = isGrounded && Mathf.Abs(sideSpeed) > Mathf.Max(0.1f, 0.35f * Mathf.Abs(forwardSpeed)) && NetworkRigidbody.Velocity.magnitude >= DriftMinVelocity;
 
     for (int i = 0; i < DriftParticleSystems.Length; i++)

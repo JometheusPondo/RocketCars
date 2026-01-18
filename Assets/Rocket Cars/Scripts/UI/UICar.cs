@@ -24,7 +24,7 @@ public class UICar : NetworkBehaviour
 
   public override void NetworkStart()
   {
-    _gm = Sandbox.GetComponent<GlobalInfo>().GameMode;
+    _gm = Sandbox.GetComponent<GlobalData>().GameMode;
   }
 
   public override void NetworkRender()
@@ -32,7 +32,7 @@ public class UICar : NetworkBehaviour
     if (Application.isBatchMode)
       return;
 
-    var plrId = _gm.GlobalInfo.IsReplay ? _gm.SpectatedPlayer : Sandbox.LocalPlayer.PlayerId;
+    var plrId = _gm.GlobalData.IsReplay ? _gm.SpectatedPlayer : Sandbox.LocalPlayer.PlayerId;
     Sandbox.TryGetPlayerObject(plrId, out Player player);
 
     if (player != null && player.IsReady)
@@ -45,7 +45,7 @@ public class UICar : NetworkBehaviour
       if (_container.activeInHierarchy && _gm.DisableCarCamera)
         _container.SetActive(false);
 
-      if (!_gm.GlobalInfo.IsReplay && Netick.Unity.Network.StartMode != StartMode.MultiplePeers)
+      if (!_gm.GlobalData.IsReplay && Netick.Unity.Network.StartMode != StartMode.MultiplePeers)
         Cursor.lockState = _gm.Paused == true ? CursorLockMode.None : CursorLockMode.Locked;
     }
     else
@@ -60,7 +60,7 @@ public class UICar : NetworkBehaviour
 
     if (_cameraModeLast != _carCameraController.LookAtBall)
     {
-      _cameraModeText.text            = _carCameraController.LookAtBall ? "Ball Cam" : "Car Cam";
+      _cameraModeText.text            = _carCameraController.LookAtBall ? "Ball" : "Car";
       _cameraModeLast                 = _carCameraController.LookAtBall;
     }
 

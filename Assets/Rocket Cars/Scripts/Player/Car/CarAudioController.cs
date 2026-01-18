@@ -3,6 +3,7 @@ using System.Collections;
 using Netick.Unity;
 using Netick;
 
+[ExecuteAfter(typeof(CarController))]
 public class CarAudioController : NetworkBehaviour
 {
   public AudioSource    EngineAudioSource;

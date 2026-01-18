@@ -35,7 +35,6 @@ public class Soccer : GameMode
   [Networked] public NetworkBool                  GoalReplayLookAtScorer { get; set; } // indicate if we should look at the scorer (instead of the ball) during replay.
   [Networked] public int                          GoalReplaySkipersCount { get; set; } // number of players who want to skip goal replay.
 
-
   // Public Events
   public event UnityAction<Player, bool>          OnGoalsChangedEvent;
   public event UnityAction<OnChangedData>         OnGameStateChangedEvent;
@@ -48,14 +47,23 @@ public class Soccer : GameMode
 
   [Header("General")]
   public CarController                            PlayerPrefab;
-  public Transform[]                              RedTeamSpawns;
-  public Transform[]                              BlueTeamSpawns;
+  public GameObject                               FuelPrefab;
   public Ball                                     Ball;
   public int                                      GoalsToWin             = 5;  // number of goals required for the match to end.
   public float                                    DelayUntilReplay       = 3f; // how long until we transition to replay after a goal was scored.
   public float                                    DelayUntilRoundStart   = 3f; // how long until the round starts after replay finishes.
   public float                                    DelayUntilRestart      = 5f; // how long until the game is restarted after it game over.
  
+  [Header("Fuel Spawn (around ball)")]
+  public float                                    SpawnRadius            = 15f; // radius from ball to spawn players around it.
+  public float                                    SpawnArcLength         = 15f; 
+  public float                                    FuelSpawnDistance      = 7f; // how far in front of the player to spawn fuel.
+  public float                                    FuelSpawnYPos          = 0.3f;
+  [Header("Fuel Spawn (spread in field)")]
+  public float                                    FuelSpawnAreaWidth     = 64f;
+  public float                                    FuelSpawnAreaHeight    = 145f; 
+  public int                                      FuelsPerLine           = 6; 
+
   [Header("Goal Explosion Effect")]
   public float                                    GoalExplosionForce     = -50f;
   public float                                    GoalExplosionTorque    = 50f;
@@ -65,7 +73,8 @@ public class Soccer : GameMode
   public float                                    MaxBallSpeed           = 1.1f;
 
   [Header("Arena Roof Material Emission Goal Effect")]
-  public Material                                 ArenaRoofMaterial;
+  public MeshRenderer                             ArenaRenderer;
+  public int                                      ArenaRendererRoofMaterialIndex;
   public Color                                    RedTeamColor;
   public Color                                    BlueTeamColor;
   public float                                    FlashingSpeed          = 1.2f;
@@ -83,25 +92,29 @@ public class Soccer : GameMode
   private GoalReplay                              _goalReplay;
   private GoalReplayCameraController              _goalReplayCameraController;
   private Vector4                                 _originalArenaRoofEmissionColor;
-
+  public Material                                 _arenaRoofMaterial;
   public override void NetworkStart()
   {
     base.NetworkStart();
     _goalReplay                     = GetComponent<GoalReplay>();
      AudioSource                    = GetComponent<AudioSource>();
     _goalReplayCameraController     = GetComponent<GoalReplayCameraController>();
-    _originalArenaRoofEmissionColor = ArenaRoofMaterial.GetVector("_EmissionColor");
     Sandbox.Events.OnPlayerJoined  += OnPlayerJoined;
     Sandbox.Events.OnPlayerLeft    += OnPlayerLeft;
+    _arenaRoofMaterial              = ArenaRenderer.materials[ArenaRendererRoofMaterialIndex];
+    _originalArenaRoofEmissionColor = _arenaRoofMaterial.GetVector("_EmissionColor");
 
     if (Sandbox.Config.MaxPlayers % 2 != 0)
       Sandbox.LogError("Incorrect MaxPlayers value! In Rocket Cars, MaxPlayers must be an even number.");
 
     if (IsServer)
+    {
       PreAllocateCars();
+      SpawnFuels();
+    }
 
-    if (SpawnPlayerImmediately && IsHost)
-      JoinAnyTeam(Sandbox.LocalPlayer.PlayerId, "Unnamed"); 
+    if (SpawnPlayerImmediately && IsHost || (Application.isBatchMode && IsClient))
+      JoinAnyTeam(Sandbox.LocalPlayer.PlayerId, "Unnamed");
   }
 
   public void OnPlayerJoined(NetworkSandbox sandbox, NetworkPlayerId plr)
@@ -116,12 +129,13 @@ public class Soccer : GameMode
       ReleaseCar(player);
   }
 
-  public void JoinAnyTeam(NetworkPlayerId plr, string name)
+  [Rpc(RpcPeers.Everyone, RpcPeers.Owner, isReliable: true)]
+  public void JoinAnyTeam(NetworkPlayerId plr, NetworkString16 name)
   {
     var team = Random.value > 0.5f ? Team.Red : Team.Blue;
     if (GetTeamSize(team) == (Sandbox.Config.MaxPlayers / 2)) // if full, join other team.
       team = team == Team.Red ? Team.Blue : Team.Red;
-    AccuireCar(plr, team, name);
+    AcquireCar(plr, team, name);
   }
 
   /// <summary>
@@ -134,11 +148,10 @@ public class Soccer : GameMode
     if (GameState == State.GoalReplay || (team == Team.Red && _freeRedTeamSpawns.Count == 0) || (team == Team.Blue && _freeBlueTeamSpawns.Count == 0))
       return;
 
-    AccuireCar(ctx.Source, team, name);
+    AcquireCar(ctx.Source, team, name);
   }
 
-
-  void AccuireCar(NetworkPlayerId playerId, Team team, NetworkString16 name)
+  void AcquireCar(NetworkPlayerId playerId, Team team, NetworkString16 name)
   {
     if (Sandbox.GetPlayerObject(playerId) != null) // return if player already has a car.
       return;
@@ -191,10 +204,20 @@ public class Soccer : GameMode
       _allCars.Add(car);
     }
 
+    GetKickoffPoints(Ball.transform.position, playersPerTeam, false, out var redTeamSpawns,  out var redTeamFuels);
+    GetKickoffPoints(Ball.transform.position, playersPerTeam, true,  out var blueTeamSpawns, out var blueTeamFuels);
+
     for (int i = 0; i < playersPerTeam; i++)
-      _freeBlueTeamSpawns.Push(BlueTeamSpawns[i]);
+    {
+      Sandbox.NetworkInstantiate(FuelPrefab, redTeamFuels[i], Quaternion.identity);
+      Sandbox.NetworkInstantiate(FuelPrefab, blueTeamFuels[i], Quaternion.identity);
+    }
+
+    //GetSpawnPositions(Ball.transform.position, playersPerTeam, false);
     for (int i = 0; i < playersPerTeam; i++)
-      _freeRedTeamSpawns.Push(RedTeamSpawns[i]);
+      _freeBlueTeamSpawns.Push(blueTeamSpawns[i]);
+    for (int i = 0; i < playersPerTeam; i++)
+      _freeRedTeamSpawns.Push(redTeamSpawns[i]);
   }
 
   public int GetTeamSize(Team team)
@@ -206,6 +229,61 @@ public class Soccer : GameMode
 
     return count;
   }
+
+  public void GetKickoffPoints(Vector3 ballPos, int playerCount, bool isBlueTeam, out List<Transform> playerPoints, out List<Vector3> fuelPoints)
+  {
+    playerPoints      = new List<Transform>(playerCount);
+    fuelPoints        = new List<Vector3>(playerCount);
+    float centerAngle = isBlueTeam ? 90f : 270f;
+    string teamTag    = isBlueTeam ? "Blue" : "Red";
+
+    for (int i = 0; i < playerCount; i++)
+    {
+      float currentAngle;
+      if (playerCount == 1)
+      {
+        currentAngle  = centerAngle;
+      }
+      else
+      {
+        float t       = ((float)i / (playerCount - 1)) - 0.5f;
+        currentAngle  = centerAngle + (t * SpawnArcLength);
+      }
+
+      var rad         = currentAngle * Mathf.Deg2Rad;
+      var pPos        = new Vector3( ballPos.x + Mathf.Cos(rad) * SpawnRadius, ballPos.y,ballPos.z + Mathf.Sin(rad) * SpawnRadius );
+      pPos.y          = FuelSpawnYPos;
+      var pObj        = new GameObject($"{teamTag} Slot {i}").transform;
+      pObj.position   = pPos;
+      pObj.LookAt(new Vector3(ballPos.x, pPos.y, ballPos.z));
+      playerPoints.Add(pObj);
+      var fPos        = pPos + (pObj.forward * FuelSpawnDistance);    
+      fuelPoints.Add(fPos);
+    }
+  }
+
+  void SpawnFuels()
+  {
+    float zStep    = FuelSpawnAreaHeight / (FuelsPerLine - 1);
+    float startZ   = -FuelSpawnAreaHeight / 2f;
+    float[] linesX = new float[] { -FuelSpawnAreaWidth / 2f, 0f, FuelSpawnAreaWidth / 2f };
+
+    for (int y = 0; y < linesX.Length; y++)
+    {
+      var xPos     = linesX[y];
+      for (int i = 0; i < FuelsPerLine; i++)
+      {
+        float currentZ = startZ + (zStep * i);
+        var spawnPos   = new Vector3(xPos, FuelSpawnYPos, currentZ);
+
+        // make sure pos is outside ball area
+        if (Vector3.Distance(spawnPos, Vector3.zero) < SpawnRadius)
+          continue;
+        Sandbox.NetworkInstantiate(FuelPrefab, spawnPos, Quaternion.identity);
+      }
+    }
+  }
+
 
   /// <summary>
   /// In NetworkFixedUpdate, we execute per-state logic and check if a state transition should happen and we execute it.
@@ -434,6 +512,7 @@ public class Soccer : GameMode
       foreach (var playerId in Sandbox.Players)
         if (Sandbox.TryGetPlayerObject(playerId, out Player player))
           ExplodeRigidbody(player.Car.Rigidbody, box, Ball);
+
       ExplodeRigidbody(Ball.Rigidbody, box, Ball);
     }
 
@@ -477,7 +556,7 @@ public class Soccer : GameMode
   {
     _goalReplayCameraController.Render();
     // roof emission effect when scoring goal.
-    var goalRoofColor = Color.Lerp(Color.white, LastGoalTarget == Team.Blue ? RedTeamColor : BlueTeamColor, Mathf.InverseLerp(-1f, 1f, Mathf.Sin(FlashingSpeed * Time.time))) * 2f;
-    ArenaRoofMaterial.SetVector("_EmissionColor", GameState == State.GoalScored ? goalRoofColor : _originalArenaRoofEmissionColor);
+    var goalRoofColor = Color.Lerp(Color.white, LastGoalTarget == Team.Blue ? RedTeamColor : BlueTeamColor, Mathf.InverseLerp(-1f, 1f, Mathf.Sin(FlashingSpeed * Time.time))) * 1f;
+    _arenaRoofMaterial.SetVector("_EmissionColor", GameState == State.GoalScored ? goalRoofColor : _originalArenaRoofEmissionColor);
   }
 }
