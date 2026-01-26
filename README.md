@@ -2,7 +2,9 @@
 
 <img width="2692" height="1571" alt="Promo2" src="https://github.com/user-attachments/assets/36167790-b493-4bbb-89e3-28ec38db5a32" />
 
-[![Watch the video](https://img.youtube.com/vi/leNmsjLQ-74/0.jpg)](https://youtu.be/leNmsjLQ-74)
+https://github.com/user-attachments/assets/f5c14de4-470b-4205-a0e4-b706cb5730e0
+
+[Longer video here]([https://discord.com/invite/uV6bfG66Fx](https://youtu.be/leNmsjLQ-74))
 
 Rocket Cars is a free open-source server-authoritative physics-based multiplayer car game sample, inspired by Rocket League. It’s made in Unity using [Netick](https://github.com/NetickNetworking/NetickForUnity), a powerful free networking library that makes creating complex multiplayer games like Rocket League simple and easy for indie developers.
 
