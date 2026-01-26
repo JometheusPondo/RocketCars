@@ -75,8 +75,6 @@ public class Soccer : GameMode
   [Header("Arena Roof Material Emission Goal Effect")]
   public MeshRenderer                             ArenaRenderer;
   public int                                      ArenaRendererRoofMaterialIndex;
-  public Color                                    RedTeamColor;
-  public Color                                    BlueTeamColor;
   public float                                    FlashingSpeed          = 1.2f;
 
   [Header("Audio")]
@@ -556,7 +554,7 @@ public class Soccer : GameMode
   {
     _goalReplayCameraController.Render();
     // roof emission effect when scoring goal.
-    var goalRoofColor = Color.Lerp(Color.white, LastGoalTarget == Team.Blue ? RedTeamColor : BlueTeamColor, Mathf.InverseLerp(-1f, 1f, Mathf.Sin(FlashingSpeed * Time.time))) * 1f;
+    var goalRoofColor = Color.Lerp(Color.white, Color.blue, Mathf.InverseLerp(-1f, 1f, Mathf.Sin(FlashingSpeed * Time.time))) * 1f;
     _arenaRoofMaterial.SetVector("_EmissionColor", GameState == State.GoalScored ? goalRoofColor : _originalArenaRoofEmissionColor);
   }
 }

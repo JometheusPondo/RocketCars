@@ -20,6 +20,8 @@ Join our [discord](https://discord.com/invite/uV6bfG66Fx) for support.
 - Goal replay system
 - Full-match replay mode (using Netick's built-in full-game replay system)
 - Custom field shader
+- Camera Effects
+- In-Game Text Chat
 
 ## Controls
 
@@ -91,11 +93,7 @@ Future improvement suggestion: Use a deterministic and CSP-ready third-party phy
 
 Massive thank you to [Steak](https://github.com/stinkysteak) and [Milk-Drinker01](https://github.com/Milk-Drinker01) for being invaluable during the development of this sample. Steak completely cleaned up the project and overhauled the graphical style, and Milk-Drinker01 created a beautiful field shader and fixed the camera jitter issue.
 
-### License & Third-Party Assets
-
-The **source code** of this project is licensed under the **MIT License**. 
-
-However, this project includes several **third-party assets** (art, audio, and plugins) that are **not** open-source. These assets are provided for educational use within this sample only and are subject to their own original licenses.
+### Third-Party Assets
 
 | Asset | Source | License / Terms |
 | :--- | :--- | :--- |
