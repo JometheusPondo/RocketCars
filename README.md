@@ -2,11 +2,16 @@
 
 <img width="2692" height="1571" alt="Promo2" src="https://github.com/user-attachments/assets/36167790-b493-4bbb-89e3-28ec38db5a32" />
 
+<a href="https://youtu.be/leNmsjLQ-74" target="_blank">
+  <img src="https://youtu.be/leNmsjLQ-74" alt="Video Preview" width="480" height="360" border="10" />
+</a>
+
+
 Rocket Cars is a free open-source server-authoritative physics-based multiplayer car game sample, inspired by Rocket League. It’s made in Unity using [Netick](https://github.com/NetickNetworking/NetickForUnity), a powerful free networking library that makes creating complex multiplayer games like Rocket League simple and easy for indie developers.
 
-**Note**: This project is not a Rocket League clone. It’s designed as a simplified learning sample for developers who want to understand how to build physics-based networked games using [Netick](https://github.com/NetickNetworking/NetickForUnity).
+Join our [discord](https://discord.com/invite/uV6bfG66Fx) for support.
 
-Join our [discord](https://discord.com/invite/uV6bfG66Fx) for any questions.
+**Support Policy**: This is an educational resource. Support is provided for learning purposes only. Asset flips or minimal-effort derivatives will receive no support.
 
 ## Features
 - Clean and documented code 
@@ -96,9 +101,9 @@ However, this project includes several **third-party assets** (art, audio, and p
 | Asset | Source | License / Terms |
 | :--- | :--- | :--- |
 | **DOTween** | [Demigiant](https://assetstore.unity.com/packages/tools/animation/dotween-hotween-v2-27676) | [Standard EULA](http://dotween.demigiant.com/license.php) |
-| **Low Poly Car Pack 1** | [Designer Soup](https://designersoup.itch.io/low-poly-car-pack-1) | [Custom](https://designersoup.itch.io/low-poly-car-pack-1) |
+| **Low Poly Car Pack 1** | [Designer Soup](https://designersoup.itch.io/low-poly-car-pack-1) | Custom |
 | **Toon Shader** | [Erik Roystan](https://github.com/IronWarrior/UnityToonShader) | MIT |
-| **Textures** | [FreePBR](https://freepbr.com/) & [Free3DTextures](https://free-3dtextureshd.com) | Free for use |
+| **Textures** | [FreePBR](https://freepbr.com/) & [Free3DTextures](https://free-3dtextureshd.com) | Custom |
 | **ParticlePack** | [Unity Technologies](https://assetstore.unity.com/packages/vfx/particles/particle-pack-127325) | [Unity Asset Store EULA](https://unity.com/legal/as-terms) |
 | **Game Countdown 62** | [Pixabay](https://pixabay.com/) | [Pixabay License](https://pixabay.com/service/license-summary/) |
 | **car-tire-squeal-skid-loop** | [opengameart.org](https://opengameart.org/content/car-tire-squeal-skid-loop) | CC BY 3.0 |

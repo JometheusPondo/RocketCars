@@ -428,8 +428,8 @@ public class CarController : GoalReplayable
     var totalPendingForce     = Rigidbody.GetAccumulatedForce();
     var t                     = Mathf.Clamp(Vector3.Dot(totalPendingForce.normalized, _authVel.normalized), 0.01f, 1f);
     Vector3 longitudinalForce = Vector3.Project(totalPendingForce, transform.forward);  // the force along the car's forward/backward axis
-    Rigidbody.AddForce(-longitudinalForce, ForceMode.Force); // clear all accumulated forces.
-    Rigidbody.AddForce(longitudinalForce * t, ForceMode.Force); // add filtered accumulated forces.
+    Rigidbody.AddForce(-longitudinalForce, ForceMode.Force); 
+    Rigidbody.AddForce(longitudinalForce * t, ForceMode.Force);
   }
 
   private void DecayVelocity()
