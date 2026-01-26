@@ -64,7 +64,7 @@ If the selected player is no longer valid (e.g. disconnected or not spawned), th
 - `Soccer`: Implements the Soccer game mode and handles overall game management
 - `CarController`: Contains the vehicle simulation logic, using a custom lightweight physics model
 - `Ball`, `GoalBox`, `Booster`: Core interactive game elements
-- `ReplaySystem` & `Replayable`: Handles server-side goal replay system (recording and playback), using Netick state storing/reseting API
+- `GoalReplaySystem` & `GoalReplayable`: Handles server-side goal replay system (recording and playback), using Netick state storing/reseting API
 - `UI Folder`: Contains all user interface logic, designed to be independent from the gameplay layer
 
 ## Networking 
