@@ -1,6 +1,6 @@
 # Rocket Cars
 
-<img width="2692" height="467" alt="Promo3" src="https://github.com/user-attachments/assets/326e61df-91b1-4901-9691-e3bd2bf5f163" />
+<img width="2692" height="467" alt="Promo3" src="https://github.com/user-attachments/assets/25c18252-dc77-46fc-b923-c1b182b92550" />
 
 https://github.com/user-attachments/assets/f5c14de4-470b-4205-a0e4-b706cb5730e0
 
