@@ -563,7 +563,7 @@ GameObject:
   - component: {fileID: 3533399504916795956}
   - component: {fileID: 8835238281947139947}
   m_Layer: 6
-  m_Name: Car
+  m_Name: Blue Car
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -623,6 +623,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ReplayableBehaviour: {fileID: 9201329679079639887}
+  <LastInput>k__BackingField:
+    Jump:
+      RawValue: 0
+    Rocket:
+      RawValue: 0
+    Drift:
+      RawValue: 0
   <JumpTickTimer>k__BackingField:
     Value: 0
   <AirBoostTickTimer>k__BackingField:
@@ -637,6 +644,7 @@ MonoBehaviour:
   <AirPitchFlag>k__BackingField:
     RawValue: 0
   <JumpTrigger>k__BackingField: 0
+  <AirBoostDirection>k__BackingField: {x: 0, y: 0, z: 0}
   EnableJump: 1
   EnableRocket: 1
   EnableAirControl: 1
@@ -740,10 +748,10 @@ MonoBehaviour:
   RocketForce: 22
   MaxFuel: 25
   TimeAddedPerFuel: 6
-  JumpForce: 5
+  JumpForce: 8
   AirSteerTorque: {x: 10, y: 10, z: 20}
   AirBoostLinearForce: 6.5
-  AirBoostTorque: 25
+  AirBoostTorque: 200
   InputDecayMaxLatency: 250
   InputDecayMinFactor: 0.02
   VelocityDecayMinLatency: 250
@@ -790,9 +798,18 @@ MonoBehaviour:
   MinShakeSpeed: 15
   MaxShakeSpeed: 100
   ShakeFrequency: 3
-  MaxShakeAmount: 0.3
+  ShakeIntensity: 2.15
+  MaxRotationTilt: 0.5
+  MaxRotationRoll: 1.5
+  DriftMaxShakeSpeed: 40
+  DriftShakeIntensity: 2
+  DriftShakeFreq: 40
+  ImpactIntensityMult: 0.3
+  BallIAndCarmpactIntensityMult: 0.6
+  CollisionDecay: 8
   MaxSpeedFOV: 105
   FOVWeight: 0.5
+  FOVModifier: 1
 --- !u!114 &1974884719944547763
 MonoBehaviour:
   m_ObjectHideFlags: 0

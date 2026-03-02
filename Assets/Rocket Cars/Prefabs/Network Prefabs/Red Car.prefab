@@ -72,6 +72,14 @@ PrefabInstance:
       propertyPath: RedCarPrefab
       value: 
       objectReference: {fileID: 6957089359115430956}
+    - target: {fileID: 9201329679079639887, guid: b8ab3af591528cd449e670a574a96d6e, type: 3}
+      propertyPath: JumpForce
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 9201329679079639887, guid: b8ab3af591528cd449e670a574a96d6e, type: 3}
+      propertyPath: AirBoostTorque
+      value: 200
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []

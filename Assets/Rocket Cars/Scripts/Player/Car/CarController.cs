@@ -2,6 +2,8 @@ using JetBrains.Annotations;
 using Netick;
 using Netick.Unity;
 using System;
+using System.Collections.Specialized;
+using System.Diagnostics;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.EventSystems;
@@ -22,6 +24,8 @@ public class CarController : GoalReplayable
   [Networked] public NetworkBool AirBoostUsed                          { get; set; } // did the car use the boost/double jump.
   [Networked] public NetworkBool AirPitchFlag                          { get; set; } // used to prevent the player from directly pitching when the move forward button is still pressed when jumping.
   [Networked] public int         JumpTrigger                           { get; set; } // used to sync jump audio.
+
+  [Networked] public Vector3     AirBoostDirection                     { get; set; } // used to sync dodge direction and to ensure flips do a complete rotation without needing to hold input
 
   public Rigidbody               Rigidbody                             { get; private set; }
   public NetworkRigidbody        NetworkRigidbody                      { get; private set; }
@@ -210,8 +214,10 @@ public class CarController : GoalReplayable
       SimulateAirControl(input.Movement, groundedWheels >= 3);
 
     // * gravity
-    if (AirBoostTickTimer <= 0)
-     Rigidbody.AddForce(Vector3.down * GravityForce, ForceMode.Acceleration);
+    // if (AirBoostTickTimer <= 0)
+    // With the change to flips fully rotating without continued input, we dont need the check
+    // that allow
+    Rigidbody.AddForce(Vector3.down * GravityForce, ForceMode.Acceleration);
 
     // * bending velocity
     if (!IsGrounded && input.Rocket && FuelTickTime > 0 && !Rigidbody.isKinematic)
@@ -219,10 +225,10 @@ public class CarController : GoalReplayable
 
     // * drag
     if (!Rigidbody.isKinematic)
-    {
-      Rigidbody.velocity        *= Mathf.Exp(-LinearDrag * Sandbox.FixedDeltaTime);  // linear drag
-      Rigidbody.angularVelocity *= Mathf.Exp(-AngularDrag * Sandbox.FixedDeltaTime);  // angular drag
-    }
+        {
+            Rigidbody.velocity *= Mathf.Exp(-LinearDrag * Sandbox.FixedDeltaTime);  // linear drag
+            Rigidbody.angularVelocity *= Mathf.Exp(-AngularDrag * Sandbox.FixedDeltaTime);  // angular drag
+        }
   }
 
   private void SimulateWheels(float steer, float engineForce, bool isDrifting, out int groundedWheels)
@@ -324,21 +330,37 @@ public class CarController : GoalReplayable
       {
         if (jumpInput)
         {
-          var linear        = new Vector3(movement.x, 0.2f, movement.y);
-          Rigidbody.AddRelativeForce(linear * AirBoostLinearForce, ForceMode.VelocityChange);
-          AirBoostUsed      = true;
-          AirBoostTickTimer = Sandbox.TimeToTick(1f);
-          JumpTrigger++;
-        }
+          AirBoostDirection = new Vector3(movement.y, 0f, -movement.x);
+          var linear        = new Vector3(movement.x, 0f, movement.y);
+          var forwardSpeed = Vector3.Dot(Rigidbody.velocity, transform.forward);
+          
+          if (movement.y < 0 && forwardSpeed > 0)
+           {
+             var BackFlipVelocity = new Vector3(0f, Rigidbody.velocity.y, 0f);
+             Rigidbody.velocity = BackFlipVelocity;
+             // Rigidbody.AddForce(transform.up * JumpForce * 0f, ForceMode.VelocityChange);
+           }
+          else
+           {
+            Rigidbody.AddRelativeForce(linear * AirBoostLinearForce, ForceMode.VelocityChange);
+            AirBoostUsed = true;
+           }
+
+            AirBoostTickTimer = Sandbox.TimeToTick(1f);
+            JumpTrigger++;
+
+         }
       }
     }
 
     if (AirBoostTickTimer > 0)
     {
       var rotational        = new Vector3(movement.y, 0, movement.x);
-      Rigidbody.AddRelativeTorque(rotational * AirBoostTorque, ForceMode.Acceleration);
+      Rigidbody.AddRelativeTorque(AirBoostDirection * AirBoostTorque, ForceMode.Acceleration);
       AirBoostTickTimer    -= 1;
     }
+
+
 
     if (JumpTickTimer == 0)
     {
@@ -364,7 +386,7 @@ public class CarController : GoalReplayable
   /// </summary>
   private void SimulateAirControl(Vector3 movement, bool isGrounded)
   {
-    if (!isGrounded)
+    if (!isGrounded && AirBoostTickTimer <= 0)
     {
       // we use a flag (AirPitchFlag) to let the player not pitch-rotate when holding the move forward button, and only pitch when they release it and press it again.
       if (AirPitchFlag == false && movement.y <= 0.5f)
