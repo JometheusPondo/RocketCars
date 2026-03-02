@@ -343,6 +343,7 @@ public class CarController : GoalReplayable
           else
            {
             Rigidbody.AddRelativeForce(linear * AirBoostLinearForce, ForceMode.VelocityChange);
+            Rigidbody.AddRelativeTorque(AirBoostDirection * 3f, ForceMode.VelocityChange);
             AirBoostUsed = true;
            }
 
