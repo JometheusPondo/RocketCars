@@ -57,6 +57,7 @@ public abstract class GameMode : NetworkBehaviour
     input.Rocket     |= Input.GetButton("Rocket");
     input.Jump       |= Input.GetButtonDown("Jump");
     input.Drift      |= Input.GetButton("Drift");
+    input.AirRoll    |= Input.GetKey(KeyCode.LeftShift);
     Sandbox.SetInput(input);
   }
 

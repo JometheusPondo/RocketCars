@@ -751,7 +751,7 @@ MonoBehaviour:
   JumpForce: 8
   AirSteerTorque: {x: 10, y: 10, z: 20}
   AirBoostLinearForce: 6.5
-  AirBoostTorque: 200
+  AirBoostTorque: 25
   InputDecayMaxLatency: 250
   InputDecayMinFactor: 0.02
   VelocityDecayMinLatency: 250

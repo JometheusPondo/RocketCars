@@ -13,4 +13,5 @@ public struct GameInput : INetworkInput
   public NetworkBool Jump;
   public NetworkBool Rocket;
   public NetworkBool Drift;
+  public NetworkBool AirRoll;
 }

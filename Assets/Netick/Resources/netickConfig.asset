@@ -19,7 +19,7 @@ MonoBehaviour:
   - {fileID: 8439433461650480370, guid: 59f49f7cffe7e05449819897e431bf92, type: 3}
   AutoGetPrefabs: 1
   PrefabsPath: Assets/
-  TickRate: 40
+  TickRate: 120
   MaxAllowedTimestep: 0.1
   MaxPlayers: 6
   MaxObjects: 64

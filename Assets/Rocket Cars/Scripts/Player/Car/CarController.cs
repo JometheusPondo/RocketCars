@@ -211,7 +211,7 @@ public class CarController : GoalReplayable
 
     // * air control
     if (EnableAirControl)
-      SimulateAirControl(input.Movement, groundedWheels >= 3);
+      SimulateAirControl(input.Movement, groundedWheels >= 3, input.AirRoll);
 
     // * gravity
     // if (AirBoostTickTimer <= 0)
@@ -343,7 +343,6 @@ public class CarController : GoalReplayable
           else
            {
             Rigidbody.AddRelativeForce(linear * AirBoostLinearForce, ForceMode.VelocityChange);
-            Rigidbody.AddRelativeTorque(AirBoostDirection * 3f, ForceMode.VelocityChange);
             AirBoostUsed = true;
            }
 
@@ -356,9 +355,16 @@ public class CarController : GoalReplayable
 
     if (AirBoostTickTimer > 0)
     {
-      var rotational        = new Vector3(movement.y, 0, movement.x);
-      Rigidbody.AddRelativeTorque(AirBoostDirection * AirBoostTorque, ForceMode.Acceleration);
+      // var rotational        = new Vector3(movement.y, 0, movement.x);
+
+      // Smoothing the jump impulse
+      var ticksElapsed = Sandbox.TimeToTick(1f) - AirBoostTickTimer;
+      var rampMultiplier = ticksElapsed < 5 ? 2f : 1f;
+
+
+      Rigidbody.AddRelativeTorque(AirBoostDirection * AirBoostTorque * rampMultiplier, ForceMode.Acceleration);
       AirBoostTickTimer    -= 1;
+
     }
 
 
@@ -385,7 +391,7 @@ public class CarController : GoalReplayable
   /// <summary>
   /// Simulates pitch, yaw, and roll torques when flying.
   /// </summary>
-  private void SimulateAirControl(Vector3 movement, bool isGrounded)
+  private void SimulateAirControl(Vector3 movement, bool isGrounded, bool AirRoll)
   {
     if (!isGrounded && AirBoostTickTimer <= 0)
     {
@@ -396,6 +402,12 @@ public class CarController : GoalReplayable
 
       if (AirPitchFlag == false)
         axis.x       = 0;
+
+      if (AirRoll)
+            {
+                axis.z = movement.x * AirSteerTorque.z;
+                axis.y = 0;
+            }
 
       Rigidbody.AddRelativeTorque(axis, ForceMode.Acceleration);
     }
