@@ -52,14 +52,29 @@ public abstract class GameMode : NetworkBehaviour
             return;
         // collecting networked user input.
         var input = Sandbox.GetInput<GameInput>();
-        input.Throttle = Mathf.Clamp(input.Throttle + Input.GetAxis("Vertical"), -1f, 1f);
-        input.Steer    = Mathf.Clamp(input.Steer    + Input.GetAxis("Horizontal"), -1f, 1f);
-        input.Pitch    = Mathf.Clamp(input.Pitch    + Input.GetAxis("Vertical"), -1f, 1f);
-        input.Yaw      = Mathf.Clamp(input.Yaw      + Input.GetAxis("Horizontal"), -1f, 1f);
-        input.Roll     = Mathf.Clamp(input.Roll     + Input.GetAxis("Roll"), -1f, 1f);
-        input.Boost    |= Input.GetButton("Rocket");
-        input.Jump     |= Input.GetButtonDown("Jump");
-        input.Handbrake|= Input.GetButton("Drift");
+
+        float triggers = Input.GetAxis("Throttle") - Input.GetAxis("Brake");
+        float kbVert = Input.GetAxis("Vertical");
+        float stickX = Input.GetAxis("Horizontal");
+
+
+        input.Throttle = Mathf.Clamp(input.Throttle + triggers + kbVert, -1f, 1f);
+        input.Steer = Mathf.Clamp(input.Steer + stickX, -1f, 1f);
+        input.Pitch = Mathf.Clamp(input.Pitch + kbVert, -1f, 1f);
+        input.Yaw = Mathf.Clamp(input.Yaw + stickX, -1f, 1f);
+
+        bool airRollHeld = Input.GetButton("AirRollPowerslide");
+        float rollInput = Input.GetAxis("Roll"); 
+
+        if (airRollHeld)
+            rollInput = stickX; 
+
+        input.Roll = Mathf.Clamp(input.Roll + rollInput, -1f, 1f);
+
+        input.Boost |= Input.GetButton("Boost");
+        input.Jump |= Input.GetButtonDown("Jump");
+        input.Handbrake |= airRollHeld; // LB = powerslide on ground
+
         Sandbox.SetInput(input);
     }
 
