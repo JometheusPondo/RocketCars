@@ -69,9 +69,9 @@ public class UICar : NetworkBehaviour
     else
       _cameraModeText.color           = Color.white;
 
-    float fuel                        = Mathf.RoundToInt(Sandbox.TickToTime(_carController.FuelTickTime));
-    float alpha                       = fuel / _carController.MaxFuel;
+    float fuel = _carController.Boost;
+    float alpha = fuel / RLC.BOOST_MAX;
     _fuelFillBar.transform.localScale = new Vector3(alpha, 1f, 1f);
-    _fuelText.SetText("{0}", fuel);
-  }
+    _fuelText.SetText("{0}", Mathf.RoundToInt(fuel));
+    }
 }

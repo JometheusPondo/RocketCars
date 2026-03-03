@@ -81,8 +81,16 @@ PrefabInstance:
       value: 200
       objectReference: {fileID: 0}
     - target: {fileID: 9201329679079639887, guid: b8ab3af591528cd449e670a574a96d6e, type: 3}
+      propertyPath: SpringStiffnessVisual
+      value: 35
+      objectReference: {fileID: 0}
+    - target: {fileID: 9201329679079639887, guid: b8ab3af591528cd449e670a574a96d6e, type: 3}
       propertyPath: VelocityDecayMinLatency
       value: 25
+      objectReference: {fileID: 0}
+    - target: {fileID: 9201329679079639887, guid: b8ab3af591528cd449e670a574a96d6e, type: 3}
+      propertyPath: <FlipTime>k__BackingField
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

@@ -626,134 +626,53 @@ MonoBehaviour:
   <LastInput>k__BackingField:
     Jump:
       RawValue: 0
-    Rocket:
+    Boost:
       RawValue: 0
-    Drift:
+    Handbrake:
       RawValue: 0
-  <JumpTickTimer>k__BackingField:
-    Value: 0
-  <AirBoostTickTimer>k__BackingField:
-    Value: 0
-  <FuelTickTime>k__BackingField:
-    Value: 0
+  <Boost>k__BackingField: 0
+  <IsBoosting>k__BackingField:
+    RawValue: 0
+  <BoostingTime>k__BackingField: 0
+  <IsOnGround>k__BackingField:
+    RawValue: 0
   <GroundedWheelsNum>k__BackingField: 0
-  <IsGrounded>k__BackingField:
+  <HasJumped>k__BackingField:
     RawValue: 0
-  <AirBoostUsed>k__BackingField:
+  <IsJumping>k__BackingField:
     RawValue: 0
-  <AirPitchFlag>k__BackingField:
+  <JumpTime>k__BackingField: 0
+  <HasFlipped>k__BackingField:
     RawValue: 0
+  <HasDoubleJumped>k__BackingField:
+    RawValue: 0
+  <IsFlipping>k__BackingField:
+    RawValue: 0
+  <FlipTime>k__BackingField: 0
+  <FlipRelTorque_RL>k__BackingField: {x: 0, y: 0, z: 0}
+  <HandbrakeVal>k__BackingField: 0
+  <AirTime>k__BackingField: 0
+  <AirTimeSinceJump>k__BackingField: 0
+  <IsAutoFlipping>k__BackingField:
+    RawValue: 0
+  <AutoFlipTimer>k__BackingField: 0
+  <AutoFlipTorqueScale>k__BackingField: 0
+  <IsSupersonic>k__BackingField:
+    RawValue: 0
+  <SupersonicTime>k__BackingField: 0
   <JumpTrigger>k__BackingField: 0
+  S: 0.01
   EnableJump: 1
-  EnableRocket: 1
+  EnableBoost: 1
   EnableAirControl: 1
   EnableAutoStabilization: 1
-  EngineForce: 3
-  BreakForce: 7
-  GravityForce: 6.3
-  StabilizationForce: 14
-  VelocityBendingFactor: 0.5
-  LinearDrag: 0.5
-  AngularDrag: 3.5
   CenterOfMass: {fileID: 6261265045006837607}
-  WheelRadius: 0.2
+  RocketForceTransform: {fileID: 7365915249806338187}
   Wheels:
   - {fileID: 2316699849256008222}
   - {fileID: 8743907056182423903}
   - {fileID: 4270857523052149647}
   - {fileID: 5910223011450074414}
-  MinSteerAngle: 3.3
-  MaxSteerAngle: 45
-  SteerAngleMaxReductionVehicleVelocity: 25
-  SteerAngleReductionCurve:
-    serializedVersion: 2
-    m_Curve:
-    - serializedVersion: 3
-      time: 0
-      value: 1
-      inSlope: -1.5380064
-      outSlope: -1.5380064
-      tangentMode: 34
-      weightedMode: 0
-      inWeight: 0
-      outWeight: 0.33333334
-    - serializedVersion: 3
-      time: 0.59482706
-      value: 0.08515215
-      inSlope: -0.33219007
-      outSlope: -0.33219007
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0.18259363
-      outWeight: 0.07242332
-    - serializedVersion: 3
-      time: 1
-      value: 0
-      inSlope: -0.21016248
-      outSlope: -0.21016248
-      tangentMode: 34
-      weightedMode: 0
-      inWeight: 0.33333334
-      outWeight: 0
-    m_PreInfinity: 2
-    m_PostInfinity: 2
-    m_RotationOrder: 0
-  FrictionCurve:
-    serializedVersion: 2
-    m_Curve:
-    - serializedVersion: 3
-      time: 0
-      value: 1
-      inSlope: -0.39998507
-      outSlope: -0.39998507
-      tangentMode: 34
-      weightedMode: 0
-      inWeight: 0
-      outWeight: 0.33333334
-    - serializedVersion: 3
-      time: 0.1625308
-      value: 0.9349901
-      inSlope: -1.0930313
-      outSlope: -1.0930313
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0.10931696
-      outWeight: 0.33333334
-    - serializedVersion: 3
-      time: 0.21117547
-      value: 0.34171823
-      inSlope: -0.19541825
-      outSlope: -0.19541825
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0.13407387
-      outWeight: 0.07112695
-    - serializedVersion: 3
-      time: 1
-      value: 0
-      inSlope: -0.4331993
-      outSlope: -0.4331993
-      tangentMode: 34
-      weightedMode: 0
-      inWeight: 0.33333334
-      outWeight: 0
-    m_PreInfinity: 2
-    m_PostInfinity: 2
-    m_RotationOrder: 4
-  FrictionCurveMin: 0.1
-  FrictionMultiplier: 3
-  DriftFrictionMultiplier: 0.4
-  RocketForceTransform: {fileID: 7365915249806338187}
-  RocketForce: 22
-  MaxFuel: 25
-  TimeAddedPerFuel: 5
-  JumpForce: 5
-  AirSteerTorque: {x: 10, y: 10, z: 20}
-  AirBoostLinearForce: 6.5
-  AirBoostTorque: 25
-  InputDecayMaxLatency: 250
-  InputDecayMinFactor: 0.02
-  VelocityDecayMinLatency: 250
   CarBody: {fileID: 6008900682183671325}
   AfterburnerParticleSystems:
   - {fileID: 6773296490042082060}
@@ -762,21 +681,23 @@ MonoBehaviour:
   - {fileID: 6045844148227501766}
   - {fileID: 9063809091184517840}
   DriftMinVelocity: 3
+  SpringStiffnessVisual: 65
+  SpringDampingVisual: 0.98
+  SpringSpeedFactor: 0.01
+  MaxSuspensionCompression: 0.25
+  MaxSuspensionRollAngle: 10
+  MaxSuspensionPitchAngle: 5
+  SuspensionCompressionDirection: {x: 0, y: 1, z: 0}
+  SuspensionRollAxis: {x: 0, y: 0, z: -1}
+  SuspensionPitchAxis: {x: 1, y: 0, z: 0}
   WheelSteerAxis: {x: 0, y: 0, z: 1}
   WheelRollAxis: {x: -1, y: 0, z: 0}
   WheelMaxSteerAngle: 30
   WheelMaxRollSpeed: 10
   WheelRollSpeedFactor: 15
-  SuspensionCompressionDirection: {x: 0, y: 1, z: 0}
-  SuspensionRollAxis: {x: 0, y: 0, z: -1}
-  SuspensionPitchAxis: {x: 1, y: 0, z: 0}
-  SpringStiffness: 80
-  SpringDamping: 0.93
-  SpringSpeedFactor: 0.01
-  MaxSuspensionCompression: 0.25
-  MaxSuspensionRollAngle: 10
-  MaxSuspensionPitchAngle: 5
-  SuspensionVisualizer: {fileID: 6033807279883062560}
+  InputDecayMaxLatency: 250
+  InputDecayMinFactor: 0.02
+  VelocityDecayMinLatency: 250
 --- !u!114 &774381909787068010
 MonoBehaviour:
   m_ObjectHideFlags: 0

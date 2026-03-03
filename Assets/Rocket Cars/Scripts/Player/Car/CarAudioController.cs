@@ -74,10 +74,10 @@ public class CarAudioController : NetworkBehaviour
       SkidAudioSource.volume    = Mathf.Lerp(SkidAudioSource.volume, _carController.IsSlipping ? 1f : 0, Time.deltaTime * SkidLerpFactor);
 
 
-    float enginePitchModifier   = _carController.IsGrounded ? Mathf.Lerp(1f, 1.7f, Mathf.InverseLerp(0f, 30f, _carController.Rigidbody.velocity.magnitude)) : 1.9f;
+    float enginePitchModifier   = _carController.IsOnGround ? Mathf.Lerp(1f, 1.7f, Mathf.InverseLerp(0f, 30f, _carController.Rigidbody.velocity.magnitude)) : 1.9f;
     EngineAudioSource.pitch     = Mathf.Lerp(EngineAudioSource.pitch, 1f * enginePitchModifier, Time.deltaTime * EngineAudioPitchLerpFactor);
 
-    var rocket                  = _carController.EnableRocket && _carController.LastInput.Rocket && _carController.FuelTickTime > 0f;
+    var rocket                  = _carController.EnableBoost && _carController.LastInput.Boost && _carController.Boost > 0f;
     RocketAudioSource.volume    = Mathf.Lerp(RocketAudioSource.volume, rocket ? 1f : 0, Time.deltaTime * (rocket ? RocketStartingAudioVolumeLerpFactor : RocketStoppingAudioVolumeLerpFactor));
   }
 
