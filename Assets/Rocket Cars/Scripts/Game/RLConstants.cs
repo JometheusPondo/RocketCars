@@ -189,12 +189,12 @@ public static class RLC
     public const float DOUBLEJUMP_MAX_DELAY = 1.25f;  
     public const float FLIP_INITIAL_VEL_SCALE = 500f;   
     public const float FLIP_TORQUE_TIME = 0.65f;  
-    public const float FLIP_TORQUE_X = 260f;   
-    public const float FLIP_TORQUE_Y = 224f;   
+    public const float FLIP_TORQUE_X = 360f;   
+    public const float FLIP_TORQUE_Y = 240f;   
     public const float FLIP_Z_DAMP_120 = 0.35f;
     public const float FLIP_Z_DAMP_START = 0.15f;
     public const float FLIP_Z_DAMP_END = 0.21f;
-    public const float FLIP_PITCHLOCK_EXTRA_TIME = 0.3f;
+    public const float FLIP_PITCHLOCK_EXTRA_TIME = 0.4f;
     public const float FLIP_FORWARD_IMPULSE_MAX_SPEED_SCALE = 1.0f;
     public const float FLIP_SIDE_IMPULSE_MAX_SPEED_SCALE = 1.9f;
     public const float FLIP_BACKWARD_IMPULSE_MAX_SPEED_SCALE = 2.5f;
@@ -202,7 +202,7 @@ public static class RLC
 
     // ===================== AIR CONTROL =====================
 
-    // Torque magnitudes for pitch, yaw, roll (applied in local space)
+    // Torque magnitudes for pitch, yaw, roll
 
     public static readonly Vector3 CAR_AIR_CONTROL_TORQUE = new Vector3(130f, 95f, 400f);  
     public static readonly Vector3 CAR_AIR_CONTROL_DAMPING = new Vector3(30f, 20f, 50f);   

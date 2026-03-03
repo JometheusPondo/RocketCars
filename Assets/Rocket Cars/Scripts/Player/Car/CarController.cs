@@ -684,6 +684,14 @@ public class CarController : GoalReplayable
     {
         if (IsOnGround)
         {
+            // Kill residual roll spin on landing from a flip
+            if (HasFlipped)
+            {
+                Vector3 angVel = Rigidbody.angularVelocity;
+                float rollComponent = Vector3.Dot(angVel, transform.forward);
+                Rigidbody.angularVelocity = angVel - transform.forward * rollComponent * 0.9f;
+            }
+
             HasDoubleJumped = false;
             HasFlipped = false;
             AirTime = 0f;
@@ -1038,7 +1046,7 @@ public class CarController : GoalReplayable
         if (vel.sqrMagnitude > maxSpeed * maxSpeed)
             Rigidbody.velocity = vel.normalized * maxSpeed;
 
-        if (!IsFlipping || FlipTime > RLC.FLIP_TORQUE_TIME * 0.9f)
+        if (!IsFlipping)
         {
             Vector3 angVel = Rigidbody.angularVelocity;
             if (angVel.sqrMagnitude > maxAngSpeed * maxAngSpeed)
