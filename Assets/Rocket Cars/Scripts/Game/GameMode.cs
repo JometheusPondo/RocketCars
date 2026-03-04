@@ -71,6 +71,9 @@ public abstract class GameMode : NetworkBehaviour
 
         input.Roll = Mathf.Clamp(input.Roll + rollInput, -1f, 1f);
 
+        if (Input.GetButton("AirRollLeft"))
+            input.Roll = -1f;
+
         input.Boost |= Input.GetButton("Boost");
         input.Jump |= Input.GetButtonDown("Jump");
         input.Handbrake |= airRollHeld; // LB = powerslide on ground

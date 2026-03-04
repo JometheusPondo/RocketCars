@@ -85,7 +85,7 @@ public static class RLC
 
     public const float THROTTLE_TORQUE_AMOUNT = CAR_MASS_BT * 400f;   
     public const float BRAKE_TORQUE_AMOUNT = CAR_MASS_BT * (14.25f + 1f / 3f);
-    public const float STOPPING_FORWARD_VEL = 25f;   
+    public const float STOPPING_FORWARD_VEL = 50f;   
     public const float COASTING_BRAKE_FACTOR = 0.15f;
     public const float BRAKING_NO_THROTTLE_SPEED_THRESH = 0.01f;
     public const float THROTTLE_DEADZONE = 0.001f;
@@ -170,10 +170,10 @@ public static class RLC
     public const float SUSPENSION_STIFFNESS = 500f;
     public const float WHEELS_DAMPING_COMPRESSION = 25f;
     public const float WHEELS_DAMPING_RELAXATION = 40f;
-    public const float MAX_SUSPENSION_TRAVEL = 12f;     
+    public const float MAX_SUSPENSION_TRAVEL = 22f;     
     public const float SUSPENSION_SUBTRACTION = 0.05f;   
     public const float SUSPENSION_FORCE_SCALE_FRONT = 36f - 0.25f;      
-    public const float SUSPENSION_FORCE_SCALE_BACK = 54f + 0.25f + 0.015f; 
+    public const float SUSPENSION_FORCE_SCALE_BACK = 54f + 0.5f + 0.015f; 
 
     // ===================== JUMP =====================
 
@@ -188,9 +188,9 @@ public static class RLC
 
     public const float DOUBLEJUMP_MAX_DELAY = 1.25f;  
     public const float FLIP_INITIAL_VEL_SCALE = 500f;   
-    public const float FLIP_TORQUE_TIME = 0.65f;  
-    public const float FLIP_TORQUE_X = 360f;   
-    public const float FLIP_TORQUE_Y = 240f;   
+    public const float FLIP_TORQUE_TIME = 0.7f;  
+    public const float FLIP_TORQUE_X = 180f;   
+    public const float FLIP_TORQUE_Y = 224f;   
     public const float FLIP_Z_DAMP_120 = 0.35f;
     public const float FLIP_Z_DAMP_START = 0.15f;
     public const float FLIP_Z_DAMP_END = 0.21f;
@@ -211,7 +211,7 @@ public static class RLC
     // ===================== AUTO FLIP (TURTLE RECOVERY) =====================
 
     public const float CAR_AUTOFLIP_IMPULSE = 200f;    
-    public const float CAR_AUTOFLIP_TORQUE = 50f;
+    public const float CAR_AUTOFLIP_TORQUE = 25f;
     public const float CAR_AUTOFLIP_TIME = 0.4f;
     public const float CAR_AUTOFLIP_NORMZ_THRESH = 0.7071f; // sqrt(0.5)
     public const float CAR_AUTOFLIP_ROLL_THRESH = 1.5f;    

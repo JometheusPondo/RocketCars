@@ -61,7 +61,7 @@ public class CarController : GoalReplayable
 
     [Header("Scale -- CRITICAL: Match to your asset size")]
     [Tooltip("Unity meters per Rocket League Unreal Unit. Default 0.01 = real-world scale.")]
-    public float S = 0.01f;
+    public float S = 0.015f;
 
     [Header("Simulation Features")]
     public bool EnableJump = true;
@@ -149,6 +149,7 @@ public class CarController : GoalReplayable
     // ========================================================================
 
     private WheelPhysState[] _ws; // 4 wheels
+    private Quaternion[] _wheelBaseRotation = new Quaternion[4];
     private int _envLayerMask;
     private BoxCollider _collider;
     private GameMode _gm;
@@ -157,6 +158,7 @@ public class CarController : GoalReplayable
     private Vector3 _worldContactNormal;
     private GameInput _lastControls;
     private float _maxSusTravel; // scaled
+    private float _currentSteerAngle;
 
     // Visual suspension state
     private Vector3 _springPos;
@@ -200,6 +202,8 @@ public class CarController : GoalReplayable
 
         InitWheels();
 
+
+
         if (IsReplay)
             Sandbox.Replay.Playback.OnSeeked += OnReplaySeeked;
     }
@@ -231,6 +235,13 @@ public class CarController : GoalReplayable
             _ws[i].restLength = (pair.suspensionRestLength - RLC.MAX_SUSPENSION_TRAVEL) * S;
             _ws[i].forceScale = front ? RLC.SUSPENSION_FORCE_SCALE_FRONT : RLC.SUSPENSION_FORCE_SCALE_BACK;
         }
+
+        for (int i = 0; i < Wheels.Length && i < 4; i++)
+        {
+            if (Wheels[i] != null && Wheels[i].Render != null)
+                _wheelBaseRotation[i] = Wheels[i].Render.localRotation;
+        }
+
     }
 
     // ========================================================================
@@ -281,8 +292,8 @@ public class CarController : GoalReplayable
         IsOnGround = numInContact >= 3;
 
         // Phase 2: Driving -- throttle, brake, steering, friction curves, sticky forces
-        float forwardSpeed_UU = GetForwardSpeedUU();
-        UpdateDriving(input, dt, numInContact, forwardSpeed_UU);
+        float forwardSpeed = GetForwardSpeedUU();
+        UpdateDriving(input, dt, numInContact, forwardSpeed);
 
         // Phase 3: Air/flip mechanics
         bool jumpPressed = input.Jump && !_lastControls.Jump;
@@ -304,7 +315,7 @@ public class CarController : GoalReplayable
         {
             UpdateJump(input, dt, jumpPressed);
             UpdateAutoFlip(dt, jumpPressed);
-            UpdateDoubleJumpOrFlip(input, dt, jumpPressed, forwardSpeed_UU);
+            UpdateDoubleJumpOrFlip(input, dt, jumpPressed, forwardSpeed);
         }
 
         if (EnableAutoStabilization && input.Throttle != 0)
@@ -320,7 +331,7 @@ public class CarController : GoalReplayable
 
         // Phase 5: Boost
         if (EnableBoost)
-            UpdateBoost(input, dt, forwardSpeed_UU);
+            UpdateBoost(input, dt, forwardSpeed);
 
         // Phase 6: Gravity
         Rigidbody.AddForce(Vector3.down * Mathf.Abs(RLC.GRAVITY_Z) * S, ForceMode.Acceleration);
@@ -442,11 +453,10 @@ public class CarController : GoalReplayable
     //  DRIVING -- THROTTLE, BRAKE, STEERING, FRICTION
     // ========================================================================
 
-    private void UpdateDriving(GameInput input, float dt, int numInContact, float forwardSpeed_UU)
+    private void UpdateDriving(GameInput input, float dt, int numInContact, float forwardSpeed)
     {
-        float absSpeed = Mathf.Abs(forwardSpeed_UU);
+        float absSpeed = Rigidbody.velocity.magnitude / S;
 
-        // Handbrake
         if (input.Handbrake)
             HandbrakeVal = Mathf.Min(HandbrakeVal + RLC.POWERSLIDE_RISE_RATE * dt, 1f);
         else
@@ -464,7 +474,7 @@ public class CarController : GoalReplayable
             float absThrottle = Mathf.Abs(realThrottle);
             if (absThrottle >= RLC.THROTTLE_DEADZONE)
             {
-                if (absSpeed > RLC.STOPPING_FORWARD_VEL && Mathf.Sign(realThrottle) != Mathf.Sign(forwardSpeed_UU))
+                if (absSpeed > RLC.STOPPING_FORWARD_VEL && Mathf.Sign(realThrottle) != Mathf.Sign(forwardSpeed))
                 {
                     realBrake = 1f;
                     if (absSpeed > RLC.BRAKING_NO_THROTTLE_SPEED_THRESH)
@@ -503,7 +513,7 @@ public class CarController : GoalReplayable
             _ws[i].steerAngle = _ws[i].isFront ? steerAngle : 0f;
         }
 
-        UpdateFrictionCurves(input, realThrottle, forwardSpeed_UU);
+        UpdateFrictionCurves(input, realThrottle, forwardSpeed);
 
         // Sticky Forces 
         bool anyWorldContact = false;
@@ -521,7 +531,7 @@ public class CarController : GoalReplayable
         }
     }
 
-    private void UpdateFrictionCurves(GameInput input, float realThrottle, float forwardSpeed_UU)
+    private void UpdateFrictionCurves(GameInput input, float realThrottle, float forwardSpeed)
     {
         for (int i = 0; i < 4; i++)
         {
@@ -680,7 +690,7 @@ public class CarController : GoalReplayable
     //  DOUBLE JUMP / FLIP (DODGE)
     // ========================================================================
 
-    private void UpdateDoubleJumpOrFlip(GameInput input, float dt, bool jumpPressed, float forwardSpeed_UU)
+    private void UpdateDoubleJumpOrFlip(GameInput input, float dt, bool jumpPressed, float forwardSpeed)
     {
         if (IsOnGround)
         {
@@ -725,7 +735,7 @@ public class CarController : GoalReplayable
                     HasFlipped = true;
                     IsFlipping = true;
 
-                    float forwardSpeedRatio = Mathf.Abs(forwardSpeed_UU) / RLC.CAR_MAX_SPEED;
+                    float forwardSpeedRatio = Mathf.Abs(forwardSpeed) / RLC.CAR_MAX_SPEED;
 
                     // Dodge direction
                     Vector3 dodgeDir_rl = new Vector3(input.Pitch, input.Yaw + input.Roll, 0f);
@@ -744,10 +754,10 @@ public class CarController : GoalReplayable
                     if (dodgeDir_rl != Vector3.zero)
                     {
                         bool shouldDodgeBackward;
-                        if (Mathf.Abs(forwardSpeed_UU) < 100f)
+                        if (Mathf.Abs(forwardSpeed) < 100f)
                             shouldDodgeBackward = dodgeDir_rl.x < 0f;
                         else
-                            shouldDodgeBackward = (dodgeDir_rl.x >= 0f) != (forwardSpeed_UU >= 0f);
+                            shouldDodgeBackward = (dodgeDir_rl.x >= 0f) != (forwardSpeed >= 0f);
 
                         Vector3 initDodgeVel = dodgeDir_rl * RLC.FLIP_INITIAL_VEL_SCALE;
 
@@ -952,7 +962,13 @@ public class CarController : GoalReplayable
             }
             else
             {
-                Rigidbody.angularVelocity += transform.forward * RLC.CAR_AUTOFLIP_TORQUE * AutoFlipTorqueScale * dt;
+                // Set angular velocity directly to overpower ground friction
+                float rollComponent = Vector3.Dot(Rigidbody.angularVelocity, transform.forward);
+                float targetSpeed = RLC.CAR_AUTOFLIP_TORQUE * AutoFlipTorqueScale * 0.5f;
+                if (Mathf.Abs(rollComponent) < Mathf.Abs(targetSpeed))
+                    Rigidbody.angularVelocity = Rigidbody.angularVelocity
+                        - transform.forward * rollComponent
+                        + transform.forward * targetSpeed;
                 AutoFlipTimer -= dt;
             }
         }
@@ -998,7 +1014,7 @@ public class CarController : GoalReplayable
     //  BOOST
     // ========================================================================
 
-    private void UpdateBoost(GameInput input, float dt, float forwardSpeed_UU)
+    private void UpdateBoost(GameInput input, float dt, float forwardSpeed)
     {
         bool hasBoost = Boost > 0;
 
@@ -1236,9 +1252,11 @@ public class CarController : GoalReplayable
             float rollSpeed = Mathf.Clamp(wheel.VisualSpeed, -WheelMaxRollSpeed, WheelMaxRollSpeed);
             _currentWheelRollAngle += rollSpeed * dt * WheelRollSpeedFactor;
 
-            var yawRot = Quaternion.AngleAxis(wheel.IsFront ? _currentWheelSteerAngle : 0, WheelSteerAxis);
-            var rollRot = Quaternion.AngleAxis(_currentWheelRollAngle, WheelRollAxis);
-            wheel.Render.localRotation = yawRot * rollRot;
+            float sideSign = (i % 2 == 1) ? -1f : 1f;
+            var rollRot = Quaternion.AngleAxis(_currentWheelRollAngle * sideSign, WheelRollAxis);
+            var yawRot = Quaternion.AngleAxis((wheel.IsFront ? _currentWheelSteerAngle : 0) * sideSign, WheelSteerAxis);
+
+            wheel.Render.localRotation = _wheelBaseRotation[i] * yawRot * rollRot;
         }
     }
 
