@@ -162,27 +162,33 @@ public class CarCameraController : NetworkBehaviour
     _curRot               = Quaternion.Slerp(_curRot, rot, LerpFactor * deltaTime);
   }
 
-  private void FollowCarAndLookAtBall(float deltaTime, bool reset = false)
-  {
-    var ballPosNoY        = _ballRenderTransform.parent.position;
-    ballPosNoY.y          = CarRenderTransform.parent.position.y;
+    private void FollowCarAndLookAtBall(float deltaTime, bool reset = false)
+    {
+        var ballPos = _ballRenderTransform.parent.position;
+        var carPos = CarRenderTransform.parent.position;
 
-    var carPos            = CarRenderTransform.parent.position;
-    var carToBall         = (ballPosNoY - carPos).normalized;
+        var focusLocation = carPos + (CarRenderTransform.parent.forward * 0.3f);
 
-    var t                 = reset ? 1f : LerpFactor * deltaTime;
-    var dot               = Mathf.Abs(Vector3.Dot(_curDir.normalized, carToBall));
-    var j                 = Math.Max(0.2f, Mathf.Pow(dot, 10)) * t;
-    _curDir               = Vector3.Lerp(_curDir, carToBall, j);
+        var carToBall = ballPos - focusLocation;
+        var flatDir = new Vector3(carToBall.x, 0f, carToBall.z);
+        flatDir.Normalize();
 
-    var pos               = carPos + (carToBall * CameraOffset.z) + (Vector3.up * CameraOffset.y);
-    var rot               = Quaternion.LookRotation(_curDir, Vector3.up);
+        var t = reset ? 1f : LerpFactor * deltaTime;
+        var dot = Mathf.Abs(Vector3.Dot(_curDir.normalized, flatDir));
+        var j = Math.Max(0.2f, Mathf.Pow(dot, 10)) * t;
+        _curDir = Vector3.Lerp(_curDir, flatDir, j);
 
-    _curPos               = Vector3.Lerp(_curPos, pos, LerpFactor * deltaTime);
-    _curRot               = Quaternion.Slerp(_curRot, rot, LerpFactor * deltaTime);
-  }
+        var pos = focusLocation
+                                  - (_curDir * Mathf.Abs(CameraOffset.z))
+                                  + (Vector3.up * CameraOffset.y);
 
-  private void CalculateShake(float dt)
+        var rot = Quaternion.LookRotation(_curDir, Vector3.up);
+
+        _curPos = Vector3.Lerp(_curPos, pos, LerpFactor * deltaTime);
+        _curRot = Quaternion.Slerp(_curRot, rot, LerpFactor * deltaTime);
+    }
+
+    private void CalculateShake(float dt)
   {
     float speed           = _carController.NetworkRigidbody.Velocity.magnitude;
     float speedFactor     = Mathf.InverseLerp(MinShakeSpeed, MaxShakeSpeed, speed);
@@ -246,4 +252,7 @@ public class CarCameraController : NetworkBehaviour
         _collisionAmount = Mathf.Clamp(_collisionAmount + (Mathf.Min(impactForce, 10f) * ImpactIntensityMult), 0, 15f);
     }
   }
+
+
+
 }

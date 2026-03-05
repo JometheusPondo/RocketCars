@@ -471,7 +471,7 @@ MonoBehaviour:
     RawValue: 0
   <GoalReplaySkipersCount>k__BackingField: 0
   SpawnPlayerImmediately: 0
-  PlayerPrefab: {fileID: 9201329679079639887, guid: b8ab3af591528cd449e670a574a96d6e, type: 3}
+  PlayerPrefab: {fileID: 799705521248687214, guid: ffcd53c3c44c043418ecc316baa0720f, type: 3}
   FuelPrefab: {fileID: 6985111396825753372, guid: 5922f81430a296145abe236caa5817c7, type: 3}
   Ball: {fileID: 1230431211}
   GoalsToWin: 5
@@ -493,8 +493,6 @@ MonoBehaviour:
   MaxBallSpeed: 1.1
   ArenaRenderer: {fileID: 2080901704}
   ArenaRendererRoofMaterialIndex: 5
-  RedTeamColor: {r: 0, g: 0.3137255, b: 1, a: 0.11372549}
-  BlueTeamColor: {r: 0, g: 0.3137255, b: 1, a: 0.11372549}
   FlashingSpeed: 30
   GoalScoreAudioClip: {fileID: 8300000, guid: 07a036d6fd6549541ba669ed186a14de, type: 3}
   RoundStartAudioClip: {fileID: 8300000, guid: 93325a2c63c7f0d40b170f4e33e94bef, type: 3}
@@ -6337,7 +6335,7 @@ Rigidbody:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1230431204}
   serializedVersion: 4
-  m_Mass: 100
+  m_Mass: 30
   m_Drag: 0.05
   m_AngularDrag: 0.5
   m_CenterOfMass: {x: 0, y: 0, z: 0}
@@ -6368,7 +6366,7 @@ MonoBehaviour:
   m_Script: {fileID: 1266966383, guid: da78c2c9df60edc4fb5f65b59fa57c41, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  RenderTransform: {fileID: 615941832}
+  RenderTransform: {fileID: 0}
   TeleportDistance: 20
   PositionPrecision: 3
   Settings: 15
@@ -6428,9 +6426,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 19afd13ab62bbc346903b4f8744c6d99, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  GravityForce: 10
-  LastTouchedPlayer: {fileID: 0}
   InitialPosition: {x: 0, y: 0, z: 0}
+  LastTouchedPlayer: {fileID: 0}
+  S: 0.0125
 --- !u!4 &1230431212
 Transform:
   m_ObjectHideFlags: 0

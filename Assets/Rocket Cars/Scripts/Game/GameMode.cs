@@ -71,14 +71,33 @@ public abstract class GameMode : NetworkBehaviour
 
         input.Roll = Mathf.Clamp(input.Roll + rollInput, -1f, 1f);
 
-        if (Input.GetButton("AirRollLeft"))
-            input.Roll = -1f;
+
 
         input.Boost |= Input.GetButton("Boost");
         input.Jump |= Input.GetButtonDown("Jump");
         input.Handbrake |= airRollHeld; // LB = powerslide on ground
 
+        if (Input.GetButton("AirRollLeft"))
+            input.Roll = -1f;
+
+        if (Input.GetAxis("DPadLeft") < -0.5f)
+        {
+            var ball = Sandbox.FindObjectOfType<Ball>();
+            foreach (var player in Sandbox.FindObjectsOfType<Player>())
+            {
+                if (player.IsInputSource && player.Car != null)
+                {
+                    ball.TossToward(player.Car.transform.position, player.Car.Rigidbody.velocity);
+                    break;
+                }
+            }
+        }
+
         Sandbox.SetInput(input);
+
+
+
+
     }
 
     public virtual void ReactToSpectateControls()

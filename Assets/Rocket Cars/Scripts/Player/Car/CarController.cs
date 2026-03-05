@@ -329,6 +329,18 @@ public class CarController : GoalReplayable
         ApplySuspensionForces(dt);
         ApplyWheelFrictionImpulses(dt);
 
+        // Ground stabilization — always push toward upright when wheels contact
+        if (GroundedWheelsNum > 0 && GroundedWheelsNum < 4)
+        {
+            float tiltAngle = Vector3.Angle(transform.up, Vector3.up); 
+            if (tiltAngle > 5f && tiltAngle < 120f)
+            {
+                Vector3 correctionAxis = Vector3.Cross(transform.up, Vector3.up).normalized;
+                float correctionStrength = tiltAngle * 0.1f; 
+                Rigidbody.AddTorque(correctionAxis * correctionStrength, ForceMode.Acceleration);
+            }
+        }
+
         // Phase 5: Boost
         if (EnableBoost)
             UpdateBoost(input, dt, forwardSpeed);
@@ -503,9 +515,13 @@ public class CarController : GoalReplayable
             float psAngle = RLC.POWERSLIDE_STEER_ANGLE_FROM_SPEED.Evaluate(absSpeed);
             steerAngle += (psAngle - steerAngle) * HandbrakeVal;
         }
+
         steerAngle *= input.Steer;
 
-        // Assign per-wheel driving params
+        float steerRate = Mathf.Lerp(15f, 12f, absSpeed / (RLC.CAR_MAX_SPEED));
+        _currentSteerAngle = Mathf.MoveTowards(_currentSteerAngle, steerAngle, steerRate * dt);
+        steerAngle = _currentSteerAngle;
+
         for (int i = 0; i < 4; i++)
         {
             _ws[i].engineForce = engineAccel;
@@ -603,6 +619,9 @@ public class CarController : GoalReplayable
             Vector3 velAtContact = Rigidbody.GetPointVelocity(w.contactPoint);
             float lateralVel = Vector3.Dot(velAtContact, axleDir);
             float sideImpulse = -lateralVel * Rigidbody.mass;
+
+            float contactRatio = (float)GroundedWheelsNum / 4f;
+            sideImpulse *= contactRatio;
 
             // --- Longitudinal impulse (engine or brake) ---
             float rollingFriction;

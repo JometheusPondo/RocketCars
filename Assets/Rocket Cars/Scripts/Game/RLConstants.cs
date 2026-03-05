@@ -68,7 +68,17 @@ public static class RLC
     // ===================== GENERAL PHYSICS =====================
 
     public const float GRAVITY_Z = -650f;         
-    public const float CAR_MASS_BT = 180f;          
+    public const float CAR_MASS_BT = 180f;
+
+    // ===================== BALL =====================
+    public const float BALL_RADIUS = 91.25f;   
+    public const float BALL_RESTITUTION = 0.6f;
+    public const float BALL_FRICTION = 0.285f;
+    public const float BALL_FRICTION_Y = 2.0f;     
+    public const float BALL_MAX_SPEED = 6000f;    
+    public const float BALL_MAX_ANG_SPEED = 6f;       
+    public const float BALL_DRAG = 0.0003f; 
+    public const float BALL_MASS = 30f;      
 
     // ===================== SPEED LIMITS =====================
 
