@@ -78,7 +78,7 @@ public static class RLC
     public const float BALL_MAX_SPEED = 6000f;    
     public const float BALL_MAX_ANG_SPEED = 6f;       
     public const float BALL_DRAG = 0.0003f; 
-    public const float BALL_MASS = 30f;      
+    public const float BALL_MASS = 18f;      
 
     // ===================== SPEED LIMITS =====================
 
@@ -112,7 +112,7 @@ public static class RLC
 
     // ===================== STEERING =====================
 
-    // Steer angle (radians) from forward speed
+    // Steer angle from forward speed
 
     public static readonly PiecewiseCurve STEER_ANGLE_FROM_SPEED = new PiecewiseCurve(
         new Vector2(0, 0.53356f),

@@ -55,16 +55,14 @@ public class Ball : NetworkBehaviour
             PlayCollisionAudio(collision);
     }
 
-private void ApplyBounce(Collision collision)
+    private void ApplyBounce(Collision collision)
     {
         if (collision.contactCount == 0) return;
 
         var player = collision.gameObject.GetComponentInParent<Player>();
         if (player == null) return;
 
-
         Rigidbody carRb = collision.gameObject.GetComponentInParent<Rigidbody>();
-        CarController car = collision.gameObject.GetComponentInParent<CarController>();
         Vector3 n = (collision.contacts[0].point - carRb.worldCenterOfMass).normalized;
 
         Vector3 contactOffset = collision.contacts[0].point - carRb.worldCenterOfMass;
@@ -73,18 +71,9 @@ private void ApplyBounce(Collision collision)
         Vector3 v = Rigidbody.velocity - carVelAtContact;
         Vector3 w = Rigidbody.angularVelocity;
 
-        Transform carT = carRb.transform;
-        float forwardDot = Mathf.Abs(Vector3.Dot(n, carT.forward));
-        float rightDot   = Mathf.Abs(Vector3.Dot(n, carT.right));
-        float upDot      = Mathf.Abs(Vector3.Dot(n, carT.up));
-
-        float zonePower = (forwardDot * 1.3f) + (upDot * 1.0f) + (rightDot * 0.7f);
-        float flipBonus = (car != null && car.IsFlipping) ? 1.5f : 1f;
-
-        v *= zonePower * flipBonus;
-
         Vector3 vPerp = Vector3.Dot(v, n) * n;
         Vector3 vPara = v - vPerp;
+
         Vector3 vSpin = _radius * Vector3.Cross(n, w);
         Vector3 slip = vPara + vSpin;
 

@@ -1075,14 +1075,13 @@ public class CarController : GoalReplayable
         if (Rigidbody.isKinematic) return;
 
         float maxSpeed = RLC.CAR_MAX_SPEED * S;
-        float maxAngSpeed = RLC.CAR_MAX_ANG_SPEED;
-
         Vector3 vel = Rigidbody.velocity;
         if (vel.sqrMagnitude > maxSpeed * maxSpeed)
             Rigidbody.velocity = vel.normalized * maxSpeed;
 
         if (!IsFlipping)
         {
+            float maxAngSpeed = IsOnGround ? 3f : RLC.CAR_MAX_ANG_SPEED;
             Vector3 angVel = Rigidbody.angularVelocity;
             if (angVel.sqrMagnitude > maxAngSpeed * maxAngSpeed)
                 Rigidbody.angularVelocity = angVel.normalized * maxAngSpeed;

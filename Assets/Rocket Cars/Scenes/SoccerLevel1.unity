@@ -6335,7 +6335,7 @@ Rigidbody:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1230431204}
   serializedVersion: 4
-  m_Mass: 30
+  m_Mass: 18
   m_Drag: 0.05
   m_AngularDrag: 0.5
   m_CenterOfMass: {x: 0, y: 0, z: 0}
@@ -6366,7 +6366,7 @@ MonoBehaviour:
   m_Script: {fileID: 1266966383, guid: da78c2c9df60edc4fb5f65b59fa57c41, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  RenderTransform: {fileID: 0}
+  RenderTransform: {fileID: 615941832}
   TeleportDistance: 20
   PositionPrecision: 3
   Settings: 15
