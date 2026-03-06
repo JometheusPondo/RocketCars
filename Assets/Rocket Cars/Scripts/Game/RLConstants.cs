@@ -199,7 +199,7 @@ public static class RLC
     public const float DOUBLEJUMP_MAX_DELAY = 1.25f;  
     public const float FLIP_INITIAL_VEL_SCALE = 500f;   
     public const float FLIP_TORQUE_TIME = 0.7f;  
-    public const float FLIP_TORQUE_X = 180f;   
+    public const float FLIP_TORQUE_X = 260f;   
     public const float FLIP_TORQUE_Y = 224f;   
     public const float FLIP_Z_DAMP_120 = 0.35f;
     public const float FLIP_Z_DAMP_START = 0.15f;
