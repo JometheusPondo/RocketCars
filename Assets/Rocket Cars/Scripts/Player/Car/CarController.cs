@@ -189,7 +189,6 @@ public class CarController : GoalReplayable
         base.NetworkStart();
         _gm = Sandbox.GetComponent<GlobalData>().GameMode;
 
-        // Configure Rigidbody to match RL
         Rigidbody.mass = RLC.CAR_MASS_BT;
         Rigidbody.drag = 0f;
         Rigidbody.angularDrag = 0f;
@@ -303,6 +302,11 @@ public class CarController : GoalReplayable
 
             if (EnableAirControl)
                 UpdateAirTorque(input, dt, numInContact == 0);
+
+            if (GroundedWheelsNum == 2)
+            {
+                Rigidbody.AddForce(Vector3.down * Mathf.Abs(RLC.GRAVITY_Z) * S * 1.5f, ForceMode.Acceleration);
+            }
 
         }
         else
@@ -719,6 +723,7 @@ public class CarController : GoalReplayable
                 Vector3 angVel = Rigidbody.angularVelocity;
                 float rollComponent = Vector3.Dot(angVel, transform.forward);
                 Rigidbody.angularVelocity = angVel - transform.forward * rollComponent * 0.9f;
+                Rigidbody.mass = RLC.CAR_MASS_BT;
             }
 
             HasDoubleJumped = false;
@@ -753,6 +758,7 @@ public class CarController : GoalReplayable
                     FlipTime = 0f;
                     HasFlipped = true;
                     IsFlipping = true;
+                    Rigidbody.mass = RLC.CAR_MASS_BT * 100;
 
                     float forwardSpeedRatio = Mathf.Abs(forwardSpeed) / RLC.CAR_MAX_SPEED;
 
@@ -1074,6 +1080,13 @@ public class CarController : GoalReplayable
     {
         if (Rigidbody.isKinematic) return;
 
+
+        if (FlipTime > RLC.FLIP_TORQUE_TIME)
+        {
+            IsFlipping = false;
+            Rigidbody.mass = RLC.CAR_MASS_BT;
+        }
+
         float maxSpeed = RLC.CAR_MAX_SPEED * S;
         Vector3 vel = Rigidbody.velocity;
         if (vel.sqrMagnitude > maxSpeed * maxSpeed)
@@ -1085,6 +1098,7 @@ public class CarController : GoalReplayable
             Vector3 angVel = Rigidbody.angularVelocity;
             if (angVel.sqrMagnitude > maxAngSpeed * maxAngSpeed)
                 Rigidbody.angularVelocity = angVel.normalized * maxAngSpeed;
+
         }
     }
 

@@ -11,6 +11,8 @@ public class UIPauseMenu : NetworkBehaviour
   [SerializeField]
   private Button     _buttonResume;
   [SerializeField]
+  private Button     _buttonSettings;
+  [SerializeField]
   private Button     _buttonLeave;
   [SerializeField]
   private Button     _buttonQuit;
@@ -18,6 +20,7 @@ public class UIPauseMenu : NetworkBehaviour
   private Graphic[]  _graphics;
   private GameMode   _gm;
   private bool       _shown;
+  private UISettings _settings;
 
   void Awake()
   {
@@ -26,11 +29,16 @@ public class UIPauseMenu : NetworkBehaviour
 
     _gm       = GetComponent<GameMode>();
     _graphics = _pauseMenu.GetComponentsInChildren<Graphic>();
+    _settings = GetComponent<UISettings>();
+    if (_settings == null)
+      _settings = gameObject.AddComponent<UISettings>();
   }
 
   private void Start()
   {
     _buttonResume.onClick.AddListener(Resume);
+    if (_buttonSettings != null)
+      _buttonSettings.onClick.AddListener(OpenSettings);
     _buttonLeave.onClick.AddListener(Leave);
     _buttonQuit.onClick.AddListener(Quit);
   }
@@ -40,8 +48,18 @@ public class UIPauseMenu : NetworkBehaviour
     if (Application.isBatchMode || Sandbox == null || !Sandbox.IsRunning || _gm.GlobalData == null)
       return;
 
-    if (_gm != null && (_gm.GlobalData.CanUseInput || _gm.GlobalData.IsReplay) && Input.GetKeyDown(KeyCode.Escape))
-      TogglePause();
+    // Close settings with Escape before closing pause menu
+    if (Input.GetKeyDown(KeyCode.Escape))
+    {
+      if (_settings != null && _settings.IsOpen)
+      {
+        _settings.Close();
+        return;
+      }
+
+      if (_gm != null && (_gm.GlobalData.CanUseInput || _gm.GlobalData.IsReplay))
+        TogglePause();
+    }
   }
 
   void TogglePause()
@@ -51,6 +69,10 @@ public class UIPauseMenu : NetworkBehaviour
 
     if (_gm.Paused)
       Sandbox.SetInput<GameInput>(default);
+
+    // Close settings when closing pause menu
+    if (!_shown && _settings != null)
+      _settings.Close();
 
     _pauseMenu.SetActive(_shown);
     SetVisibility(_shown);
@@ -67,12 +89,18 @@ public class UIPauseMenu : NetworkBehaviour
     TogglePause();
   }
 
+  private void OpenSettings()
+  {
+    if (_settings != null)
+    {
+      _pauseMenu.SetActive(false);
+      _settings.Open();
+    }
+  }
+
   private void Leave()
   {
-    // shuts down Netick.
     Network.Shutdown();
-
-    // loads menu scene.
     SceneManager.LoadScene(0);
   }
 

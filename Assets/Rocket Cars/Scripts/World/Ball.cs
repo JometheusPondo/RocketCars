@@ -49,8 +49,6 @@ public class Ball : NetworkBehaviour
         if (player != null)
             LastTouchedPlayer = player;
 
-        ApplyBounce(collision);
-
         if (Object != null && !IsResimulating)
             PlayCollisionAudio(collision);
     }

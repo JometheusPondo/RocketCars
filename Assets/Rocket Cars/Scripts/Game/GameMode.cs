@@ -1,6 +1,7 @@
 using Netick;
 using Netick.Samples;
 using Netick.Unity;
+using System.Diagnostics;
 using UnityEngine;
 
 /// <summary>
@@ -53,51 +54,30 @@ public abstract class GameMode : NetworkBehaviour
         // collecting networked user input.
         var input = Sandbox.GetInput<GameInput>();
 
-        float triggers = Input.GetAxis("Throttle") - Input.GetAxis("Brake");
-        float kbVert = Input.GetAxis("Vertical");
-        float stickX = Input.GetAxis("Horizontal");
+        var ibm = InputBindingManager.Instance;
 
 
-        input.Throttle = Mathf.Clamp(input.Throttle + triggers + kbVert, -1f, 1f);
-        input.Steer = Mathf.Clamp(input.Steer + stickX, -1f, 1f);
-        input.Pitch = Mathf.Clamp(input.Pitch + kbVert, -1f, 1f);
-        input.Yaw = Mathf.Clamp(input.Yaw + stickX, -1f, 1f);
-
-        bool airRollHeld = Input.GetButton("AirRollPowerslide");
-        float rollInput = Input.GetAxis("Roll"); 
-
-        if (airRollHeld)
-            rollInput = stickX; 
-
-        input.Roll = Mathf.Clamp(input.Roll + rollInput, -1f, 1f);
-
-
-
-        input.Boost |= Input.GetButton("Boost");
-        input.Jump |= Input.GetButtonDown("Jump");
-        input.Handbrake |= airRollHeld; // LB = powerslide on ground
-
-        if (Input.GetButton("AirRollLeft"))
-            input.Roll = -1f;
-
-        if (Input.GetAxis("DPadLeft") < -0.5f)
+        if (ibm != null)
         {
-            var ball = Sandbox.FindObjectOfType<Ball>();
-            foreach (var player in Sandbox.FindObjectsOfType<Player>())
-            {
-                if (player.IsInputSource && player.Car != null)
-                {
-                    ball.TossToward(player.Car.transform.position, player.Car.Rigidbody.velocity);
-                    break;
-                }
-            }
+
+            input.Throttle = Mathf.Clamp(input.Throttle + ibm.GetValue(InputBindingManager.InputAction.Throttle)
+                            - ibm.GetValue(InputBindingManager.InputAction.Brake), -1f, 1f);
+            input.Steer = Mathf.Clamp(input.Steer + ibm.StickX, -1f, 1f);
+            input.Pitch = Mathf.Clamp(input.Pitch + ibm.StickY, -1f, 1f);
+            input.Yaw = Mathf.Clamp(input.Yaw + ibm.StickX, -1f, 1f);
+
+            bool airRollHeld = ibm.GetHeld(InputBindingManager.InputAction.AirRollPowerslide);
+            input.Roll = airRollHeld ? ibm.StickX : 0f;
+
+            if (ibm.GetHeld(InputBindingManager.InputAction.AirRollLeft))
+                input.Roll = -1f;
+
+            input.Boost |= ibm.GetHeld(InputBindingManager.InputAction.Boost);
+            input.Jump |= ibm.GetDown(InputBindingManager.InputAction.Jump);
+            input.Handbrake |= airRollHeld;
         }
 
         Sandbox.SetInput(input);
-
-
-
-
     }
 
     public virtual void ReactToSpectateControls()
