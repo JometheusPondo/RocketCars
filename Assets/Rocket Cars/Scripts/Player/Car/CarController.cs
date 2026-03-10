@@ -1,6 +1,7 @@
 using Netick;
 using Netick.Unity;
 using System.Collections.Specialized;
+using System.Diagnostics;
 using UnityEngine;
 using UnityEngine.Events;
 using static System.Net.Mime.MediaTypeNames;
@@ -61,7 +62,7 @@ public class CarController : GoalReplayable
 
     [Header("Scale -- CRITICAL: Match to your asset size")]
     [Tooltip("Unity meters per Rocket League Unreal Unit. Default 0.01 = real-world scale.")]
-    public float S = 0.015f;
+    public float S = 0.01f;
 
     [Header("Simulation Features")]
     public bool EnableJump = true;
@@ -322,7 +323,7 @@ public class CarController : GoalReplayable
             UpdateDoubleJumpOrFlip(input, dt, jumpPressed, forwardSpeed);
         }
 
-        if (EnableAutoStabilization && input.Throttle != 0)
+        if (EnableAutoStabilization && (input.Throttle != 0 || GroundedWheelsNum == 2))
         {
             if ((numInContact > 0 && numInContact < 4) || _worldContactHasContact)
                 UpdateAutoRoll(dt, numInContact);
@@ -336,11 +337,11 @@ public class CarController : GoalReplayable
         // Ground stabilization — always push toward upright when wheels contact
         if (GroundedWheelsNum > 0 && GroundedWheelsNum < 4)
         {
-            float tiltAngle = Vector3.Angle(transform.up, Vector3.up); 
+            float tiltAngle = Vector3.Angle(transform.up, Vector3.up);
             if (tiltAngle > 5f && tiltAngle < 120f)
             {
                 Vector3 correctionAxis = Vector3.Cross(transform.up, Vector3.up).normalized;
-                float correctionStrength = tiltAngle * 0.1f; 
+                float correctionStrength = tiltAngle * 0.1f;
                 Rigidbody.AddTorque(correctionAxis * correctionStrength, ForceMode.Acceleration);
             }
         }
@@ -478,6 +479,7 @@ public class CarController : GoalReplayable
         else
             HandbrakeVal = Mathf.Max(HandbrakeVal - RLC.POWERSLIDE_FALL_RATE * dt, 0f);
 
+
         // Throttle/Brake logic
         float realThrottle = input.Throttle;
         float realBrake = 0f;
@@ -544,10 +546,10 @@ public class CarController : GoalReplayable
             Vector3 upDir = GetUpwardsDirFromWheelContacts();
             bool fullStick = (realThrottle != 0) || (absSpeed > RLC.STOPPING_FORWARD_VEL);
             float stickyScale = 0.5f;
-            if (fullStick) stickyScale += 1f - Mathf.Abs(upDir.y); 
+            if (fullStick) stickyScale += 1f - Mathf.Abs(upDir.y);
 
             // Sticky force counteracts gravity along the surface normal
-            Rigidbody.AddForce(upDir * stickyScale * Mathf.Abs(RLC.GRAVITY_Z) * S, ForceMode.Acceleration);
+            Rigidbody.AddForce(-upDir * stickyScale * Mathf.Abs(RLC.GRAVITY_Z) * S, ForceMode.Acceleration);
         }
     }
 
@@ -612,22 +614,18 @@ public class CarController : GoalReplayable
             ref var w = ref _ws[i];
             if (!w.inContact) { w.frictionImpulse = Vector3.zero; continue; }
 
-            // Compute steered axle & forward directions on the contact surface
             Quaternion steerRot = Quaternion.AngleAxis(w.steerAngle * Mathf.Rad2Deg, transform.up);
             Vector3 axleDir = steerRot * transform.right;
             Vector3 surfNorm = w.contactNormal;
             axleDir = (axleDir - surfNorm * Vector3.Dot(axleDir, surfNorm)).normalized;
             Vector3 fwdDir = Vector3.Cross(surfNorm, axleDir).normalized;
 
-            // Lateral impulse
             Vector3 velAtContact = Rigidbody.GetPointVelocity(w.contactPoint);
             float lateralVel = Vector3.Dot(velAtContact, axleDir);
-            float sideImpulse = -lateralVel * Rigidbody.mass;
 
-            float contactRatio = (float)GroundedWheelsNum / 4f;
-            sideImpulse *= contactRatio;
+            // resolveSingleBilateral approximation — Bullet's Jacobian returns ~0.5x mass
+            float sideImpulse = -lateralVel * Rigidbody.mass * 0.5f;
 
-            // --- Longitudinal impulse (engine or brake) ---
             float rollingFriction;
             if (w.engineForce == 0f)
             {
@@ -650,7 +648,6 @@ public class CarController : GoalReplayable
                                   + (axleDir * sideImpulse * w.latFriction);
             w.frictionImpulse = totalFriction * frictionScale;
 
-            // Apply at vehicles center of mass height
             if (!w.frictionImpulse.Equals(Vector3.zero))
             {
                 Vector3 contactOffset = w.contactPoint - Rigidbody.worldCenterOfMass;
@@ -758,7 +755,6 @@ public class CarController : GoalReplayable
                     FlipTime = 0f;
                     HasFlipped = true;
                     IsFlipping = true;
-                    Rigidbody.mass = RLC.CAR_MASS_BT * 100;
 
                     float forwardSpeedRatio = Mathf.Abs(forwardSpeed) / RLC.CAR_MAX_SPEED;
 
@@ -974,7 +970,7 @@ public class CarController : GoalReplayable
                 AutoFlipTorqueScale = (rollAngle > 0) ? 1f : -1f;
                 IsAutoFlipping = true;
 
-                Rigidbody.AddForce(-transform.up * RLC.CAR_AUTOFLIP_IMPULSE * S, ForceMode.VelocityChange);
+                Rigidbody.AddForce(Vector3.up * RLC.CAR_AUTOFLIP_IMPULSE * S, ForceMode.VelocityChange);
             }
         }
 
@@ -1084,7 +1080,6 @@ public class CarController : GoalReplayable
         if (FlipTime > RLC.FLIP_TORQUE_TIME)
         {
             IsFlipping = false;
-            Rigidbody.mass = RLC.CAR_MASS_BT;
         }
 
         float maxSpeed = RLC.CAR_MAX_SPEED * S;

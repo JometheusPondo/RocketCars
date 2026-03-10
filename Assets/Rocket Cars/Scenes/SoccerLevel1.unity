@@ -521,7 +521,7 @@ MonoBehaviour:
   Ball: {fileID: 1230431211}
   GoalsToWin: 5
   DelayUntilReplay: 5
-  DelayUntilRoundStart: 5
+  DelayUntilRoundStart: 3
   DelayUntilRestart: 30
   SpawnRadius: 25
   SpawnArcLength: 60
@@ -6260,6 +6260,7 @@ GameObject:
   - component: {fileID: 1230431207}
   - component: {fileID: 1230431206}
   - component: {fileID: 1230431205}
+  - component: {fileID: 1230431213}
   m_Layer: 8
   m_Name: Ball
   m_TagString: Untagged
@@ -6382,7 +6383,7 @@ SphereCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Radius: 1
+  m_Radius: 1.1
   m_Center: {x: 0, y: 0, z: 0}
 --- !u!54 &1230431207
 Rigidbody:
@@ -6485,7 +6486,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   InitialPosition: {x: 0, y: 0, z: 0}
   LastTouchedPlayer: {fileID: 0}
-  S: 0.0125
+  S: 0.01
 --- !u!4 &1230431212
 Transform:
   m_ObjectHideFlags: 0
@@ -6502,6 +6503,27 @@ Transform:
   - {fileID: 615941832}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!135 &1230431213
+SphereCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1230431204}
+  m_Material: {fileID: 13400000, guid: 2b775ebbee1e53249b9fe59a4dc8089e, type: 2}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Radius: 1
+  m_Center: {x: 0, y: 0, z: 0}
 --- !u!1 &1292262088
 GameObject:
   m_ObjectHideFlags: 0

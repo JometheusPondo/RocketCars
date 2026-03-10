@@ -73,7 +73,7 @@ public abstract class GameMode : NetworkBehaviour
                 input.Roll = -1f;
 
             input.Boost |= ibm.GetHeld(InputBindingManager.InputAction.Boost);
-            input.Jump |= ibm.GetDown(InputBindingManager.InputAction.Jump);
+            input.Jump |= ibm.GetHeld(InputBindingManager.InputAction.Jump);
             input.Handbrake |= airRollHeld;
         }
 

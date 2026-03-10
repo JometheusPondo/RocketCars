@@ -71,14 +71,31 @@ public static class RLC
     public const float CAR_MASS_BT = 180f;
 
     // ===================== BALL =====================
-    public const float BALL_RADIUS = 91.25f;   
-    public const float BALL_RESTITUTION = 0.6f;
-    public const float BALL_FRICTION = 0.285f;
-    public const float BALL_FRICTION_Y = 2.0f;     
-    public const float BALL_MAX_SPEED = 6000f;    
-    public const float BALL_MAX_ANG_SPEED = 6f;       
-    public const float BALL_DRAG = 0.0003f; 
-    public const float BALL_MASS = 18f;      
+    // ===================== BALL =====================
+    public const float BALL_RADIUS = 91.25f;
+    public const float BALL_RESTITUTION = 0.6f;        // ball vs WORLD only
+    public const float BALL_FRICTION = 0.35f;           // was 0.285
+    public const float BALL_FRICTION_Y = 2.0f;
+    public const float BALL_MAX_SPEED = 6000f;
+    public const float BALL_MAX_ANG_SPEED = 6f;
+    public const float BALL_DRAG = 0.03f;               // was 0.0003, Bullet linear damping
+    public const float BALL_MASS = 30f;                  
+
+    // Car-ball collision overrides (different from ball-world!)
+    public const float CARBALL_COLLISION_FRICTION = 2.0f;
+    public const float CARBALL_COLLISION_RESTITUTION = 0.0f;
+
+    // Extra car-ball impulse
+    public const float BALL_CAR_EXTRA_IMPULSE_Z_SCALE = 0.35f;
+    public const float BALL_CAR_EXTRA_IMPULSE_FORWARD_SCALE = 0.65f;
+    public const float BALL_CAR_EXTRA_IMPULSE_MAXDELTAVEL = 4600f;
+
+    public static readonly PiecewiseCurve BALL_CAR_EXTRA_IMPULSE_FACTOR = new PiecewiseCurve(
+        new Vector2(0f, 0.65f),
+        new Vector2(500f, 0.65f),
+        new Vector2(2300f, 0.55f),
+        new Vector2(4600f, 0.30f)
+    );
 
     // ===================== SPEED LIMITS =====================
 
@@ -159,8 +176,8 @@ public static class RLC
 
     // Powerslide lateral friction factor
     public static readonly PiecewiseCurve HANDBRAKE_LAT_FRICTION_FACTOR = new PiecewiseCurve(
-        new Vector2(0, 0.1f)
-    );
+            new Vector2(0, 0.03f)
+        );
 
     // Powerslide longitudinal friction factor
     public static readonly PiecewiseCurve HANDBRAKE_LONG_FRICTION_FACTOR = new PiecewiseCurve(
@@ -220,7 +237,7 @@ public static class RLC
 
     // ===================== AUTO FLIP (TURTLE RECOVERY) =====================
 
-    public const float CAR_AUTOFLIP_IMPULSE = 200f;    
+    public const float CAR_AUTOFLIP_IMPULSE = 240f;    
     public const float CAR_AUTOFLIP_TORQUE = 25f;
     public const float CAR_AUTOFLIP_TIME = 0.4f;
     public const float CAR_AUTOFLIP_NORMZ_THRESH = 0.7071f; // sqrt(0.5)
