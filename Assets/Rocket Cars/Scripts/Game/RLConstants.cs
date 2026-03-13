@@ -132,19 +132,19 @@ public static class RLC
     // Steer angle from forward speed
 
     public static readonly PiecewiseCurve STEER_ANGLE_FROM_SPEED = new PiecewiseCurve(
-        new Vector2(0, 0.53356f),
-        new Vector2(500, 0.31930f),
-        new Vector2(1000, 0.18203f),
-        new Vector2(1500, 0.10570f),
-        new Vector2(1750, 0.08507f),
-        new Vector2(3000, 0.03454f)
+        new Vector2(0, 0.373492f),
+        new Vector2(500, 0.22351f),
+        new Vector2(1000, 0.127421f),
+        new Vector2(1500, 0.07399f),
+        new Vector2(1750, 0.059549f),
+        new Vector2(3000, 0.024178f)
     );
 
     // Extended steer angle during powerslide
 
     public static readonly PiecewiseCurve POWERSLIDE_STEER_ANGLE_FROM_SPEED = new PiecewiseCurve(
-        new Vector2(0, 0.39235f),
-        new Vector2(2500, 0.12610f)
+        new Vector2(0, 0.274645f),
+        new Vector2(2500, 0.08827f)
     );
 
     // ===================== POWERSLIDE =====================
@@ -204,8 +204,8 @@ public static class RLC
 
     // ===================== JUMP =====================
 
-    public const float JUMP_IMMEDIATE_FORCE = 875f / 3f;   // ~291.67 UU/s 
-    public const float JUMP_ACCEL = 4375f / 3f;   // ~1458.33 UU/s^2 
+    public const float JUMP_IMMEDIATE_FORCE = 875f / 3f;   
+    public const float JUMP_ACCEL = 4375f / 3f;   
     public const float JUMP_MIN_TIME = 0.025f;
     public const float JUMP_MAX_TIME = 0.2f;
     public const float JUMP_RESET_TIME_PAD = 1f / 40f;
@@ -233,7 +233,7 @@ public static class RLC
 
     public static readonly Vector3 CAR_AIR_CONTROL_TORQUE = new Vector3(130f, 95f, 400f);  
     public static readonly Vector3 CAR_AIR_CONTROL_DAMPING = new Vector3(30f, 20f, 50f);   
-    public const float CAR_TORQUE_SCALE = 0.08f;
+    public const float CAR_TORQUE_SCALE = 0.05f;
 
     // ===================== AUTO FLIP (TURTLE RECOVERY) =====================
 

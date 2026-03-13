@@ -4,9 +4,9 @@ using Netick.Unity;
 using System.Diagnostics;
 using UnityEngine;
 
-/// <summary>
-/// This is the Game Mode script, the parent script of all game modes. 
-/// </summary>
+
+// This is the parent script of all game modes. 
+
 [ExecutionOrder(-30)]
 public abstract class GameMode : NetworkBehaviour
 {

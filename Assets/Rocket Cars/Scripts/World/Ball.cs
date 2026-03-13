@@ -53,63 +53,10 @@ public class Ball : NetworkBehaviour
         }
     }
 
-    public void OnTriggerEnter(Collider other)
-    {
-        var player = other.GetComponentInParent<Player>();
-        if (player == null) return;
-
-        LastTouchedPlayer = player;
-
-        Rigidbody carRb = other.GetComponentInParent<Rigidbody>();
-        CarController car = other.GetComponentInParent<CarController>();
-        if (carRb == null) return;
-
-        // --- Base collision: restitution 0.0, friction 2.0 ---
-        Vector3 n = (transform.position - carRb.worldCenterOfMass).normalized;
-
-        Vector3 contactPoint = transform.position - n * _radius;
-        Vector3 contactOffset = contactPoint - carRb.worldCenterOfMass;
-        Vector3 carVelAtContact = carRb.velocity + Vector3.Cross(carRb.angularVelocity, contactOffset);
-
-        Vector3 vRel = Rigidbody.velocity - carVelAtContact;
-        float vRelN = Vector3.Dot(vRel, n);
-
-        if (vRelN > 0f) return; // already separating
-
-        Vector3 vPerp = vRelN * n;
-        Vector3 vPara = vRel - vPerp;
-
-        Vector3 vSpin = _radius * Vector3.Cross(n, Rigidbody.angularVelocity);
-        Vector3 slip = vPara + vSpin;
-
-        // Restitution is 0.0 for car-ball — Bullet just stops the approach, no bounce
-        Vector3 deltaVPerp = -(1f + RLC.CARBALL_COLLISION_RESTITUTION) * vPerp;
-
-        // Friction is 2.0 for car-ball — very high, kills tangential slip aggressively
-        Vector3 deltaVPara = Vector3.zero;
-        float slipMag = slip.magnitude;
-        if (slipMag > 0.001f)
-        {
-            float ratio = vPerp.magnitude / slipMag;
-            float frictionScale = Mathf.Min(1f, RLC.BALL_FRICTION_Y * ratio);
-            deltaVPara = -frictionScale * RLC.CARBALL_COLLISION_FRICTION * slip;
-        }
-
-        Rigidbody.velocity += deltaVPerp + deltaVPara;
-
-        // Angular velocity update
-        Rigidbody.angularVelocity += (0.0003f / _radius) * Vector3.Cross(deltaVPara, n);
-
-        // --- Extra impulse (RocketSim _OnHit) ---
-        ApplyExtraCarBallImpulse(car, carRb);
-
-        if (Object != null && !IsResimulating)
-            PlayCollisionAudio(null);
-    }
 
     private void ApplyExtraCarBallImpulse(CarController car, Rigidbody carRb)
     {
-        Vector3 ballPos = transform.position / S; // to UU
+        Vector3 ballPos = transform.position / S; 
         Vector3 carPos = carRb.worldCenterOfMass / S;
         Vector3 ballVel = Rigidbody.velocity / S;
         Vector3 carVel = carRb.velocity / S;
@@ -139,7 +86,7 @@ public class Ball : NetworkBehaviour
 
         Vector3 addedVel = hitDir * relSpeed * factor;
 
-        // Cache — applied at end of tick (matching RocketSim)
+        // Cache — applied at end of tick 
         _extraImpulseCache += addedVel * S; // back to Unity units
     }
 
@@ -147,47 +94,17 @@ public class Ball : NetworkBehaviour
     {
         var player = collision.gameObject.GetComponentInParent<Player>();
         if (player != null)
+        {
             LastTouchedPlayer = player;
+
+            Rigidbody carRb = collision.gameObject.GetComponentInParent<Rigidbody>();
+            CarController car = collision.gameObject.GetComponentInParent<CarController>();
+            if (carRb != null)
+                ApplyExtraCarBallImpulse(car, carRb);
+        }
 
         if (Object != null && !IsResimulating)
             PlayCollisionAudio(collision);
-    }
-
-    private void ApplyBounce(Collision collision)
-    {
-        if (collision.contactCount == 0) return;
-
-        var player = collision.gameObject.GetComponentInParent<Player>();
-        if (player == null) return;
-
-        Rigidbody carRb = collision.gameObject.GetComponentInParent<Rigidbody>();
-        Vector3 n = (collision.contacts[0].point - carRb.worldCenterOfMass).normalized;
-
-        Vector3 contactOffset = collision.contacts[0].point - carRb.worldCenterOfMass;
-        Vector3 carVelAtContact = carRb.velocity + Vector3.Cross(carRb.angularVelocity, contactOffset);
-
-        Vector3 v = Rigidbody.velocity - carVelAtContact;
-        Vector3 w = Rigidbody.angularVelocity;
-
-        Vector3 vPerp = Vector3.Dot(v, n) * n;
-        Vector3 vPara = v - vPerp;
-
-        Vector3 vSpin = _radius * Vector3.Cross(n, w);
-        Vector3 slip = vPara + vSpin;
-
-        Vector3 deltaVPerp = -(1f + RLC.BALL_RESTITUTION) * vPerp;
-
-        Vector3 deltaVPara = Vector3.zero;
-        float slipMag = slip.magnitude;
-        if (slipMag > 0.001f)
-        {
-            float ratio = vPerp.magnitude / slipMag;
-            float frictionScale = Mathf.Min(1f, RLC.BALL_FRICTION_Y * ratio);
-            deltaVPara = -frictionScale * RLC.BALL_FRICTION * slip;
-        }
-
-        Rigidbody.velocity = Rigidbody.velocity + deltaVPerp + deltaVPara;
-        Rigidbody.angularVelocity = w + (RLC.BALL_DRAG / _radius) * Vector3.Cross(deltaVPara, n);
     }
 
     private void PlayCollisionAudio(Collision collision)

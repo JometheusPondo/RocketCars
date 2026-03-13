@@ -178,11 +178,34 @@ public class CarCameraController : NetworkBehaviour
         var j = Math.Max(0.2f, Mathf.Pow(dot, 10)) * t;
         _curDir = Vector3.Lerp(_curDir, flatDir, j);
 
+        // Camera position: fixed behind car, fixed height
         var pos = focusLocation
-                                  - (_curDir * Mathf.Abs(CameraOffset.z))
-                                  + (Vector3.up * CameraOffset.y);
+                - (_curDir * Mathf.Abs(CameraOffset.z))
+                + (Vector3.up * CameraOffset.y);
 
-        var rot = Quaternion.LookRotation(_curDir, Vector3.up);
+        var lookDir = _curDir;
+        Vector3 camToFocus = focusLocation - pos;
+        camToFocus.y = 0f;
+        Vector3 baseLookDir = camToFocus.normalized;
+
+        Vector3 toBall = ballPos - pos;
+        float verticalAngle = Mathf.Atan2(toBall.y, new Vector3(toBall.x, 0f, toBall.z).magnitude) * Mathf.Rad2Deg;
+
+        float halfFOV = _camera.fieldOfView * 0.5f;
+        float viewportThreshold = halfFOV * 0.65f; 
+
+        if (verticalAngle > viewportThreshold)
+        {
+            float tiltNeeded = verticalAngle - viewportThreshold;
+            lookDir = Quaternion.AngleAxis(-tiltNeeded, Vector3.Cross(Vector3.up, baseLookDir)) * baseLookDir;
+        }
+        else if (verticalAngle < -viewportThreshold)
+        {
+            float tiltNeeded = -verticalAngle - viewportThreshold;
+            lookDir = Quaternion.AngleAxis(tiltNeeded, Vector3.Cross(Vector3.up, baseLookDir)) * baseLookDir;
+        }
+
+        var rot = Quaternion.LookRotation(lookDir, Vector3.up);
 
         _curPos = Vector3.Lerp(_curPos, pos, LerpFactor * deltaTime);
         _curRot = Quaternion.Slerp(_curRot, rot, LerpFactor * deltaTime);

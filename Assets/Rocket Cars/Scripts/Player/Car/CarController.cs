@@ -69,6 +69,7 @@ public class CarController : GoalReplayable
     public bool EnableBoost = true;
     public bool EnableAirControl = true;
     public bool EnableAutoStabilization = true;
+    public bool UnlimitedBoost = false;
 
     [Header("References")]
     public Transform CenterOfMass;
@@ -312,7 +313,7 @@ public class CarController : GoalReplayable
         }
         else
         {
-            // Grounded (3+ wheels) — stop any active flip
+            // Grounded (3+ wheels) ï¿½ stop any active flip
             IsFlipping = false;
         }
 
@@ -334,7 +335,7 @@ public class CarController : GoalReplayable
         ApplySuspensionForces(dt);
         ApplyWheelFrictionImpulses(dt);
 
-        // Ground stabilization — always push toward upright when wheels contact
+        // Ground stabilization ï¿½ always push toward upright when wheels contact
         if (GroundedWheelsNum > 0 && GroundedWheelsNum < 4)
         {
             float tiltAngle = Vector3.Angle(transform.up, Vector3.up);
@@ -623,7 +624,7 @@ public class CarController : GoalReplayable
             Vector3 velAtContact = Rigidbody.GetPointVelocity(w.contactPoint);
             float lateralVel = Vector3.Dot(velAtContact, axleDir);
 
-            // resolveSingleBilateral approximation — Bullet's Jacobian returns ~0.5x mass
+            // resolveSingleBilateral approximation ï¿½ Bullet's Jacobian returns ~0.5x mass
             float sideImpulse = -lateralVel * Rigidbody.mass * 0.5f;
 
             float rollingFriction;
@@ -970,7 +971,7 @@ public class CarController : GoalReplayable
                 AutoFlipTorqueScale = (rollAngle > 0) ? 1f : -1f;
                 IsAutoFlipping = true;
 
-                Rigidbody.AddForce(Vector3.up * RLC.CAR_AUTOFLIP_IMPULSE * S, ForceMode.VelocityChange);
+                Rigidbody.AddForce(-transform.up * RLC.CAR_AUTOFLIP_IMPULSE * S, ForceMode.VelocityChange);
             }
         }
 
@@ -1037,7 +1038,7 @@ public class CarController : GoalReplayable
 
     private void UpdateBoost(GameInput input, float dt, float forwardSpeed)
     {
-        bool hasBoost = Boost > 0;
+        bool hasBoost = UnlimitedBoost || Boost > 0;
 
         if (hasBoost)
         {
@@ -1055,7 +1056,8 @@ public class CarController : GoalReplayable
 
         if (IsBoosting)
         {
-            Boost = Mathf.Max(Boost - RLC.BOOST_USED_PER_SECOND * dt, 0f);
+            if (!UnlimitedBoost)
+                Boost = Mathf.Max(Boost - RLC.BOOST_USED_PER_SECOND * dt, 0f);
             float accel = (IsOnGround ? RLC.BOOST_ACCEL_GROUND : RLC.BOOST_ACCEL_AIR) * S;
             Rigidbody.AddForce(transform.forward * accel, ForceMode.Acceleration);
         }
@@ -1084,17 +1086,10 @@ public class CarController : GoalReplayable
 
         float maxSpeed = RLC.CAR_MAX_SPEED * S;
         Vector3 vel = Rigidbody.velocity;
+
         if (vel.sqrMagnitude > maxSpeed * maxSpeed)
             Rigidbody.velocity = vel.normalized * maxSpeed;
 
-        if (!IsFlipping)
-        {
-            float maxAngSpeed = IsOnGround ? 3f : RLC.CAR_MAX_ANG_SPEED;
-            Vector3 angVel = Rigidbody.angularVelocity;
-            if (angVel.sqrMagnitude > maxAngSpeed * maxAngSpeed)
-                Rigidbody.angularVelocity = angVel.normalized * maxAngSpeed;
-
-        }
     }
 
     private void UpdateSupersonic(float dt)
