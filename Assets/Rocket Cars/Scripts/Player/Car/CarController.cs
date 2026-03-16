@@ -354,6 +354,13 @@ public class CarController : GoalReplayable
         // Phase 6: Gravity
         Rigidbody.AddForce(Vector3.down * Mathf.Abs(RLC.GRAVITY_Z) * S, ForceMode.Acceleration);
 
+        if (IsOnGround)
+        {
+            float yawRate = Vector3.Dot(Rigidbody.angularVelocity, transform.up);
+            float yawDamping = 5f; // tune this
+            Rigidbody.angularVelocity -= transform.up * yawRate * yawDamping * dt;
+        }
+
         // Phase 7: Air throttle (small forward accel when airborne with throttle)
         if (input.Throttle != 0 && !IsOnGround)
             Rigidbody.AddForce(transform.forward * input.Throttle * RLC.THROTTLE_AIR_ACCEL * S, ForceMode.Acceleration);
@@ -1089,6 +1096,13 @@ public class CarController : GoalReplayable
 
         if (vel.sqrMagnitude > maxSpeed * maxSpeed)
             Rigidbody.velocity = vel.normalized * maxSpeed;
+
+        if (!IsFlipping || FlipTime > RLC.FLIP_TORQUE_TIME * 0.65f)
+        {
+            Vector3 angVel = Rigidbody.angularVelocity;
+            if (angVel.sqrMagnitude > RLC.CAR_MAX_ANG_SPEED * RLC.CAR_MAX_ANG_SPEED)
+                Rigidbody.angularVelocity = angVel.normalized * RLC.CAR_MAX_ANG_SPEED;
+        }
 
     }
 

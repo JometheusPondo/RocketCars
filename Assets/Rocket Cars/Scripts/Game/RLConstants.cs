@@ -93,7 +93,7 @@ public static class RLC
     public static readonly PiecewiseCurve BALL_CAR_EXTRA_IMPULSE_FACTOR = new PiecewiseCurve(
         new Vector2(0f, 0.65f),
         new Vector2(500f, 0.65f),
-        new Vector2(2300f, 0.55f),
+        new Vector2(2300f, 0.50f),
         new Vector2(4600f, 0.30f)
     );
 
@@ -132,19 +132,19 @@ public static class RLC
     // Steer angle from forward speed
 
     public static readonly PiecewiseCurve STEER_ANGLE_FROM_SPEED = new PiecewiseCurve(
-        new Vector2(0, 0.373492f),
-        new Vector2(500, 0.22351f),
-        new Vector2(1000, 0.127421f),
-        new Vector2(1500, 0.07399f),
-        new Vector2(1750, 0.059549f),
-        new Vector2(3000, 0.024178f)
+        new Vector2(0, 0.53356f),
+        new Vector2(500, 0.31930f),
+        new Vector2(1000, 0.18203f),
+        new Vector2(1500, 0.10570f),
+        new Vector2(1750, 0.08507f),
+        new Vector2(3000, 0.03454f)
     );
 
     // Extended steer angle during powerslide
 
     public static readonly PiecewiseCurve POWERSLIDE_STEER_ANGLE_FROM_SPEED = new PiecewiseCurve(
-        new Vector2(0, 0.274645f),
-        new Vector2(2500, 0.08827f)
+        new Vector2(0, 0.39235f),
+        new Vector2(2500, 0.12610f)
     );
 
     // ===================== POWERSLIDE =====================
@@ -233,7 +233,7 @@ public static class RLC
 
     public static readonly Vector3 CAR_AIR_CONTROL_TORQUE = new Vector3(130f, 95f, 400f);  
     public static readonly Vector3 CAR_AIR_CONTROL_DAMPING = new Vector3(30f, 20f, 50f);   
-    public const float CAR_TORQUE_SCALE = 0.05f;
+    public const float CAR_TORQUE_SCALE = 0.08f;
 
     // ===================== AUTO FLIP (TURTLE RECOVERY) =====================
 
