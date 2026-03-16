@@ -357,8 +357,9 @@ public class CarController : GoalReplayable
         if (IsOnGround)
         {
             float yawRate = Vector3.Dot(Rigidbody.angularVelocity, transform.up);
-            float yawDamping = 5f; // tune this
+            float yawDamping = 5f * (1f - HandbrakeVal);
             Rigidbody.angularVelocity -= transform.up * yawRate * yawDamping * dt;
+
         }
 
         // Phase 7: Air throttle (small forward accel when airborne with throttle)
