@@ -1,3 +1,25 @@
+<!--
+  PASTE THIS BLOCK AT THE TOP OF THE EXISTING README.md, ABOVE THE "# Rocket Cars" HEADER.
+  The upstream README content stays below as-is.
+-->
+
+> ## About this fork
+>
+> This is a fork of [NetickNetworking/NetickRocketCars](https://github.com/NetickNetworking/NetickRocketCars), maintained by [Joseph Ahrens](https://github.com/JometheusPondo). The upstream sample's README is preserved below.
+>
+> ### My contributions on this fork
+>
+> - **Vehicle physics replacement (C++ → C#).** Ported a reverse-engineered Rocket League physics library from C++ into C# and integrated it into the Unity project, replacing the upstream sample's vehicle physics with a model that more closely matches the source game's car-and-ball dynamics.
+>   - Source library: RocketSim by ZealanL: https://github.com/ZealanL/RocketSim
+>   - Primary affected systems: `CarController`, `Ball`, related physics integration code
+> - **Vehicle handling overhaul.** Rebuilt steering response and implemented air-roll (Q/E) controls to match competitive Rocket League feel.
+> - **Prototype vehicles on the same physics framework.** Built two offshoot vehicle types reusing the ported physics core:
+> - **Networking integration.** Adapted the ported physics to work inside Netick's server-authoritative prediction model, including testing and tuning prediction-error correction smoothing at higher pings.
+>
+> ---
+>
+> *Original README from the upstream sample follows.*
+
 # Rocket Cars
 
 <img width="2692" height="467" alt="Promo3" src="https://github.com/user-attachments/assets/25c18252-dc77-46fc-b923-c1b182b92550" />
